@@ -149,7 +149,7 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 > Goal: team leaders post tagged updates; agents see a deduplicated, easy-to-search feed.
 
 ### Data Models
-- [ ] **4.1** `Models/Updates/Update.cs`  
+- [x] **4.1** `Models/Updates/Update.cs`  
   ```
   Id, Title, Body (HTML/Markdown),
   AuthorId (FK AppUser), CreatedAt, UpdatedAt,
@@ -157,30 +157,30 @@ Four roles are supported. Permissions build upward — each role inherits the vi
   AffectedBrands (many-to-many → Brand),
   Tags (JSON list of strings)   // e.g. "Singapore", "ID Document", "Link Change"
   ```
-- [ ] **4.2** `Models/Updates/UpdateBrand.cs` — join table  
-- [ ] **4.3** Add DbSets + migration  
+- [x] **4.2** `Models/Updates/UpdateBrand.cs` — join table  
+- [x] **4.3** Add DbSets + migration  
 
 ### Service Layer
-- [ ] **4.4** `Services/UpdateService.cs`  
+- [x] **4.4** `Services/UpdateService.cs`  
   - `GetFeed(brandId?, tag?, searchText?)` — returns newest-first, pinned on top  
   - `PostUpdate(dto)` — creates update, validates at least one brand or "All Brands" flag  
   - `ArchiveOldUpdates(days)` — auto-archive updates older than N days  
   - Conflict detection hint: surface updates sharing the same tag + brand combination for review  
 
 ### Controllers & Views
-- [ ] **4.5** `Controllers/UpdatesController.cs`  
+- [x] **4.5** `Controllers/UpdatesController.cs`  
   - `[Authorize(Roles="BrandManager,TeamLeader")]` for `Create`, `Edit`, `Archive`  
   - All roles can view  
-- [ ] **4.6** Views:  
+- [x] **4.6** Views:  
   - `Feed` (default landing page) — card/timeline layout, sticky filter bar  
     - Filter by: Brand, Tag, Date range, text search  
     - Pinned updates shown at top with badge  
     - Archived toggle  
   - `Create/Edit` — form with Quill editor, brand multi-select, tag input (Tagify), pin toggle  
   - `_UpdateCard.cshtml` partial — reusable card showing brand badges, tags, author, timestamp  
-- [ ] **4.7** Toast notification on login if there are unread pinned updates since last login  
+- [x] **4.7** Toast notification on login if there are unread pinned updates since last login  
 
-**Phase 4 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 4 Status:** `[x] IN PROGRESS` → `[x] DONE`
 
 ---
 

@@ -1,0 +1,57 @@
+@model Unified.Models.Updates.Update
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Feed">Updates</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                @if (Model.IsPinned)
+                {
+                    <span class="badge bg-primary me-1"><i class="bx bx-pin me-1"></i>Pinned</span>
+                }
+                <h5 class="d-inline mb-0">@Model.Title</h5>
+            </div>
+            <div class="d-flex gap-1 flex-wrap">
+                @foreach (var ub in Model.AffectedBrands)
+                {
+                    <span class="badge bg-label-info">@ub.Brand?.Name</span>
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                @Html.Raw(Model.Body)
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    @foreach (var tag in Model.GetTags())
+                    {
+                        <span class="badge bg-label-secondary me-1">@tag</span>
+                    }
+                </div>
+                <small class="text-muted">
+                    Posted by <strong>@(Model.Author?.DisplayName ?? "Unknown")</strong>
+                    on @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                    @if (Model.UpdatedAt > Model.CreatedAt.AddSeconds(5))
+                    {
+                        <span> · edited @Model.UpdatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                    }
+                </small>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a asp-action="Feed" class="btn btn-outline-secondary btn-sm">← Back to Feed</a>
+        </div>
+    </div>
+</div>

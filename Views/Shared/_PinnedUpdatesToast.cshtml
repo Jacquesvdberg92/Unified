@@ -1,0 +1,22 @@
+@* Rendered by _Layout after login. TempData["PinnedUpdatesCount"] is set by the HomeController on first load after login. *@
+@{
+    var count = (int?)TempData["PinnedUpdatesCount"];
+}
+@if (count.HasValue && count.Value > 0)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: "@count new pinned update@(count == 1 ? "" : "s") — <a href='/Updates/Feed' style='color:#fff;text-decoration:underline'>View Feed</a>",
+                    duration: 6000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    escapeMarkup: false,
+                    style: { background: "linear-gradient(to right, #405189, #0ab39c)" }
+                }).showToast();
+            }
+        });
+    </script>
+}

@@ -81,6 +81,8 @@
 
         @await RenderSectionAsync("Scripts", required: false)
 
+        <partial name="~/Views/Shared/_PinnedUpdatesToast.cshtml" />
+
         <!-- STICKY JS -->
 		<script src="@Url.Content("~/assets/js/sticky.js")"></script>
 

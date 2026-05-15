@@ -27,6 +27,14 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
 builder.Services.AddScoped<Unified.Services.ProcessTemplateService>();
+builder.Services.AddScoped<Unified.Services.UpdateService>();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -45,6 +53,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

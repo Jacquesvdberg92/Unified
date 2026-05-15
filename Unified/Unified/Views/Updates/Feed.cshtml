@@ -1,0 +1,79 @@
+@using Unified.Models.Identity
+@model List<Unified.Models.Updates.Update>
+
+@{
+    ViewData["Title"] = "Updates Feed";
+    var brands       = (IEnumerable<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
+    var allTags      = (IEnumerable<string>)ViewBag.AllTags;
+    var selBrandId   = (int?)ViewBag.SelectedBrandId;
+    var selTag       = (string?)ViewBag.SelectedTag;
+    var search       = (string?)ViewBag.Search;
+    var showArchived = (bool)ViewBag.ShowArchived;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bx bx-news me-2"></i>Updates Feed</h4>
+        @if (User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.TeamLeader))
+        {
+            <a asp-action="Create" class="btn btn-primary"><i class="bx bx-plus me-1"></i>Post Update</a>
+        }
+    </div>
+
+    <div class="row g-4">
+        {{!-- Filter sidebar --}}
+        <div class="col-lg-3">
+            <form method="get" id="filterForm">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">Filter</h6>
+                        <div class="mb-3">
+                            <label class="form-label small">Search</label>
+                            <input name="search" class="form-control form-control-sm"
+                                   value="@search" placeholder="Keyword…" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Brand</label>
+                            <select name="brandId" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Brands</option>
+                                @foreach (var b in brands)
+                                {
+                                    <option value="@b.Id" @(selBrandId == b.Id ? "selected" : "")>@b.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Tag</label>
+                            <select name="tag" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Tags</option>
+                                @foreach (var t in allTags)
+                                {
+                                    <option value="@t" @(selTag == t ? "selected" : "")>@t</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="archived" value="true"
+                                   id="showArchived" @(showArchived ? "checked" : "") onchange="this.form.submit()" />
+                            <label class="form-check-label small" for="showArchived">Show archived</label>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary w-100">Search</button>
+                        <a asp-action="Feed" class="btn btn-sm btn-outline-secondary w-100 mt-1">Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {{!-- Update cards --}}
+        <div class="col-lg-9">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">No updates found.</div>
+            }
+            @foreach (var update in Model)
+            {
+                @await Html.PartialAsync("_UpdateCard", update)
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+@using Unified.Models.Identity
+@model Unified.Models.Updates.Update
+
+<div class="card mb-3 @(Model.IsPinned ? "border-primary" : "")">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <div>
+                @if (Model.IsPinned)
+                {
+                    <span class="badge bg-primary me-1"><i class="bx bx-pin me-1"></i>Pinned</span>
+                }
+                @if (Model.IsArchived)
+                {
+                    <span class="badge bg-secondary me-1">Archived</span>
+                }
+                <h5 class="d-inline mb-0">@Model.Title</h5>
+            </div>
+            <div class="d-flex gap-1 flex-wrap">
+                @foreach (var ub in Model.AffectedBrands)
+                {
+                    <span class="badge bg-label-info">@ub.Brand?.Name</span>
+                }
+            </div>
+        </div>
+
+        <div class="mb-3 update-body-preview">
+            @Html.Raw(Model.Body)
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                @foreach (var tag in Model.GetTags())
+                {
+                    <span class="badge bg-label-secondary me-1">@tag</span>
+                }
+            </div>
+            <small class="text-muted">
+                <i class="bx bx-user me-1"></i>@(Model.Author?.DisplayName ?? "Unknown")
+                &nbsp;·&nbsp;
+                <i class="bx bx-time me-1"></i>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+            </small>
+        </div>
+
+        @if (User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.TeamLeader))
+        {
+            <hr class="my-2" />
+            <div class="d-flex gap-2">
+                <a asp-action="Detail" asp-controller="Updates" asp-route-id="@Model.Id"
+                   class="btn btn-sm btn-outline-primary">View</a>
+                <a asp-action="Edit" asp-controller="Updates" asp-route-id="@Model.Id"
+                   class="btn btn-sm btn-outline-secondary">Edit</a>
+                @if (!Model.IsArchived)
+                {
+                    <form asp-action="Archive" asp-controller="Updates" asp-route-id="@Model.Id"
+                          method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                onclick="return confirm('Archive this update?')">Archive</button>
+                    </form>
+                }
+                @if (User.IsInRole(Roles.BrandManager))
+                {
+                    <form asp-action="Delete" asp-controller="Updates" asp-route-id="@Model.Id"
+                          method="post" class="d-inline ms-auto">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Permanently delete this update?')">Delete</button>
+                    </form>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mt-2">
+                <a asp-action="Detail" asp-controller="Updates" asp-route-id="@Model.Id"
+                   class="btn btn-sm btn-outline-primary">Read more</a>
+            </div>
+        }
+    </div>
+</div>

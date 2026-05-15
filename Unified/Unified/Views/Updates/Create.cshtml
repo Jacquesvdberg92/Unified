@@ -1,0 +1,28 @@
+@model Unified.Models.Updates.Update
+
+@{
+    ViewData["Title"] = "Post Update";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Feed">Updates</a></li>
+            <li class="breadcrumb-item active">Post Update</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0">Post New Update</h5></div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                @await Html.PartialAsync("_UpdateForm", Model)
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/libs/quill/quill.snow.css" />
+}

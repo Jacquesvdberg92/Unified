@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
 using Unified.Models.ProcessTemplates;
+using Unified.Models.Updates;
 
 namespace Unified.Data;
 
@@ -18,6 +19,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<TemplateCategory> TemplateCategories => Set<TemplateCategory>();
     public DbSet<ProcessTemplate> ProcessTemplates => Set<ProcessTemplate>();
     public DbSet<ProcessTemplateBrand> ProcessTemplateBrands => Set<ProcessTemplateBrand>();
+    public DbSet<Update> Updates => Set<Update>();
+    public DbSet<UpdateBrand> UpdateBrands => Set<UpdateBrand>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -53,5 +56,15 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ptb => ptb.Brand)
             .WithMany()
             .HasForeignKey(ptb => ptb.BrandId);
+
+        builder.Entity<UpdateBrand>().HasKey(ub => new { ub.UpdateId, ub.BrandId });
+        builder.Entity<UpdateBrand>()
+            .HasOne(ub => ub.Update)
+            .WithMany(u => u.AffectedBrands)
+            .HasForeignKey(ub => ub.UpdateId);
+        builder.Entity<UpdateBrand>()
+            .HasOne(ub => ub.Brand)
+            .WithMany()
+            .HasForeignKey(ub => ub.BrandId);
     }
 }

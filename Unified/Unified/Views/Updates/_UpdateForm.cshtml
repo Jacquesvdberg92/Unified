@@ -1,0 +1,94 @@
+@model Unified.Models.Updates.Update
+
+@{
+    var brands           = (IEnumerable<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
+    var selectedBrandIds = (List<int>?)ViewBag.SelectedBrandIds ?? new List<int>();
+    var currentTags      = (string?)ViewBag.CurrentTags ?? string.Empty;
+    var isEdit           = Model.Id != 0;
+}
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger d-none" id="validationSummary"></div>
+
+<div class="mb-3">
+    <label asp-for="Title" class="form-label"></label>
+    <input asp-for="Title" class="form-control" placeholder="Update title" />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Body</label>
+    <div id="quillEditor" style="min-height:200px;">@Html.Raw(Model.Body)</div>
+    <input type="hidden" asp-for="Body" id="bodyInput" />
+    <span asp-validation-for="Body" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Affected Brands</label>
+    <div class="row row-cols-2 row-cols-md-3 g-2">
+        @foreach (var brand in brands)
+        {
+            <div class="col">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="brandIds"
+                           value="@brand.Id" id="brand_@brand.Id"
+                           @(selectedBrandIds.Contains(brand.Id) ? "checked" : "") />
+                    <label class="form-check-label" for="brand_@brand.Id">@brand.Name</label>
+                </div>
+            </div>
+        }
+    </div>
+    <small class="text-muted">Leave all unchecked to show to all brands.</small>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Tags</label>
+    <input type="text" name="tags" id="tagsInput" class="form-control"
+           value="@currentTags" placeholder="e.g. Singapore, ID Document, Link Change" />
+    <small class="text-muted">Comma-separated tags.</small>
+</div>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <div class="form-check form-switch">
+            <input asp-for="IsPinned" class="form-check-input" type="checkbox" />
+            <label asp-for="IsPinned" class="form-check-label">Pin this update</label>
+        </div>
+    </div>
+</div>
+
+@if (isEdit)
+{
+    <input asp-for="AuthorId"  type="hidden" />
+    <input asp-for="CreatedAt" type="hidden" />
+}
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">@(isEdit ? "Save Changes" : "Post Update")</button>
+    <a asp-action="Feed" class="btn btn-outline-secondary">Cancel</a>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var quill = new Quill('#quillEditor', {
+                theme: 'snow',
+                modules: { toolbar: [
+                    ['bold','italic','underline','strike'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]}
+            });
+
+            // Pre-fill existing body
+            var existing = document.getElementById('bodyInput').value;
+            if (existing) {
+                quill.root.innerHTML = existing;
+            }
+
+            document.querySelector('form').addEventListener('submit', function () {
+                document.getElementById('bodyInput').value = quill.root.innerHTML;
+            });
+        });
+    </script>
+}
