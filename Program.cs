@@ -25,6 +25,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/Identity/Account/Logout";
 });
 
+builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

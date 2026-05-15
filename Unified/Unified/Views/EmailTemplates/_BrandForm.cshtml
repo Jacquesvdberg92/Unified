@@ -1,0 +1,38 @@
+@model Unified.Models.EmailTemplates.Brand
+
+<div class="mb-3">
+    <label class="form-label">Brand Name <span class="text-danger">*</span></label>
+    <input asp-for="Name" class="form-control" required />
+</div>
+<div class="mb-3">
+    <label class="form-label">Logo URL</label>
+    <input asp-for="LogoUrl" class="form-control" placeholder="https://..." />
+</div>
+<div class="mb-3">
+    <label class="form-label">Primary Colour</label>
+    <input asp-for="PrimaryColour" class="form-control" type="color" />
+</div>
+<div class="mb-3">
+    <label class="form-label">CRM URL</label>
+    <input asp-for="CrmUrl" class="form-control" placeholder="https://crm.example.com" />
+</div>
+<div class="mb-3">
+    <label class="form-label">Call System URL</label>
+    <input asp-for="CallSystemUrl" class="form-control" placeholder="https://calls.example.com" />
+</div>
+<div class="mb-3">
+    <label class="form-label">Website Links (JSON)</label>
+    <textarea asp-for="WebsiteLinksJson" class="form-control font-monospace" rows="4"
+              placeholder='[{"Region":"Global","Url":"https://example.com"}]'></textarea>
+    <div class="form-text">JSON array of <code>{"Region":"...", "Url":"..."}</code> objects.</div>
+</div>
+<div class="mb-3">
+    <label class="form-label">Footer Signature HTML</label>
+    <textarea asp-for="FooterSignatureHtml" class="form-control font-monospace" rows="5"
+              placeholder="HTML signature pasted into ZoHo..."></textarea>
+</div>
+<div class="mb-3">
+    <label class="form-label">ZoHo Signature Setup Notes</label>
+    <textarea asp-for="ZohoSignatureNote" class="form-control" rows="3"
+              placeholder="Instructions for setting up this signature in ZoHo..."></textarea>
+</div>

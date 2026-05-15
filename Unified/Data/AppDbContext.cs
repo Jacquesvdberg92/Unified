@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
 
 namespace Unified.Data;
@@ -11,6 +12,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<AgentTeam> AgentTeams => Set<AgentTeam>();
     public DbSet<AgentBrand> AgentBrands => Set<AgentBrand>();
+    public DbSet<Brand> Brands => Set<Brand>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -31,5 +34,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ab => ab.Agent)
             .WithMany(u => u.Brands)
             .HasForeignKey(ab => ab.AgentId);
+        builder.Entity<AgentBrand>()
+            .HasOne(ab => ab.Brand)
+            .WithMany()
+            .HasForeignKey(ab => ab.BrandId);
     }
 }

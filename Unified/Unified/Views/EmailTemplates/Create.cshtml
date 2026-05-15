@@ -1,0 +1,102 @@
+@model Unified.Models.EmailTemplates.EmailTemplate
+@{
+    ViewData["Title"] = "Create Template";
+    var brands = (List<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Create Email Template</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject Line <span class="text-danger">*</span></label>
+                        <input asp-for="SubjectLine" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Brand</label>
+                        <select asp-for="BrandId" class="form-select">
+                            <option value="">— Master (no brand) —</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                        <div class="form-text">Leave blank to create a master template usable for any brand.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Body HTML</label>
+                        <div class="border rounded">
+                            <div id="tokenToolbar" class="p-2 border-bottom bg-light d-flex flex-wrap gap-1">
+                                <span class="me-2 fw-semibold small align-self-center">Insert token:</span>
+                                @foreach (var token in new[] { "{{BrandName}}", "{{WebsiteUrl}}", "{{CrmUrl}}", "{{CallSystemUrl}}", "{{FooterSignature}}", "{{Region}}" })
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-secondary token-btn"
+                                            data-token="@token">@token</button>
+                                }
+                            </div>
+                            <div id="quillEditor" style="min-height:250px;">@Html.Raw(Model.BodyHtml)</div>
+                        </div>
+                        <input type="hidden" asp-for="BodyHtml" id="bodyHtmlInput" />
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label">Active</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Live Preview</div>
+            <div class="card-body p-0">
+                <iframe id="previewFrame" style="width:100%;min-height:300px;border:0;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="@Url.Content("~/assets/libs/quill/quill.snow.css")" rel="stylesheet" />
+    <script src="@Url.Content("~/assets/libs/quill/quill.min.js")"></script>
+    <script>
+        const quill = new Quill('#quillEditor', { theme: 'snow', modules: { toolbar: '#tokenToolbar' } });
+
+        // Sync hidden input before submit
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
+        });
+
+        // Token insert buttons
+        document.querySelectorAll('.token-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const token = this.dataset.token;
+                const range = quill.getSelection(true);
+                quill.insertText(range.index, token);
+                quill.setSelection(range.index + token.length);
+                updatePreview();
+            });
+        });
+
+        // Live preview
+        function updatePreview() {
+            const frame = document.getElementById('previewFrame');
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            doc.open(); doc.write(quill.root.innerHTML); doc.close();
+        }
+        quill.on('text-change', updatePreview);
+        updatePreview();
+    </script>
+}

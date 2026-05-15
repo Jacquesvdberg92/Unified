@@ -99,42 +99,20 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 > Goal: create, manage and copy branded email templates with per-brand variable substitution.
 
 ### Data Models
-- [ ] **2.1** `Models/EmailTemplates/Brand.cs`  
-  ```
-  Id, Name, LogoUrl, PrimaryColour,
-  WebsiteLinks (JSON list of { Region, Url }),
-  CrmUrl, CallSystemUrl,
-  FooterSignatureHtml,   // set per brand, pasted into ZoHo
-  ZohoSignatureNote      // plain text instructions for ZoHo setup
-  ```
-- [ ] **2.2** `Models/EmailTemplates/EmailTemplate.cs`  
-  ```
-  Id, Title, SubjectLine, BodyHtml,
-  BrandId (FK, nullable = master template),
-  IsActive, CreatedAt, UpdatedAt
-  ```
-  Body HTML supports placeholders: `{{BrandName}}`, `{{WebsiteUrl}}`, `{{CrmUrl}}`, `{{CallSystemUrl}}`, `{{FooterSignature}}`, `{{Region}}`  
-- [ ] **2.3** Add `DbSet<Brand>` and `DbSet<EmailTemplate>` to `AppDbContext`; add migration  
+- [x] **2.1** `Models/EmailTemplates/Brand.cs`  
+- [x] **2.2** `Models/EmailTemplates/EmailTemplate.cs`  
+- [x] **2.3** Add `DbSet<Brand>` and `DbSet<EmailTemplate>` to `AppDbContext`; add migration  
 
 ### Service Layer
-- [ ] **2.4** `Services/EmailTemplateService.cs`  
-  - `GetMasterTemplates()` — templates with no BrandId  
-  - `CloneForBrand(templateId, brandId)` — copies master, substitutes all `{{...}}` tokens with brand values  
-  - `GetBrandLinks(brandId, region?)` — returns correct website URL for optional region  
-  - `RenderPreview(templateId)` — returns fully resolved HTML string  
+- [x] **2.4** `Services/EmailTemplateService.cs`  
 
 ### Controllers & Views
-- [ ] **2.5** `Controllers/EmailTemplatesController.cs` — CRUD, restricted to `Admin` + `TeamLeader`  
-  Actions: `Index`, `Create`, `Edit`, `CloneForBrand`, `Preview`, `Delete`  
-- [ ] **2.6** Views:  
-  - `Index` — searchable/filterable table (DataTables) of templates, grouped by brand  
-  - `Create/Edit` — rich text editor (Quill) for body, token helper toolbar showing available `{{tokens}}`  
-  - `Preview` — rendered iframe of resolved HTML with brand selector dropdown  
-  - `BrandManager` — CRUD for brands and their links/signature  
-- [ ] **2.7** "Copy HTML" button on Preview page — copies resolved HTML to clipboard (for pasting into ZoHo)  
-- [ ] **2.8** ZoHo Signature section on Brand page — shows formatted signature HTML + copy button + setup notes  
+- [x] **2.5** `Controllers/EmailTemplatesController.cs` — CRUD, restricted to `Admin` + `TeamLeader`  
+- [x] **2.6** Views: Index, Create/Edit, Preview, BrandManager  
+- [x] **2.7** "Copy HTML" button on Preview page  
+- [x] **2.8** ZoHo Signature section on Brand page  
 
-**Phase 2 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 2 Status:** `[x] IN PROGRESS` → `[x] DONE`
 
 ---
 

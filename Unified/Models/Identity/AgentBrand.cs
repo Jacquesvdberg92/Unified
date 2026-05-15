@@ -1,3 +1,5 @@
+using Unified.Models.EmailTemplates;
+
 namespace Unified.Models.Identity;
 
 public class AgentBrand
@@ -6,4 +8,5 @@ public class AgentBrand
     public AppUser Agent { get; set; } = null!;
 
     public int BrandId { get; set; }
+    public Brand Brand { get; set; } = null!;
 }

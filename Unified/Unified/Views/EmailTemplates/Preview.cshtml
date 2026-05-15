@@ -1,0 +1,74 @@
+@model Unified.Models.EmailTemplates.EmailTemplate
+@{
+    ViewData["Title"] = "Preview — " + Model.Title;
+    var brands = (List<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
+    var renderedHtml = (string)ViewBag.RenderedHtml;
+    var selectedBrandId = (int?)ViewBag.SelectedBrandId;
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Preview — @Model.Title</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">
+            <i class="ri-edit-line me-1"></i> Edit
+        </a>
+        <button id="copyHtmlBtn" class="btn btn-primary btn-sm">
+            <i class="ri-clipboard-line me-1"></i> Copy HTML
+        </button>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="d-flex align-items-center gap-3">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <label class="mb-0 fw-semibold">Preview as brand:</label>
+            <select name="brandId" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                <option value="">— No brand (raw tokens) —</option>
+                @foreach (var b in brands)
+                {
+                    <option value="@b.Id" @(selectedBrandId == b.Id ? "selected" : "")>@b.Name</option>
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <strong>Subject:</strong> @Model.SubjectLine
+            </div>
+            <div class="card-body p-0">
+                <iframe id="previewFrame" style="width:100%;min-height:500px;border:0;" srcdoc=""></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const renderedHtml = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedHtml));
+
+        // Populate iframe
+        (function () {
+            const frame = document.getElementById('previewFrame');
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            doc.open(); doc.write(renderedHtml); doc.close();
+        })();
+
+        // Copy HTML to clipboard (Step 2.7)
+        document.getElementById('copyHtmlBtn').addEventListener('click', function () {
+            navigator.clipboard.writeText(renderedHtml).then(function () {
+                const btn = document.getElementById('copyHtmlBtn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.replace('btn-primary', 'btn-success');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="ri-clipboard-line me-1"></i> Copy HTML';
+                    btn.classList.replace('btn-success', 'btn-primary');
+                }, 2500);
+            });
+        });
+    </script>
+}

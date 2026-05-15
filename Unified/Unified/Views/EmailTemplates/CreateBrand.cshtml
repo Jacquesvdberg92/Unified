@@ -1,0 +1,18 @@
+@model Unified.Models.EmailTemplates.Brand
+@{
+    ViewData["Title"] = "Create Brand";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Create Brand</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="CreateBrand" method="post">
+            @await Html.PartialAsync("_BrandForm", Model)
+            <button type="submit" class="btn btn-primary mt-3">Create</button>
+            <a asp-action="BrandManager" class="btn btn-secondary mt-3">Cancel</a>
+        </form>
+    </div>
+</div>
