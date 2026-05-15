@@ -1,0 +1,83 @@
+@model Unified.Models.ProcessTemplates.ProcessTemplate
+
+@{
+    bool isSelected(int id) => ((List<int>)ViewBag.SelectedBrandIds).Contains(id);
+}
+
+<div class="mb-3">
+    <label class="form-label">Title <span class="text-danger">*</span></label>
+    <input asp-for="Title" class="form-control" required />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Category <span class="text-danger">*</span></label>
+        <select asp-for="CategoryId" class="form-select" required>
+            <option value="">— select —</option>
+            @foreach (var cat in (IEnumerable<Unified.Models.ProcessTemplates.TemplateCategory>)ViewBag.Categories)
+            {
+                <option value="@cat.Id">@cat.Name</option>
+            }
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Affected Brands</label>
+        <select name="brandIds" class="form-select" multiple>
+            @foreach (var brand in (IEnumerable<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands)
+            {
+                <option value="@brand.Id" @(isSelected(brand.Id) ? "selected" : "")>@brand.Name</option>
+            }
+        </select>
+        <div class="form-text">Leave empty = global (all brands).</div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Description</label>
+    <input asp-for="Description" class="form-control" placeholder="One-liner shown on the library card" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Body Text <span class="text-danger">*</span></label>
+    <div class="mb-1">
+        <button type="button" class="btn btn-sm btn-outline-warning" onclick="insertBlank()">
+            Insert [BLANK]
+        </button>
+    </div>
+    <textarea asp-for="BodyText" id="bodyText" class="form-control font-monospace" rows="14" required></textarea>
+    <span asp-validation-for="BodyText" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Guidance Notes <small class="text-muted">(Quill rich text)</small></label>
+    <div id="guidanceEditor" style="min-height:120px;"></div>
+    <input type="hidden" asp-for="GuidanceNotes" id="GuidanceNotes" />
+</div>
+
+<div class="form-check mb-3">
+    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+    <label asp-for="IsActive" class="form-check-label">Active</label>
+</div>
+
+@section Scripts {
+<script src="~/assets/libs/quill/dist/quill.min.js"></script>
+<script>
+    function insertBlank() {
+        const ta = document.getElementById('bodyText');
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        ta.value = ta.value.slice(0, start) + '[BLANK]' + ta.value.slice(end);
+        ta.selectionStart = ta.selectionEnd = start + 7;
+        ta.focus();
+    }
+
+    const quill = new Quill('#guidanceEditor', { theme: 'snow' });
+    const hiddenNotes = document.getElementById('GuidanceNotes');
+    if (hiddenNotes.value) quill.root.innerHTML = hiddenNotes.value;
+
+    document.querySelector('form').addEventListener('submit', () => {
+        hiddenNotes.value = quill.root.innerHTML;
+    });
+</script>
+}

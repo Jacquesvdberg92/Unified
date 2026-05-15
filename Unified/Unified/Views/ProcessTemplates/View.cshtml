@@ -1,0 +1,117 @@
+@model Unified.Models.ProcessTemplates.ProcessTemplate
+
+@{
+    ViewData["Title"] = Model.Title;
+    var brands = (IEnumerable<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Template Library</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        {{!-- Template body --}}
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">@Model.Title</h5>
+                        <span class="badge bg-label-primary">@Model.Category?.Name</span>
+                        @if (!Model.AffectedBrands.Any())
+                        {
+                            <span class="badge bg-label-secondary ms-1">All Brands</span>
+                        }
+                        else
+                        {
+                            @foreach (var pb in Model.AffectedBrands)
+                            {
+                                <span class="badge bg-label-info ms-1">@pb.Brand?.Name</span>
+                            }
+                        }
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button id="btnCopy" class="btn btn-primary btn-sm">
+                            <i class="bx bx-copy me-1"></i>Copy to Clipboard
+                        </button>
+                        <a id="btnDownload" href="#" class="btn btn-outline-secondary btn-sm">
+                            <i class="bx bx-download me-1"></i>Download .txt
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <pre id="templateBody" class="template-body p-3 rounded bg-light" style="white-space:pre-wrap;font-family:inherit;"></pre>
+                </div>
+            </div>
+        </div>
+
+        {{!-- Guidance notes --}}
+        <div class="col-lg-4">
+            @if (!string.IsNullOrWhiteSpace(Model.GuidanceNotes))
+            {
+                <div class="card" id="guidanceCard">
+                    <div class="card-header d-flex justify-content-between align-items-center"
+                         data-bs-toggle="collapse" data-bs-target="#guidanceBody" style="cursor:pointer;">
+                        <h6 class="mb-0"><i class="bx bx-info-circle me-1"></i>Guidance Notes</h6>
+                        <i class="bx bx-chevron-up" id="guidanceChevron"></i>
+                    </div>
+                    <div class="collapse show" id="guidanceBody">
+                        <div class="card-body">
+                            <div class="ql-snow"><div class="ql-editor p-0">@Html.Raw(Model.GuidanceNotes)</div></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="~/assets/libs/quill/dist/quill.snow.css" />
+<style>
+    .template-blank {
+        background-color: #fff3cd;
+        border-radius: 3px;
+        padding: 0 3px;
+        font-weight: 600;
+        color: #856404;
+    }
+</style>
+<script>
+    const raw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BodyText));
+
+    function highlightBlanks(text) {
+        return text.replace(/\[BLANK\]/g, '<span class="template-blank">[BLANK]</span>');
+    }
+
+    document.getElementById('templateBody').innerHTML = highlightBlanks(raw);
+
+    // Copy to clipboard
+    document.getElementById('btnCopy').addEventListener('click', async () => {
+        await navigator.clipboard.writeText(raw);
+        const btn = document.getElementById('btnCopy');
+        btn.innerHTML = '<i class="bx bx-check me-1"></i>Copied!';
+        setTimeout(() => btn.innerHTML = '<i class="bx bx-copy me-1"></i>Copy to Clipboard', 2000);
+    });
+
+    // Download .txt
+    const dl = document.getElementById('btnDownload');
+    const blob = new Blob([raw], { type: 'text/plain' });
+    dl.href = URL.createObjectURL(blob);
+    dl.download = '@(Model.Title.Replace(" ", "_")).txt';
+
+    // Guidance chevron toggle
+    const guidanceBody = document.getElementById('guidanceBody');
+    if (guidanceBody) {
+        guidanceBody.addEventListener('show.bs.collapse', () => {
+            document.getElementById('guidanceChevron').className = 'bx bx-chevron-up';
+        });
+        guidanceBody.addEventListener('hide.bs.collapse', () => {
+            document.getElementById('guidanceChevron').className = 'bx bx-chevron-down';
+        });
+    }
+</script>
+}

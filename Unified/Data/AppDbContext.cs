@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
+using Unified.Models.ProcessTemplates;
 
 namespace Unified.Data;
 
@@ -14,6 +15,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<AgentBrand> AgentBrands => Set<AgentBrand>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
+    public DbSet<TemplateCategory> TemplateCategories => Set<TemplateCategory>();
+    public DbSet<ProcessTemplate> ProcessTemplates => Set<ProcessTemplate>();
+    public DbSet<ProcessTemplateBrand> ProcessTemplateBrands => Set<ProcessTemplateBrand>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,5 +42,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ab => ab.Brand)
             .WithMany()
             .HasForeignKey(ab => ab.BrandId);
+
+        builder.Entity<ProcessTemplateBrand>()
+            .HasKey(ptb => new { ptb.ProcessTemplateId, ptb.BrandId });
+        builder.Entity<ProcessTemplateBrand>()
+            .HasOne(ptb => ptb.ProcessTemplate)
+            .WithMany(pt => pt.AffectedBrands)
+            .HasForeignKey(ptb => ptb.ProcessTemplateId);
+        builder.Entity<ProcessTemplateBrand>()
+            .HasOne(ptb => ptb.Brand)
+            .WithMany()
+            .HasForeignKey(ptb => ptb.BrandId);
     }
 }

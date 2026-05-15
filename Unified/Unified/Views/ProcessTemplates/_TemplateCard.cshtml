@@ -1,0 +1,43 @@
+@using Unified.Models.Identity
+@model Unified.Models.ProcessTemplates.ProcessTemplate
+
+<div class="card h-100 shadow-sm">
+    <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-start mb-2 gap-2">
+            @if (Model.Category?.IconCssClass is not null)
+            {
+                <i class="@Model.Category.IconCssClass fs-4 text-primary mt-1"></i>
+            }
+            <div class="flex-grow-1">
+                <h6 class="card-title mb-1">@Model.Title</h6>
+                <span class="badge bg-label-primary">@Model.Category?.Name</span>
+                @if (!Model.AffectedBrands.Any())
+                {
+                    <span class="badge bg-label-secondary ms-1">All Brands</span>
+                }
+                else
+                {
+                    @foreach (var pb in Model.AffectedBrands)
+                    {
+                        <span class="badge bg-label-info ms-1">@pb.Brand?.Name</span>
+                    }
+                }
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="card-text text-muted small flex-grow-1">@Model.Description</p>
+        }
+        <div class="d-flex gap-2 mt-2">
+            <a asp-action="View" asp-route-id="@Model.Id" class="btn btn-primary btn-sm flex-grow-1">
+                <i class="bx bx-copy-alt me-1"></i>View &amp; Copy
+            </a>
+            @if (User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.TeamLeader))
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">
+                    <i class="bx bx-edit-alt"></i>
+                </a>
+            }
+        </div>
+    </div>
+</div>

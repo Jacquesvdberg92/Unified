@@ -26,6 +26,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
+builder.Services.AddScoped<Unified.Services.ProcessTemplateService>();
 
 var app = builder.Build();
 

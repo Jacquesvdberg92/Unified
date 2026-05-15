@@ -127,63 +127,21 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 - Team leaders / brand managers create and maintain the library; agents are read-only.
 
 ### Data Models
-- [ ] **3.1** `Models/ProcessTemplates/TemplateCategory.cs`
-  ```
-  Id, Name (e.g. "Compliance", "Client Relations", "Internal"),
-  IconCssClass,
-  SortOrder
-  ```
-- [ ] **3.2** `Models/ProcessTemplates/ProcessTemplate.cs`
-  ```
-  Id, Title,
-  CategoryId (FK TemplateCategory),
-  Description,         // one-liner shown on the card in the library
-  BodyText,            // the full template body; [BLANK] marks fill-in spots
-  GuidanceNotes,       // optional markdown — tips for filling it in correctly
-  IsActive,
-  AffectedBrands (many-to-many → Brand, empty = global),
-  CreatedByUserId (FK AppUser), CreatedAt, UpdatedAt
-  ```
-  Seeded built-in templates:
-  - `Client Complaint` (Client Relations)
-  - `Document Review Request` (Compliance)
-  - `Escalation Notice` (Client Relations)
-  > ⚠️ **Do not seed** `Vacation Request` or `Schedule Change Request` — those are approval workflows handled in the Schedule module.
-- [ ] **3.3** `Models/ProcessTemplates/ProcessTemplateBrand.cs` — join table
-- [ ] **3.4** Add `DbSet<TemplateCategory>`, `DbSet<ProcessTemplate>` to `AppDbContext`; add migration
-- [ ] **3.5** Seed default categories (`Compliance`, `Client Relations`, `Internal`) and the three built-in templates listed above
+- [x] **3.1** `Models/ProcessTemplates/TemplateCategory.cs`
+- [x] **3.2** `Models/ProcessTemplates/ProcessTemplate.cs`
+- [x] **3.3** `Models/ProcessTemplates/ProcessTemplateBrand.cs` — join table
+- [x] **3.4** Add `DbSet<TemplateCategory>`, `DbSet<ProcessTemplate>` to `AppDbContext`; add migration
+- [x] **3.5** Seed default categories (`Compliance`, `Client Relations`, `Internal`) and the three built-in templates listed above
 
 ### Service Layer
-- [ ] **3.6** `Services/ProcessTemplateService.cs`
-  - `GetLibrary(brandId?, categoryId?, searchText?)` — returns active templates visible to the requesting user's brands
-  - `GetTemplate(id)` — returns single template including guidance notes
-  - `CreateTemplate(dto)` — TL / BrandManager only
-  - `UpdateTemplate(dto)` — TL / BrandManager only; saves `UpdatedAt`
-  - `DeactivateTemplate(id)` — soft-delete (sets `IsActive = false`)
-  - `GetCategories()` — ordered list for filter sidebar
+- [x] **3.6** `Services/ProcessTemplateService.cs`
 
 ### Controllers & Views
-- [ ] **3.7** `Controllers/ProcessTemplatesController.cs`
-  - `[Authorize(Roles="BrandManager,TeamLeader")]` for `Create`, `Edit`, `Deactivate`
-  - All roles can `Index`, `View`
-- [ ] **3.8** Views:
-  - `Index` — template library; card grid with filter sidebar (category + brand + search)
-    - Each card: title, category badge, brand badge(s) or "All Brands", short description, **"View & Copy"** button
-  - `View` — full template page:
-    - Formatted body with `[BLANK]` placeholders highlighted in a distinct colour (CSS span)
-    - Guidance notes panel (collapsible)
-    - **"Copy to Clipboard"** button — copies raw body text
-    - **"Download .txt"** button — browser download of raw body text
-    - Brand selector dropdown if template has multiple brand variants with different links/names
-  - `Create` / `Edit` — restricted to TL / BrandManager:
-    - Title, category dropdown, description, brand multi-select (leave empty = global)
-    - Body textarea with a helper toolbar: **"Insert [BLANK]"** button inserts the placeholder token at cursor position
-    - Guidance notes (Quill rich text)
-    - Preview pane (live, rendered beside the editor)
-  - `_TemplateCard.cshtml` partial — reusable card for library grid
-- [ ] **3.9** `[BLANK]` highlighting: a lightweight JS function replaces `[BLANK]` tokens with `<span class="template-blank">[BLANK]</span>` on the View page; styled in yellow/amber so they stand out clearly
+- [x] **3.7** `Controllers/ProcessTemplatesController.cs`
+- [x] **3.8** Views: `Index`, `View`, `Create`, `Edit`, `_TemplateCard.cshtml`, `_TemplateForm.cshtml`
+- [x] **3.9** `[BLANK]` highlighting — JS replaces tokens with `<span class="template-blank">` on View page
 
-**Phase 3 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 3 Status:** `[x] IN PROGRESS` → `[x] DONE`
 
 ---
 
