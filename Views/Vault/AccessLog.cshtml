@@ -1,0 +1,67 @@
+@using Unified.Models.Vault
+@model List<VaultAccessLog>
+
+@{
+    ViewData["Title"] = "Vault Access Log";
+    var users   = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Users;
+    var userId  = (string?)ViewBag.UserId;
+    var entryId = (int?)ViewBag.EntryId;
+}
+
+<div class="container-fluid px-4 py-3">
+    <h4 class="fw-bold mb-3">🕵 Vault Access Log</h4>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-auto">
+            <select name="userId" asp-items="users" class="form-select form-select-sm">
+                <option value="">— All users —</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="number" name="entryId" value="@entryId" class="form-control form-control-sm"
+                   placeholder="Entry ID" style="width:110px" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Filter</button>
+            @if (userId is not null || entryId.HasValue)
+            {
+                <a asp-action="AccessLog" class="btn btn-link btn-sm">Clear</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No log entries found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Entry</th>
+                        <th>Action</th>
+                        <th>When</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model)
+                    {
+                        <tr>
+                            <td>@(log.User?.DisplayName ?? log.User?.UserName ?? log.UserId)</td>
+                            <td>@(log.Entry?.Label ?? log.EntryId.ToString())</td>
+                            <td>
+                                <span class="badge @(log.Action == "Copy" ? "bg-warning text-dark" : "bg-secondary")">
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td>@log.AccessedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

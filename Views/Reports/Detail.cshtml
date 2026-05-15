@@ -1,0 +1,171 @@
+@using Unified.Models.Reports
+@using Unified.Services
+@model TeamReport
+
+@{
+    ViewData["Title"] = $"Report — {Model.Team?.Name} · {Model.PeriodStart:dd MMM yyyy}";
+    var highlights = (List<PerformanceHighlightDto>)ViewBag.Highlights;
+    var ftdLabels  = System.Text.Json.JsonSerializer.Serialize(
+        Model.FTDLanguageStats.Select(f => f.Language).ToList());
+    var ftdData    = System.Text.Json.JsonSerializer.Serialize(
+        Model.FTDLanguageStats.Select(f => f.FTDCount).ToList());
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h4 class="fw-bold mb-0">
+                📋 @(Model.Team?.Name) — @(Model.PeriodType == PeriodType.Monthly
+                    ? Model.PeriodStart.ToString("MMMM yyyy")
+                    : $"Week of {Model.PeriodStart:dd MMM yyyy}")
+            </h4>
+            <small class="text-muted">
+                Submitted @Model.SubmittedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                by @(Model.ReportedByLeader?.DisplayName ?? Model.ReportedByLeader?.UserName)
+            </small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">🖨 Print</button>
+            <button class="btn btn-outline-success btn-sm" id="csvBtn">⬇ CSV</button>
+            @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
+            {
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                      onsubmit="return confirm('Delete this report?')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                </form>
+            }
+            <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">← Back</a>
+        </div>
+    </div>
+
+    @* KPI row *@
+    <div class="row g-3 mb-4">
+        @foreach (var (label, val, cls) in new[] {
+            ("Chats",   Model.TotalChats.ToString(),   "text-primary"),
+            ("Tickets", Model.TotalTickets.ToString(), "text-info"),
+            ("Calls",   Model.TotalCalls.ToString(),   "text-warning"),
+            ("FTDs",    Model.TotalFTD.ToString(),     "text-success") })
+        {
+            <div class="col-6 col-md-3">
+                <div class="card shadow-sm text-center border-0">
+                    <div class="card-body">
+                        <div class="fs-2 fw-bold @cls">@val</div>
+                        <div class="text-muted small">@label</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* Agent table *@
+    <h5 class="fw-semibold mb-2">Agent Stats</h5>
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle" id="agentTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Agent</th>
+                    <th>Language</th>
+                    <th class="text-center">Chats</th>
+                    <th class="text-center">Tickets</th>
+                    <th class="text-center">Calls</th>
+                    <th class="text-center">FTD</th>
+                    <th class="text-center">Avg Review</th>
+                    <th>Badges</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in highlights)
+                {
+                    <tr>
+                        <td>@(h.Agent?.DisplayName ?? h.Agent?.UserName)</td>
+                        <td>@(h.Agent?.Language ?? "—")</td>
+                        <td class="text-center">@h.Chats</td>
+                        <td class="text-center">@h.Tickets</td>
+                        <td class="text-center">@h.Calls</td>
+                        <td class="text-center fw-bold @(h.FTD > 0 ? "text-success" : "")">@h.FTD</td>
+                        <td class="text-center">
+                            @if (h.AvgReviewScore.HasValue)
+                            {
+                                <span class="badge @(h.AvgReviewScore >= 8 ? "bg-success" : h.AvgReviewScore >= 5 ? "bg-warning text-dark" : "bg-danger")">
+                                    @h.AvgReviewScore.Value.ToString("F1")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (h.IsTopChatPicker)   { <span class="badge bg-primary me-1" title="Top Chat Picker">💬 Chat</span> }
+                            @if (h.IsTopTicketSolver) { <span class="badge bg-info me-1" title="Top Ticket Solver">🎫 Tickets</span> }
+                            @if (h.IsTopCallMaker)    { <span class="badge bg-warning text-dark me-1" title="Top Call Maker">📞 Calls</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* FTD by language chart *@
+    @if (Model.FTDLanguageStats.Any())
+    {
+        <h5 class="fw-semibold mb-2">FTD by Language</h5>
+        <div class="row mb-4">
+            <div class="col-md-7">
+                <div id="ftdChart" style="min-height:250px"></div>
+            </div>
+            <div class="col-md-5">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>Language</th><th class="text-end">FTDs</th></tr></thead>
+                        <tbody>
+                            @foreach (var f in Model.FTDLanguageStats.OrderByDescending(x => x.FTDCount))
+                            {
+                                <tr>
+                                    <td>@f.Language</td>
+                                    <td class="text-end fw-bold">@f.FTDCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    @* FTD bar chart *@
+    @if (Model.FTDLanguageStats.Any())
+    {
+        <text>
+    new ApexCharts(document.getElementById('ftdChart'), {
+        chart:  { type: 'bar', height: 250, toolbar: { show: false } },
+        series: [{ name: 'FTDs', data: @ftdData }],
+        xaxis:  { categories: @ftdLabels },
+        colors: ['#198754'],
+        plotOptions: { bar: { borderRadius: 4, distributed: true } },
+        legend: { show: false }
+    }).render();
+        </text>
+    }
+
+    @* CSV export *@
+    document.getElementById('csvBtn')?.addEventListener('click', function () {
+        const rows = [['Agent', 'Language', 'Chats', 'Tickets', 'Calls', 'FTD', 'Avg Review']];
+        document.querySelectorAll('#agentTable tbody tr').forEach(tr => {
+            rows.push([...tr.querySelectorAll('td')].slice(0, 7).map(td => td.innerText.trim()));
+        });
+        const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a    = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(blob),
+            download: 'report.csv'
+        });
+        a.click();
+    });
+</script>
+}

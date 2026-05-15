@@ -1,0 +1,116 @@
+@using Unified.Models.Reports
+@model TeamReport
+
+@{
+    ViewData["Title"] = "Submit Report";
+    var teamList    = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Teams;
+    var agents      = (List<(string Id, string Name)>)ViewBag.Agents;
+    var periodTypes = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.PeriodTypes;
+}
+
+<div class="container-fluid px-4 py-3" style="max-width:1000px">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">📝 Submit Team Report</h4>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Team</label>
+                    <select name="TeamId" asp-items="teamList" class="form-select" required></select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Period</label>
+                    <select name="PeriodType" asp-items="periodTypes" class="form-select"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Period Start</label>
+                    <input type="date" name="PeriodStart"
+                           value="@Model.PeriodStart.ToString("yyyy-MM-dd")"
+                           class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Period End</label>
+                    <input type="date" name="PeriodEnd"
+                           value="@Model.PeriodEnd.ToString("yyyy-MM-dd")"
+                           class="form-control" required />
+                </div>
+            </div>
+        </div>
+
+        @* Agent stat rows *@
+        <h5 class="fw-semibold mb-2">Agent Stats</h5>
+        <div class="table-responsive mb-2">
+            <table class="table table-sm align-middle" id="agentTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width:180px">Agent</th>
+                        <th>Chats</th>
+                        <th>Tickets</th>
+                        <th>Calls</th>
+                        <th>FTDs</th>
+                        <th>Language</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="agentRows"></tbody>
+            </table>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="addRow">+ Add Agent</button>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@e.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary">Submit Report</button>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+    const agentOptions = @Html.Raw(
+        System.Text.Json.JsonSerializer.Serialize(
+            agents.Select(a => new { value = a.Id, text = a.Name })
+        ));
+
+    document.getElementById('addRow').addEventListener('click', addRow);
+
+    function addRow() {
+        const tbody = document.getElementById('agentRows');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <select name="agentId" class="form-select form-select-sm" required>
+                    <option value="">— Select —</option>
+                    ${agentOptions.map(a => `<option value="${a.value}">${a.text}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="number" name="chats"   min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
+            <td><input type="number" name="tickets" min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
+            <td><input type="number" name="calls"   min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
+            <td><input type="number" name="ftd"     min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
+            <td><input type="text"   name="language" placeholder="EN" class="form-control form-control-sm" style="width:75px" /></td>
+            <td><button type="button" class="btn btn-outline-danger btn-sm remove-row">✕</button></td>`;
+        tr.querySelector('.remove-row').addEventListener('click', () => tr.remove());
+        tbody.appendChild(tr);
+    }
+
+    @* Auto-add one row on load *@
+    addRow();
+</script>
+}

@@ -1,0 +1,129 @@
+@using Unified.Models.Reports
+@using Unified.Services
+@model ReportSummaryDto
+
+@{
+    ViewData["Title"] = "Reports Dashboard";
+    var periodType  = (PeriodType)ViewBag.PeriodType;
+    var periodStart = (DateTime)ViewBag.PeriodStart;
+    var periodTypes = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.PeriodTypes;
+    var dates       = (List<DateTime>)ViewBag.Dates;
+
+    string PeriodLabel(DateTime d, PeriodType pt) =>
+        pt == PeriodType.Monthly
+            ? d.ToString("MMMM yyyy")
+            : $"Week of {d:dd MMM yyyy}";
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">📊 Reports Dashboard</h4>
+        @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
+        {
+            <a asp-action="Submit" class="btn btn-primary btn-sm">+ Submit Report</a>
+        }
+    </div>
+
+    @* Period filter *@
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-auto">
+            <select name="periodType" asp-items="periodTypes" class="form-select form-select-sm"
+                    onchange="this.form.submit()"></select>
+        </div>
+        <div class="col-auto">
+            <select name="periodStart" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var d in dates)
+                {
+                    <option value="@d.ToString("yyyy-MM-dd")"
+                            selected="@(d == periodStart ? "selected" : null)">
+                        @PeriodLabel(d, periodType)
+                    </option>
+                }
+            </select>
+        </div>
+    </form>
+
+    @* KPI Cards *@
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm text-center border-0">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-primary">@Model.TotalChats</div>
+                    <div class="text-muted small">Total Chats</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm text-center border-0">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-info">@Model.TotalTickets</div>
+                    <div class="text-muted small">Total Tickets</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm text-center border-0">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-warning">@Model.TotalCalls</div>
+                    <div class="text-muted small">Total Calls</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm text-center border-0">
+                <div class="card-body">
+                    <div class="fs-2 fw-bold text-success">@Model.TotalFTD</div>
+                    <div class="text-muted small">Total FTDs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Per-team cards *@
+    @if (!Model.TeamReports.Any())
+    {
+        <div class="alert alert-info">No reports submitted for this period yet.</div>
+    }
+    else
+    {
+        <h5 class="fw-semibold mb-3">Team Breakdown</h5>
+        <div class="row g-3">
+            @foreach (var r in Model.TeamReports)
+            {
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">@(r.Team?.Name ?? "Team")</span>
+                            <a asp-action="Detail" asp-route-id="@r.Id"
+                               class="btn btn-outline-primary btn-sm">Detail →</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center g-2">
+                                <div class="col-3">
+                                    <div class="fw-bold">@r.TotalChats</div>
+                                    <div class="text-muted" style="font-size:.7rem">Chats</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="fw-bold">@r.TotalTickets</div>
+                                    <div class="text-muted" style="font-size:.7rem">Tickets</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="fw-bold">@r.TotalCalls</div>
+                                    <div class="text-muted" style="font-size:.7rem">Calls</div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="fw-bold text-success">@r.TotalFTD</div>
+                                    <div class="text-muted" style="font-size:.7rem">FTD</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted small">
+                            Submitted @r.SubmittedAt.ToLocalTime().ToString("dd MMM HH:mm")
+                            by @(r.ReportedByLeader?.DisplayName ?? r.ReportedByLeader?.UserName)
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

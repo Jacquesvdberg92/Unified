@@ -1,0 +1,65 @@
+@using Unified.Models.Performance
+@model PerformanceReview
+
+@{
+    ViewData["Title"] = "Review Detail";
+}
+
+<div class="container-fluid px-4 py-3" style="max-width:860px">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">📋 Review — @Model.PeriodLabel</h4>
+        <a asp-action="TeamReviews" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Agent</dt>
+                <dd class="col-sm-9">@(Model.Agent?.DisplayName ?? Model.Agent?.UserName)</dd>
+
+                <dt class="col-sm-3">Reviewed by</dt>
+                <dd class="col-sm-9">@(Model.ReviewedByLeader?.DisplayName ?? Model.ReviewedByLeader?.UserName)</dd>
+
+                <dt class="col-sm-3">Date</dt>
+                <dd class="col-sm-9">@Model.ReviewDate.ToString("dd MMM yyyy")</dd>
+
+                @if (!string.IsNullOrWhiteSpace(Model.OverallNotes))
+                {
+                    <dt class="col-sm-3">Overall notes</dt>
+                    <dd class="col-sm-9">@Model.OverallNotes</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    @foreach (var item in Model.Items)
+    {
+        <div class="card shadow-sm mb-3 @(item.ActionRequired ? "border-warning" : "")">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <span class="badge bg-secondary me-1">@item.Category</span>
+                    <span class="fw-semibold">@item.ReferenceId</span>
+                </span>
+                <span class="badge @(item.Rating >= 8 ? "bg-success" : item.Rating >= 5 ? "bg-warning text-dark" : "bg-danger") fs-6">
+                    @item.Rating / 10
+                </span>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(item.Positive))
+                {
+                    <p class="mb-1 text-success"><strong>✔ Positive:</strong> @item.Positive</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(item.Negative))
+                {
+                    <p class="mb-1 text-danger"><strong>✘ Improvement:</strong> @item.Negative</p>
+                }
+                @if (item.ActionRequired)
+                {
+                    <div class="alert alert-warning py-1 mb-0 mt-2">
+                        <strong>⚠ Action Required:</strong> @item.ActionNote
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

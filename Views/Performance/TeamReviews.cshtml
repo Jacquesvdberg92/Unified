@@ -1,0 +1,80 @@
+@using Unified.Models.Identity
+@using Unified.Models.Performance
+@model List<PerformanceReview>
+
+@{
+    ViewData["Title"] = "Team Reviews";
+    var agents  = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Agents;
+    var agentId = (string?)ViewBag.AgentId;
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">📋 Team Performance Reviews</h4>
+        <a asp-action="Create" class="btn btn-primary btn-sm">+ New Review</a>
+    </div>
+
+    @* Filter by agent *@
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-auto">
+            <select name="agentId" asp-items="agents" class="form-select form-select-sm">
+                <option value="">— All agents —</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Filter</button>
+            @if (!string.IsNullOrEmpty(agentId))
+            {
+                <a asp-action="TeamReviews" class="btn btn-link btn-sm">Clear</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No reviews found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Agent</th>
+                        <th>Period</th>
+                        <th>Date</th>
+                        <th class="text-center">Items</th>
+                        <th class="text-center">Avg Rating</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@(r.Agent?.DisplayName ?? r.Agent?.UserName ?? r.AgentId)</td>
+                            <td>@r.PeriodLabel</td>
+                            <td>@r.ReviewDate.ToString("dd MMM yyyy")</td>
+                            <td class="text-center">@r.Items.Count</td>
+                            <td class="text-center">
+                                @(r.Items.Any()
+                                    ? r.Items.Average(i => i.Rating).ToString("F1")
+                                    : "–") / 10
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Detail" asp-route-id="@r.Id"
+                                   class="btn btn-outline-primary btn-sm me-1">View</a>
+                                <form asp-action="Delete" asp-route-id="@r.Id" method="post"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this review?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

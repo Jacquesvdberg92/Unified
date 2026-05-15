@@ -1,0 +1,131 @@
+@using Unified.Models.Vault
+@model List<VaultEntry>
+
+@{
+    ViewData["Title"] = "My Vault";
+    var cats       = (List<VaultCategory>)ViewBag.Categories;
+    var categoryId = (int?)ViewBag.CategoryId;
+    var grouped    = Model.GroupBy(e => e.Category?.Name ?? "Other");
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">🔑 My Vault</h4>
+        <a asp-action="AddEntry" class="btn btn-primary btn-sm">+ Add Entry</a>
+    </div>
+
+    @* Category filter pills *@
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <a asp-action="MyVault"
+           class="btn btn-sm @(categoryId is null ? "btn-primary" : "btn-outline-secondary")">
+            All
+        </a>
+        @foreach (var c in cats)
+        {
+            <a asp-action="MyVault" asp-route-categoryId="@c.Id"
+               class="btn btn-sm @(categoryId == c.Id ? "btn-primary" : "btn-outline-secondary")">
+                <i class="@c.IconCssClass me-1"></i>@c.Name
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No credentials stored yet. Click <strong>+ Add Entry</strong> to add your first one.</div>
+    }
+
+    @foreach (var group in grouped)
+    {
+        <h6 class="fw-semibold text-muted mt-3 mb-2 text-uppercase" style="font-size:.75rem">@group.Key</h6>
+        <div class="row g-3 mb-2">
+            @foreach (var entry in group)
+            {
+                <div class="col-12 col-md-6 col-xl-4">
+                    @await Html.PartialAsync("_VaultCard", entry)
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@* Hidden form for CSRF token on AJAX reveal *@
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+<script>
+    const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
+
+    document.querySelectorAll('.btn-reveal').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const entryId   = this.dataset.entryId;
+            const fieldId   = this.dataset.fieldId;
+            const actionVal = this.dataset.action ?? 'View';
+            const field     = document.getElementById(fieldId);
+
+            if (field.type === 'text') {
+                field.type = 'password';
+                this.textContent = '👁';
+                return;
+            }
+
+            const resp = await fetch('/Vault/Reveal', {
+                method:  'POST',
+                headers: {
+                    'Content-Type':              'application/x-www-form-urlencoded',
+                    'RequestVerificationToken':  token
+                },
+                body: `id=${entryId}&action=${actionVal}`
+            });
+
+            if (resp.ok) {
+                const data = await resp.json();
+                field.value = data.password;
+                field.type  = 'text';
+                this.textContent = '🙈';
+
+                @* Auto-mask after 30 s *@
+                setTimeout(() => {
+                    field.type = 'password';
+                    field.value = '';
+                    this.textContent = '👁';
+                }, 30000);
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const entryId   = this.dataset.entryId;
+            const copyType  = this.dataset.type;      // 'username' or 'password'
+            const fieldId   = this.dataset.fieldId;
+            const field     = document.getElementById(fieldId);
+
+            let text = '';
+            if (copyType === 'username') {
+                text = field.value;
+            } else {
+                @* Decrypt first *@
+                const resp = await fetch('/Vault/Reveal', {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type':             'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `id=${entryId}&action=Copy`
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                text = data.password;
+            }
+
+            await navigator.clipboard.writeText(text);
+            const orig = this.innerHTML;
+            this.innerHTML = '✔ Copied';
+            setTimeout(() => {
+                this.innerHTML = orig;
+                navigator.clipboard.writeText('');   @* clear clipboard after 30 s *@
+            }, 30000);
+        });
+    });
+</script>
+}

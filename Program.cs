@@ -29,6 +29,10 @@ builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
 builder.Services.AddScoped<Unified.Services.ProcessTemplateService>();
 builder.Services.AddScoped<Unified.Services.UpdateService>();
 builder.Services.AddScoped<Unified.Services.ScheduleService>();
+builder.Services.AddScoped<Unified.Services.PerformanceService>();
+builder.Services.AddScoped<Unified.Services.VaultService>();
+builder.Services.AddScoped<Unified.Services.ReportService>();
+builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

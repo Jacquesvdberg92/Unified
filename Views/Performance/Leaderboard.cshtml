@@ -1,0 +1,84 @@
+@using Unified.Models.Identity
+@using Unified.Models.Performance
+@model List<(AppUser Agent, double AvgRating)>
+
+@{
+    ViewData["Title"] = "Performance Leaderboard";
+    var teams      = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Teams;
+    var categories = (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Categories;
+    var teamId     = (int?)ViewBag.TeamId;
+    var category   = (int?)ViewBag.Category;
+    int rank = 1;
+}
+
+<div class="container-fluid px-4 py-3" style="max-width:800px">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="fw-bold mb-0">🏆 Performance Leaderboard</h4>
+    </div>
+
+    @* Filters *@
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-auto">
+            <select name="teamId" asp-items="teams" class="form-select form-select-sm">
+                <option value="">— All teams —</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <select name="category" asp-items="categories" class="form-select form-select-sm">
+                <option value="">— All categories —</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Filter</button>
+            @if (teamId.HasValue || category.HasValue)
+            {
+                <a asp-action="Leaderboard" class="btn btn-link btn-sm">Clear</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No review data available for the selected filters.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50px">#</th>
+                        <th>Agent</th>
+                        <th class="text-center">Avg Rating</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (agent, avg) in Model)
+                    {
+                        var badgeClass = rank == 1 ? "bg-warning text-dark"
+                                       : rank == 2 ? "bg-secondary"
+                                       : rank == 3 ? "bg-danger"
+                                       : "bg-light text-dark border";
+                        <tr>
+                            <td>
+                                <span class="badge @badgeClass">@rank</span>
+                            </td>
+                            <td>@(agent.DisplayName ?? agent.UserName)</td>
+                            <td class="text-center">
+                                <span class="badge @(avg >= 8 ? "bg-success" : avg >= 5 ? "bg-warning text-dark" : "bg-danger")">
+                                    @avg.ToString("F1") / 10
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="TeamReviews" asp-route-agentId="@agent.Id"
+                                   class="btn btn-outline-primary btn-sm">View Reviews</a>
+                            </td>
+                        </tr>
+                        rank++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

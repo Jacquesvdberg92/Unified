@@ -1,0 +1,54 @@
+@using Unified.Models.Reports
+@model TeamReport
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center"
+         data-bs-toggle="collapse" data-bs-target="#team_@Model.Id"
+         style="cursor:pointer">
+        <span class="fw-semibold">@(Model.Team?.Name ?? "Team")</span>
+        <div class="d-flex gap-3 align-items-center">
+            <span class="badge bg-primary">💬 @Model.TotalChats</span>
+            <span class="badge bg-info">🎫 @Model.TotalTickets</span>
+            <span class="badge bg-warning text-dark">📞 @Model.TotalCalls</span>
+            <span class="badge bg-success">💰 @Model.TotalFTD FTD</span>
+            <i class="bx bx-chevron-down"></i>
+        </div>
+    </div>
+    <div class="collapse" id="team_@Model.Id">
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Agent</th>
+                        <th class="text-center">Chats</th>
+                        <th class="text-center">Tickets</th>
+                        <th class="text-center">Calls</th>
+                        <th class="text-center">FTD</th>
+                        <th>🏆</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.AgentStats)
+                    {
+                        <tr>
+                            <td>@(s.Agent?.DisplayName ?? s.Agent?.UserName)</td>
+                            <td class="text-center">@s.Chats</td>
+                            <td class="text-center">@s.Tickets</td>
+                            <td class="text-center">@s.Calls</td>
+                            <td class="text-center @(s.FTD > 0 ? "text-success fw-bold" : "")">@s.FTD</td>
+                            <td>
+                                @if (s.IsTopChatPicker)   { <span title="Top Chat">💬</span> }
+                                @if (s.IsTopTicketSolver) { <span title="Top Tickets">🎫</span> }
+                                @if (s.IsTopCallMaker)    { <span title="Top Calls">📞</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-end">
+            <a asp-controller="Reports" asp-action="Detail" asp-route-id="@Model.Id"
+               class="btn btn-outline-primary btn-sm">Full Detail →</a>
+        </div>
+    </div>
+</div>

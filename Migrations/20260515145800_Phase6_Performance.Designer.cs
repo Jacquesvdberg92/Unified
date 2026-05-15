@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unified.Data;
 
@@ -10,9 +11,11 @@ using Unified.Data;
 namespace Unified.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260515145800_Phase6_Performance")]
+    partial class Phase6_Performance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -510,121 +513,6 @@ namespace Unified.Migrations
                     b.ToTable("TemplateCategories");
                 });
 
-            modelBuilder.Entity("Unified.Models.Reports.AgentStat", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AgentId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Calls")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Chats")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FTD")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsTopCallMaker")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsTopChatPicker")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsTopTicketSolver")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Language")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ReportId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Tickets")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("ReportId");
-
-                    b.ToTable("AgentStats");
-                });
-
-            modelBuilder.Entity("Unified.Models.Reports.FTDLanguageStat", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FTDCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ReportId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReportId");
-
-                    b.ToTable("FTDLanguageStats");
-                });
-
-            modelBuilder.Entity("Unified.Models.Reports.TeamReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("PeriodEnd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("PeriodStart")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PeriodType")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ReportedByLeaderId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TotalCalls")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TotalChats")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TotalFTD")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("TotalTickets")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReportedByLeaderId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("TeamReports");
-                });
-
             modelBuilder.Entity("Unified.Models.Schedule.AgentSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -824,143 +712,6 @@ namespace Unified.Migrations
                     b.ToTable("UpdateBrands");
                 });
 
-            modelBuilder.Entity("Unified.Models.Vault.VaultAccessLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("AccessedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("EntryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EntryId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("VaultAccessLogs");
-                });
-
-            modelBuilder.Entity("Unified.Models.Vault.VaultCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("IconCssClass")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsCustom")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.ToTable("VaultCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            IconCssClass = "bx bx-data",
-                            IsCustom = false,
-                            Name = "CRM"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            IconCssClass = "bx bx-bar-chart",
-                            IsCustom = false,
-                            Name = "Quemetrics"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            IconCssClass = "bx bx-task",
-                            IsCustom = false,
-                            Name = "Redmine"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            IconCssClass = "bx bx-phone-call",
-                            IsCustom = false,
-                            Name = "Call System"
-                        });
-                });
-
-            modelBuilder.Entity("Unified.Models.Vault.VaultEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EncryptedPassword")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProvisionedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Url")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("ProvisionedByUserId");
-
-                    b.ToTable("VaultEntries");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1134,55 +885,6 @@ namespace Unified.Migrations
                     b.Navigation("ProcessTemplate");
                 });
 
-            modelBuilder.Entity("Unified.Models.Reports.AgentStat", b =>
-                {
-                    b.HasOne("Unified.Models.Identity.AppUser", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Reports.TeamReport", "Report")
-                        .WithMany("AgentStats")
-                        .HasForeignKey("ReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Report");
-                });
-
-            modelBuilder.Entity("Unified.Models.Reports.FTDLanguageStat", b =>
-                {
-                    b.HasOne("Unified.Models.Reports.TeamReport", "Report")
-                        .WithMany("FTDLanguageStats")
-                        .HasForeignKey("ReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Report");
-                });
-
-            modelBuilder.Entity("Unified.Models.Reports.TeamReport", b =>
-                {
-                    b.HasOne("Unified.Models.Identity.AppUser", "ReportedByLeader")
-                        .WithMany()
-                        .HasForeignKey("ReportedByLeaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReportedByLeader");
-
-                    b.Navigation("Team");
-                });
-
             modelBuilder.Entity("Unified.Models.Schedule.AgentSchedule", b =>
                 {
                     b.HasOne("Unified.Models.Identity.AppUser", "Agent")
@@ -1268,61 +970,6 @@ namespace Unified.Migrations
                     b.Navigation("Update");
                 });
 
-            modelBuilder.Entity("Unified.Models.Vault.VaultAccessLog", b =>
-                {
-                    b.HasOne("Unified.Models.Vault.VaultEntry", "Entry")
-                        .WithMany()
-                        .HasForeignKey("EntryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Entry");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Unified.Models.Vault.VaultCategory", b =>
-                {
-                    b.HasOne("Unified.Models.Identity.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("Unified.Models.Vault.VaultEntry", b =>
-                {
-                    b.HasOne("Unified.Models.Vault.VaultCategory", "Category")
-                        .WithMany("Entries")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "ProvisionedByUser")
-                        .WithMany()
-                        .HasForeignKey("ProvisionedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Owner");
-
-                    b.Navigation("ProvisionedByUser");
-                });
-
             modelBuilder.Entity("Unified.Models.Identity.AppUser", b =>
                 {
                     b.Navigation("Brands");
@@ -1350,21 +997,9 @@ namespace Unified.Migrations
                     b.Navigation("ProcessTemplates");
                 });
 
-            modelBuilder.Entity("Unified.Models.Reports.TeamReport", b =>
-                {
-                    b.Navigation("AgentStats");
-
-                    b.Navigation("FTDLanguageStats");
-                });
-
             modelBuilder.Entity("Unified.Models.Updates.Update", b =>
                 {
                     b.Navigation("AffectedBrands");
-                });
-
-            modelBuilder.Entity("Unified.Models.Vault.VaultCategory", b =>
-                {
-                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }

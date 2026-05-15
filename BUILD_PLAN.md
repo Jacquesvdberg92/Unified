@@ -214,53 +214,19 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 > Goal: team leaders (and BrandManagers) can record structured performance reviews per agent, covering tickets, chats and calls individually. Agents can view their own reviews.
 
 ### Data Models
-- [ ] **6.1** `Models/Performance/PerformanceReview.cs`  
-  ```
-  Id, AgentId (FK AppUser), ReviewedByLeaderId (FK AppUser),
-  ReviewDate, PeriodLabel (e.g. "Week 22 - 2025"),
-  OverallNotes,
-  CreatedAt
-  ```
-- [ ] **6.2** `Models/Performance/ReviewItem.cs`  
-  ```
-  Id, ReviewId (FK),
-  Category (enum: Ticket | Chat | Call),
-  ReferenceId    // ticket number, chat ID, call ID etc.
-  Rating         // 1–10
-  Positive       // free text — what went well
-  Negative       // free text — what needs improvement
-  ActionRequired // bool — flag for follow-up
-  ActionNote     // optional follow-up note
-  ```
-  > One review contains many `ReviewItem` rows — a leader can rate 3 tickets + 2 chats + 1 call all in the same session.  
-- [ ] **6.3** Add `DbSet<PerformanceReview>` and `DbSet<ReviewItem>` to `AppDbContext`; add migration  
+- [x] **6.1** `Models/Performance/PerformanceReview.cs`  
+- [x] **6.2** `Models/Performance/ReviewItem.cs`  
+- [x] **6.3** Add `DbSet<PerformanceReview>` and `DbSet<ReviewItem>` to `AppDbContext`; add migration  
 
 ### Service Layer
-- [ ] **6.4** `Services/PerformanceService.cs`  
-  - `GetReviewsForAgent(agentId, from?, to?)` — chronological list  
-  - `GetReviewsByLeader(leaderId)` — all reviews submitted by a leader  
-  - `CreateReview(dto)` — validates rating range 1–10, saves header + items  
-  - `GetAverageRating(agentId, category?, from?, to?)` — computed average per category  
-  - `GetTopRatedAgents(teamId?, category?)` — leaderboard helper used by Reports module  
+- [x] **6.4** `Services/PerformanceService.cs`  
 
 ### Controllers & Views
-- [ ] **6.5** `Controllers/PerformanceController.cs`  
-  - `[Authorize(Roles="BrandManager,TeamLeader")]` for `Create`, `Edit`, `Delete`  
-  - Agents can call `MyReviews` — view their own only  
-- [ ] **6.6** Views:  
-  - `AgentReviews` — full history for a selected agent; tabs for Tickets / Chats / Calls  
-    - Each item card shows: reference ID, star/number rating (1–10), positive (green), negative (red), action flag  
-    - Summary bar at top: average score per category  
-  - `Create` — review session form:  
-    - Agent selector (filtered to leader's team(s))  
-    - Period label input  
-    - Dynamic item rows — click "+ Add Ticket", "+ Add Chat", "+ Add Call"  
-    - Each row: Reference ID, Rating slider (1–10), Positive textarea, Negative textarea, Action Required checkbox  
-  - `MyReviews` — agent self-view: read-only timeline of own review items, averages, action flags  
-  - `_ReviewItemCard.cshtml` partial — reusable card for a single review item  
-- [ ] **6.7** Rating input — use a simple 1–10 number input styled as a colour-coded badge (1–4 red, 5–7 amber, 8–10 green); no extra lib needed  
+- [x] **6.5** `Controllers/PerformanceController.cs`  
+- [x] **6.6** Views: `MyReviews`, `TeamReviews`, `Detail`, `Create`, `Leaderboard`  
+- [x] **6.7** Rating inputs — colour-coded 1–10 badge (red/amber/green) in Detail view  
 
-**Phase 6 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 6 Status:** `[x] DONE`
 
 ---
 
@@ -275,74 +241,27 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 - No vault entry is ever returned to the client in bulk API responses; only one entry is decrypted per explicit user request.
 
 ### Data Models
-- [ ] **7.1** `Models/Vault/VaultCategory.cs`
-  ```
-  Id, Name (e.g. "CRM", "Quemetrics", "Redmine", "Call System"),
-  IconCssClass,      // e.g. a Bootstrap icon class for display
-  IsCustom,          // false = system-defined, true = user/admin created
-  CreatedByUserId (FK, nullable — null = system default)
-  ```
-- [ ] **7.2** `Models/Vault/VaultEntry.cs`
-  ```
-  Id, OwnerId (FK AppUser),
-  CategoryId (FK VaultCategory),
-  Label,             // e.g. "Colbari CRM", "BullFX Redmine"
-  Username,          // stored plain (not sensitive)
-  EncryptedPassword, // AES-256 via IDataProtector
-  Url,               // direct login URL
-  Notes,             // optional plain-text notes (e.g. 2FA instructions)
-  CreatedAt, UpdatedAt,
-  ProvisionedByUserId (FK AppUser, nullable) // set when bulk-provisioned
-  ```
-- [ ] **7.3** Add `DbSet<VaultCategory>` and `DbSet<VaultEntry>` to `AppDbContext`; add migration
-- [ ] **7.4** Seed default system categories: `CRM`, `Quemetrics`, `Redmine`, `Call System`
+- [x] **7.1** `Models/Vault/VaultCategory.cs`
+- [x] **7.2** `Models/Vault/VaultEntry.cs`
+- [x] **7.3** `DbSet<VaultCategory>`, `DbSet<VaultEntry>` added; migration applied
+- [x] **7.4** Seed: CRM, Quemetrics, Redmine, Call System
 
 ### Service Layer
-- [ ] **7.5** `Services/VaultService.cs`
-  - `GetVaultForUser(userId)` — returns all entries for that user, passwords decrypted on the fly only when called
-  - `GetEntry(entryId, requestingUserId)` — returns single entry; throws if `requestingUserId != OwnerId` (agents) or outside team scope (TL)
-  - `UpsertEntry(dto, requestingUserId)` — create or update; encrypts password before save
-  - `DeleteEntry(entryId, requestingUserId)` — owner or BrandManager only
-  - `BulkProvision(dto)` — TeamLeader / BrandManager action:
-    ```
-    dto: {
-      CategoryId, Label, Username, PlainPassword, Url, Notes,
-      TargetUserIds[]   // or TargetTeamIds[] / "AllUsers"
-    }
-    ```
-    Creates or overwrites a `VaultEntry` per target user, encrypting individually.
-  - `BulkUpdatePassword(categoryId, label, newPassword, targetUserIds[])` — update just the password field in bulk (e.g. shared tool password rotation)
-  - `GetCategories(includeCustom: bool)` — list categories available for new entries
-  - `CreateCustomCategory(name, icon, createdByUserId)` — any role can create a custom category for themselves; TL/BrandManager can create system-wide ones
+- [x] **7.5** `Services/VaultService.cs` — AES-256 via `IDataProtector`; all CRUD + bulk + audit
 
 ### Controllers & Views
-- [ ] **7.6** `Controllers/VaultController.cs`
-  - All authenticated users can access their own vault
-  - `[Authorize(Roles="BrandManager,TeamLeader")]` gate on `BulkProvision`, `BulkUpdatePassword`, `ManageCategories`
-- [ ] **7.7** Views:
-  - `MyVault` — personal vault home; card grid grouped by category
-    - Category tabs/filter sidebar (CRM, Quemetrics, Redmine, Custom…)
-    - Each card shows: Label, Username, URL (click to open), masked password with **👁 Reveal** button, Copy Username / Copy Password buttons
-    - **Reveal** makes a single AJAX call to decrypt and return that one password; masked again on blur
-    - "+ Add Entry" button → inline form or modal
-  - `AddEntry` / `EditEntry` modal — Label, Category dropdown (incl. custom), Username, Password (input type=password), URL, Notes
-  - `BulkProvision` (TL / BrandManager only) — step wizard:
-    - Step 1: Choose category + fill credentials (label, username, password, url, notes)
-    - Step 2: Choose targets — individual checkboxes or quick-select by team / "All Users" / by role
-    - Step 3: Review count → Confirm → progress bar → done toast
-  - `BulkUpdatePassword` — simpler form: pick category + label → new password → pick targets → confirm
-  - `ManageCategories` (BrandManager only) — CRUD for system-wide categories; name + icon picker
-  - `_VaultCard.cshtml` partial — reusable credential card
+- [x] **7.6** `Controllers/VaultController.cs`
+- [x] **7.7** Views: `MyVault`, `AddEntry`, `EditEntry`, `BulkProvision`, `BulkUpdatePassword`, `ManageCategories`, `AccessLog`; `Shared/_VaultCard.cshtml`
 
-### UX / Security Details
-- [ ] **7.8** Password field on all forms uses `type="password"` with a show/hide toggle; never rendered in plain HTML source
-- [ ] **7.9** Copy-to-clipboard buttons use the browser Clipboard API; clipboard is cleared after 30 seconds (JS setTimeout)
-- [ ] **7.10** Vault page does **not** use DataTables export — no CSV/print of credentials
-- [ ] **7.11** Every decrypt call is logged in `VaultAccessLog` table: `UserId`, `EntryId`, `AccessedAt`, `Action (View|Copy)` — for audit trail
-- [ ] **7.12** `VaultAccessLog` model and `DbSet` added; migration
-- [ ] **7.13** BrandManagers can view the access log filtered by user or entry
+### UX / Security
+- [x] **7.8** Password fields use `type="password"` with show/hide toggle
+- [x] **7.9** Copy-to-clipboard with 30 s auto-clear
+- [x] **7.10** No DataTables export on vault pages
+- [x] **7.11** Every decrypt logged in `VaultAccessLog` (View / Copy)
+- [x] **7.12** `VaultAccessLog` model + DbSet + migration
+- [x] **7.13** BrandManager can filter access log by user or entry
 
-**Phase 7 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 7 Status:** `[x] DONE`
 
 ---
 
@@ -350,51 +269,19 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 > Goal: team leaders submit activity reports; aggregate stats visible to all roles.
 
 ### Data Models
-- [ ] **8.1** `Models/Reports/TeamReport.cs`  
-  ```
-  Id, TeamId (FK), ReportedByLeaderId (FK AppUser),
-  PeriodType (enum: Weekly | Monthly), PeriodStart, PeriodEnd,
-  TotalChats, TotalTickets, TotalCalls,
-  TotalFTD (First Time Deposits), SubmittedAt
-  ```
-- [ ] **8.2** `Models/Reports/AgentStat.cs`  
-  ```
-  Id, ReportId (FK), AgentId (FK AppUser),
-  Chats, Tickets, Calls, FTD,
-  Language,
-  IsTopChatPicker, IsTopTicketSolver, IsTopCallMaker  // computed flags
-  ```
-- [ ] **8.3** `Models/Reports/FTDLanguageStat.cs`  
-  ```
-  Id, ReportId, Language, FTDCount
-  ```
-- [ ] **8.4** Add DbSets + migration  
+- [x] **8.1** `Models/Reports/TeamReport.cs`
+- [x] **8.2** `Models/Reports/AgentStat.cs`
+- [x] **8.3** `Models/Reports/FTDLanguageStat.cs`
+- [x] **8.4** DbSets + `Phase8_Reports` migration applied
 
 ### Service Layer
-- [ ] **8.5** `Services/ReportService.cs`  
-  - `SubmitReport(dto)` — validates, saves, computes top-performer flags  
-  - `GetReportSummary(periodType, periodStart)` — aggregates all teams for period  
-  - `GetTeamBreakdown(teamId, reportId)` — per-agent drill-down  
-  - `GetFTDByLanguage(reportId)` — grouped FTD counts  
-  - `GetPerformanceHighlights(reportId)` — calls `PerformanceService.GetTopRatedAgents` to pull avg review scores into the report  
+- [x] **8.5** `Services/ReportService.cs` — submit, top-performer flags, FTD-by-language aggregation, highlights (with PerformanceService integration), delete
 
 ### Controllers & Views
-- [ ] **8.6** `Controllers/ReportsController.cs`  
-  - Submit restricted to `BrandManager` + `TeamLeader`  
-  - View open to all roles  
-- [ ] **8.7** Views:  
-  - `Dashboard` — period selector (week/month), high-level KPI cards:  
-    Total Chats / Tickets / Calls / FTD across all teams  
-  - `Submit` — form for team leader to enter team stats and per-agent rows (dynamic JS row add/remove)  
-  - `Detail` — full breakdown for a period:  
-    - Per-team summary table  
-    - Per-agent table with top-performer badges 🏆 + average review score column  
-    - FTD by language bar chart (ApexCharts)  
-    - Total FTD counter with language breakdown  
-  - `_TeamCard.cshtml` partial — collapsible per-team card showing agent stats  
-  - Print / export to CSV button  
+- [x] **8.6** `Controllers/ReportsController.cs`
+- [x] **8.7** Views: `Dashboard` (KPI cards + team grid), `Submit` (dynamic JS agent rows), `Detail` (agent table + ApexCharts FTD bar + CSV export), `Shared/_TeamCard.cshtml` partial
 
-**Phase 8 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 8 Status:** `[x] DONE`
 
 ---
 
