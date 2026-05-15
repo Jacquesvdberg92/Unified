@@ -1,0 +1,172 @@
+@using Unified.Models.Identity
+@using Unified.Models.Schedule
+@model List<AppUser>
+
+@{
+    ViewData["Title"] = "Weekend Shift Wheel";
+    var weekStart  = (DateTime)ViewBag.WeekStart;
+    var pastOffers = (IEnumerable<WeekendShiftOffer>)ViewBag.PastOffers;
+    var prevWeek   = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
+    var nextWeek   = weekStart.AddDays(7).ToString("yyyy-MM-dd");
+    var weekStr    = weekStart.ToString("yyyy-MM-dd");
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-rotate-right me-2"></i>Weekend Shift Wheel</h4>
+        <a asp-action="WeekView" asp-route-weekStart="@weekStr" class="btn btn-outline-secondary btn-sm">
+            ← Back to Week View
+        </a>
+    </div>
+
+    @* Week nav *@
+    <div class="card mb-3">
+        <div class="card-body py-2 d-flex align-items-center gap-3">
+            <a asp-action="WeekendWheel" asp-route-weekStart="@prevWeek"
+               class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-left"></i></a>
+            <span class="fw-semibold">
+                Week of @weekStart.ToString("dd MMM yyyy")
+            </span>
+            <a asp-action="WeekendWheel" asp-route-weekStart="@nextWeek"
+               class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-right"></i></a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @* Wheel *@
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h6 class="mb-0">Eligible Agents</h6></div>
+                <div class="card-body text-center">
+                    @if (!Model.Any())
+                    {
+                        <p class="text-muted">All eligible agents have already been offered this week.</p>
+                    }
+                    else
+                    {
+                        <div id="wheelDisplay"
+                             class="display-6 fw-bold py-4 rounded bg-label-primary mb-3"
+                             style="min-height:120px; display:flex; align-items:center; justify-content:center;">
+                            —
+                        </div>
+                        <button type="button" id="spinBtn" class="btn btn-primary btn-lg mb-3">
+                            <i class="bx bx-shuffle me-1"></i>Spin!
+                        </button>
+
+                        <form asp-action="RecordOffer" method="post" id="offerForm" class="mt-2" style="display:none">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="weekStart" value="@weekStr" />
+                            <input type="hidden" name="agentId" id="selectedAgentId" />
+                            <button type="submit" class="btn btn-success">
+                                <i class="bx bx-check me-1"></i>Record Offer to <span id="selectedAgentName"></span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ms-2" onclick="resetWheel()">Re-spin</button>
+                        </form>
+
+                        <script id="agentData" type="application/json">
+                        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                            Model.Select(a => new { id = a.Id, name = a.DisplayName })))
+                        </script>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* Past offers *@
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h6 class="mb-0">Offers This Week</h6></div>
+                <div class="card-body p-0">
+                    @if (!pastOffers.Any())
+                    {
+                        <p class="text-muted p-3">No offers recorded yet.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Agent</th><th>Status</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var offer in pastOffers)
+                                {
+                                    <tr>
+                                        <td>@offer.OfferedToAgent?.DisplayName</td>
+                                        <td>
+                                            @if (offer.AcceptedAt.HasValue)
+                                            {
+                                                <span class="badge bg-success">Accepted</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-label-warning">Pending</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!offer.AcceptedAt.HasValue)
+                                            {
+                                                <form asp-action="AcceptOffer" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="offerId" value="@offer.Id" />
+                                                    <input type="hidden" name="weekStart" value="@weekStr" />
+                                                    <button type="submit" class="btn btn-xs btn-success">Mark Accepted</button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var agents = JSON.parse(document.getElementById('agentData')?.textContent || '[]');
+    var display = document.getElementById('wheelDisplay');
+    var spinBtn = document.getElementById('spinBtn');
+    var offerForm = document.getElementById('offerForm');
+    var selectedId   = document.getElementById('selectedAgentId');
+    var selectedName = document.getElementById('selectedAgentName');
+    var chosen = null;
+
+    if (!spinBtn) return;
+
+    spinBtn.addEventListener('click', function () {
+        if (!agents.length) return;
+        spinBtn.disabled = true;
+
+        var ticks = 20 + Math.floor(Math.random() * 15);
+        var idx   = 0;
+        var delay = 60;
+
+        function tick() {
+            display.textContent = agents[idx % agents.length].name;
+            idx++;
+            ticks--;
+            delay += 8;
+            if (ticks > 0) {
+                setTimeout(tick, delay);
+            } else {
+                chosen = agents[(idx - 1) % agents.length];
+                display.textContent = chosen.name;
+                selectedId.value   = chosen.id;
+                selectedName.textContent = chosen.name;
+                offerForm.style.display = '';
+            }
+        }
+        tick();
+    });
+
+    window.resetWheel = function () {
+        chosen = null;
+        display.textContent = '—';
+        offerForm.style.display = 'none';
+        spinBtn.disabled = false;
+    };
+})();
+</script>
+}

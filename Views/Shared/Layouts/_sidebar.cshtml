@@ -23,6 +23,71 @@
                                 </a>
                             </li>
 
+                            <li class="slide">
+                                <a asp-controller="Updates" asp-action="Feed" class="side-menu__item">
+                                    <i class="bx bx-news side-menu__icon"></i>
+                                    <span class="side-menu__label">Updates Feed</span>
+                                </a>
+                            </li>
+
+                            <li class="slide">
+                                <a asp-controller="ProcessTemplates" asp-action="Index" class="side-menu__item">
+                                    <i class="bx bx-file side-menu__icon"></i>
+                                    <span class="side-menu__label">Process Templates</span>
+                                </a>
+                            </li>
+
+                            <li class="slide">
+                                <a asp-controller="Schedule" asp-action="AgentView" class="side-menu__item">
+                                    <i class="bx bx-calendar-check side-menu__icon"></i>
+                                    <span class="side-menu__label">My Schedule</span>
+                                </a>
+                            </li>
+
+                            <li class="slide">
+                                <a asp-controller="Schedule" asp-action="MyRequests" class="side-menu__item">
+                                    <i class="bx bx-calendar-event side-menu__icon"></i>
+                                    <span class="side-menu__label">My Requests</span>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
+                            {
+                                <li class="slide__category"><span class="category-name">Management</span></li>
+
+                                <li class="slide">
+                                    <a asp-controller="Schedule" asp-action="WeekView" class="side-menu__item">
+                                        <i class="bx bx-calendar side-menu__icon"></i>
+                                        <span class="side-menu__label">Team Schedule</span>
+                                    </a>
+                                </li>
+
+                                <li class="slide">
+                                    <a asp-controller="Schedule" asp-action="ReviewRequests" class="side-menu__item">
+                                        <i class="bx bx-task side-menu__icon"></i>
+                                        <span class="side-menu__label">Review Requests</span>
+                                    </a>
+                                </li>
+
+                                <li class="slide">
+                                    <a asp-controller="EmailTemplates" asp-action="Index" class="side-menu__item">
+                                        <i class="bx bx-envelope side-menu__icon"></i>
+                                        <span class="side-menu__label">Email Templates</span>
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.IsInRole("BrandManager"))
+                            {
+                                <li class="slide__category"><span class="category-name">Admin</span></li>
+                                <li class="slide">
+                                    <a asp-controller="Admin" asp-action="Index" class="side-menu__item">
+                                        <i class="bx bx-shield side-menu__icon"></i>
+                                        <span class="side-menu__label">Admin</span>
+                                    </a>
+                                </li>
+                            }
+
                         </ul>
                     </nav>
                     <!-- End::nav -->

@@ -33,7 +33,7 @@
                             <option value="">— Master (no brand) —</option>
                             @foreach (var b in brands)
                             {
-                                <option value="@b.Id" @(Model.BrandId == b.Id ? "selected" : "")>@b.Name</option>
+                                <option value="@b.Id" selected="@(Model.BrandId == b.Id ? "selected" : null)">@b.Name</option>
                             }
                         </select>
                     </div>

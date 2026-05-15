@@ -25,7 +25,7 @@
                 <option value="">All</option>
                 @foreach (var b in brands)
                 {
-                    <option value="@b.Id" @(selectedBrandId == b.Id ? "selected" : "")>@b.Name</option>
+                    <option value="@b.Id" selected="@(selectedBrandId == b.Id ? "selected" : null)">@b.Name</option>
                 }
             </select>
         </form>

@@ -20,7 +20,7 @@
     </div>
 
     <div class="row g-4">
-        {{!-- Sidebar --}}
+        @* Sidebar *@
         <div class="col-lg-3">
             <form method="get" id="filterForm">
                 <div class="card mb-3">
@@ -36,7 +36,7 @@
                                 <option value="">All Categories</option>
                                 @foreach (var cat in categories)
                                 {
-                                    <option value="@cat.Id" @(selCat == cat.Id ? "selected" : "")>@cat.Name</option>
+                                    <option value="@cat.Id" selected="@(selCat == cat.Id ? "selected" : null)">@cat.Name</option>
                                 }
                             </select>
                         </div>
@@ -46,7 +46,7 @@
                                 <option value="">All Brands</option>
                                 @foreach (var brand in brands)
                                 {
-                                    <option value="@brand.Id" @(selBrand == brand.Id ? "selected" : "")>@brand.Name</option>
+                                    <option value="@brand.Id" selected="@(selBrand == brand.Id ? "selected" : null)">@brand.Name</option>
                                 }
                             </select>
                         </div>
@@ -76,7 +76,7 @@
             </form>
         </div>
 
-        {{!-- Cards grid --}}
+        @* Cards grid *@
         <div class="col-lg-9">
             @if (!Model.Any())
             {

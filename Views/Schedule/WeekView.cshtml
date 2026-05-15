@@ -1,0 +1,239 @@
+@using Unified.Models.Identity
+@using Unified.Models.Schedule
+@model List<AgentSchedule>
+
+@{
+    ViewData["Title"] = "Weekly Schedule";
+    var teams          = (IEnumerable<Team>)ViewBag.Teams;
+    var selTeamId      = (int)ViewBag.SelectedTeamId;
+    var weekStart      = (DateTime)ViewBag.WeekStart;
+    var shifts         = (IEnumerable<ShiftTemplate>)ViewBag.ShiftTemplates;
+    var pendingCount   = (int)ViewBag.PendingCount;
+    var teamAgents     = (IEnumerable<AppUser>)ViewBag.TeamAgents;
+    var prevWeek       = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
+    var nextWeek       = weekStart.AddDays(7).ToString("yyyy-MM-dd");
+    var weekDays       = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
+
+    // Build lookup: agentId+date → entry
+    var lookup = Model.ToDictionary(s => $"{s.AgentId}_{s.Date:yyyy-MM-dd}");
+
+    string EntryLabel(AgentSchedule? e)
+    {
+        if (e is null) return "";
+        return e.Type switch
+        {
+            ScheduleEntryType.DayOff   => "Day Off",
+            ScheduleEntryType.Vacation => "Vacation",
+            ScheduleEntryType.Custom   => $"{e.CustomStartTime:hh\\:mm}–{e.CustomEndTime:hh\\:mm}",
+            _                          => e.ShiftTemplate?.Name ?? "Regular"
+        };
+    }
+
+    string EntryBadge(AgentSchedule? e)
+    {
+        if (e is null) return "bg-label-secondary";
+        return e.Type switch
+        {
+            ScheduleEntryType.DayOff   => "bg-label-warning",
+            ScheduleEntryType.Vacation => "bg-label-info",
+            ScheduleEntryType.Custom   => "bg-label-primary",
+            _                          => "bg-label-success"
+        };
+    }
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    @* Header *@
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-calendar me-2"></i>Weekly Schedule</h4>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            @if (pendingCount > 0)
+            {
+                <a asp-action="ReviewRequests" asp-route-teamId="@selTeamId"
+                   class="btn btn-warning btn-sm position-relative">
+                    <i class="bx bx-bell me-1"></i>Requests
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                        @pendingCount
+                    </span>
+                </a>
+            }
+            <a asp-action="WeekendWheel" asp-route-weekStart="@weekStart.ToString("yyyy-MM-dd")"
+               class="btn btn-outline-secondary btn-sm"><i class="bx bx-rotate-right me-1"></i>Weekend Wheel</a>
+        </div>
+    </div>
+
+    @* Team + week selector *@
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="d-flex flex-wrap gap-3 align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="form-label mb-0 small fw-semibold">Team</label>
+                    <select name="teamId" class="form-select form-select-sm" onchange="this.form.submit()" style="width:180px">
+                        @foreach (var t in teams)
+                        {
+                            <option value="@t.Id" selected="@(selTeamId == t.Id ? "selected" : null)">@t.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a asp-action="WeekView" asp-route-teamId="@selTeamId" asp-route-weekStart="@prevWeek"
+                       class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-left"></i></a>
+                    <span class="fw-semibold small">
+                        @weekStart.ToString("dd MMM") – @weekStart.AddDays(6).ToString("dd MMM yyyy")
+                    </span>
+                    <a asp-action="WeekView" asp-route-teamId="@selTeamId" asp-route-weekStart="@nextWeek"
+                       class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-right"></i></a>
+                </div>
+                <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
+            </form>
+        </div>
+    </div>
+
+    @* Schedule grid *@
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 align-middle text-center" style="min-width:900px">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-start ps-3" style="min-width:160px">Agent</th>
+                            @foreach (var day in weekDays)
+                            {
+                                <th class="@(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "bg-opacity-75" : "")">
+                                    @day.ToString("ddd")<br /><small class="fw-normal">@day.ToString("dd MMM")</small>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var agent in teamAgents)
+                        {
+                            <tr>
+                                <td class="text-start ps-3 fw-semibold">@agent.DisplayName</td>
+                                @foreach (var day in weekDays)
+                                {
+                                    lookup.TryGetValue($"{agent.Id}_{day:yyyy-MM-dd}", out var entry);
+                                    <td>
+                                        <span class="badge @EntryBadge(entry) w-100" style="cursor:pointer"
+                                              data-bs-toggle="modal" data-bs-target="#editModal"
+                                              data-agent-id="@agent.Id"
+                                              data-agent-name="@agent.DisplayName"
+                                              data-date="@day.ToString("yyyy-MM-dd")"
+                                              data-entry-id="@(entry?.Id ?? 0)"
+                                              data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
+                                              data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
+                                              data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
+                                              data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
+                                              data-note="@(entry?.Note ?? "")">
+                                            @(string.IsNullOrEmpty(EntryLabel(entry)) ? "—" : EntryLabel(entry))
+                                        </span>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                        @if (!teamAgents.Any())
+                        {
+                            <tr><td colspan="8" class="text-muted py-4">No agents in this team.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Edit Day Modal *@
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SetAgentDay" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="teamId" value="@selTeamId" />
+                <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="entry.Id" id="modal-entry-id" value="0" />
+                <input type="hidden" name="entry.AgentId" id="modal-agent-id" />
+                <input type="hidden" name="entry.Date" id="modal-date" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Schedule — <span id="modal-agent-name"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input class="form-control" id="modal-date-display" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select name="entry.Type" id="modal-type" class="form-select" onchange="toggleCustomTimes(this.value)">
+                            <option value="0">Regular</option>
+                            <option value="1">Custom</option>
+                            <option value="2">Day Off</option>
+                            <option value="3">Vacation</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="shiftRow">
+                        <label class="form-label">Shift Template</label>
+                        <select name="entry.ShiftTemplateId" id="modal-shift" class="form-select">
+                            <option value="">— None —</option>
+                            @foreach (var s in shifts)
+                            {
+                                <option value="@s.Id">@s.Name (@s.StartTime.ToString(@"hh\:mm")–@s.EndTime.ToString(@"hh\:mm"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div id="customRow" style="display:none">
+                        <div class="row g-2 mb-3">
+                            <div class="col">
+                                <label class="form-label">Start</label>
+                                <input type="time" name="entry.CustomStartTime" id="modal-custom-start" class="form-control" />
+                            </div>
+                            <div class="col">
+                                <label class="form-label">End</label>
+                                <input type="time" name="entry.CustomEndTime" id="modal-custom-end" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <input type="text" name="entry.Note" id="modal-note" class="form-control" placeholder="Optional note" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('editModal');
+    modal.addEventListener('show.bs.modal', function (e) {
+        var btn = e.relatedTarget;
+        document.getElementById('modal-agent-id').value    = btn.dataset.agentId;
+        document.getElementById('modal-agent-name').textContent = btn.dataset.agentName;
+        document.getElementById('modal-date').value        = btn.dataset.date;
+        document.getElementById('modal-date-display').value = btn.dataset.date;
+        document.getElementById('modal-entry-id').value   = btn.dataset.entryId;
+        document.getElementById('modal-type').value       = btn.dataset.entryType;
+        document.getElementById('modal-shift').value      = btn.dataset.shiftId;
+        document.getElementById('modal-custom-start').value = btn.dataset.customStart;
+        document.getElementById('modal-custom-end').value   = btn.dataset.customEnd;
+        document.getElementById('modal-note').value        = btn.dataset.note;
+        toggleCustomTimes(btn.dataset.entryType);
+    });
+});
+
+function toggleCustomTimes(val) {
+    var isCustom = val == '1';
+    var isRegular = val == '0';
+    document.getElementById('customRow').style.display = isCustom ? '' : 'none';
+    document.getElementById('shiftRow').style.display  = isRegular ? '' : 'none';
+}
+</script>
+}

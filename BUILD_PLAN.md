@@ -188,79 +188,25 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 > Goal: manage agent shifts (fixed + custom), days off, vacation, and a weekend-shift offer wheel. Vacation and schedule-change requests are submitted by agents and **manually reviewed and approved by a team leader** — the schedule is flexible and there is no auto-approval.
 
 ### Data Models
-- [ ] **5.1** `Models/Schedule/ShiftTemplate.cs`  
-  ```
-  Id, Name (e.g. "Morning"), StartTime, EndTime, IsWeekendShift
-  ```
-- [ ] **5.2** `Models/Schedule/AgentSchedule.cs`  
-  ```
-  Id, AgentId (FK AppUser), Date, ShiftTemplateId (FK nullable),
-  CustomStartTime (nullable), CustomEndTime (nullable),
-  Type (enum: Regular | Custom | DayOff | Vacation),
-  Note
-  ```
-- [ ] **5.3** `Models/Schedule/WeekendShiftOffer.cs`  
-  ```
-  Id, WeekStartDate, OfferedToAgentId, AcceptedAt (nullable), CreatedByLeaderId
-  ```
-- [ ] **5.4** `Models/Schedule/TimeOffRequest.cs`  
-  ```
-  Id,
-  AgentId (FK AppUser),
-  Type (enum: Vacation | DayOff | ScheduleChange),
-  StartDate, EndDate,
-  RequestedStartTime (nullable)  // for ScheduleChange — what time the agent wants
-  RequestedEndTime   (nullable)  // for ScheduleChange
-  Reason,                        // free text from agent
-  Status (enum: Pending | Approved | Denied),
-  ReviewedByLeaderId (FK AppUser, nullable),
-  ReviewedAt (nullable),
-  LeaderNote (nullable)          // optional note from leader on approve/deny
-  CreatedAt
-  ```
-- [ ] **5.5** Add DbSets + migration  
+- [x] **5.1** `Models/Schedule/ShiftTemplate.cs`  
+- [x] **5.2** `Models/Schedule/AgentSchedule.cs`  
+- [x] **5.3** `Models/Schedule/WeekendShiftOffer.cs`  
+- [x] **5.4** `Models/Schedule/TimeOffRequest.cs`  
+- [x] **5.5** Add DbSets + migration  
 
 ### Service Layer
-- [ ] **5.6** `Services/ScheduleService.cs`  
-  - `GetWeeklySchedule(teamId, weekStart)` — returns all agent schedules for the week  
-  - `SetAgentDay(dto)` — upsert a single day entry (leader/admin use)  
-  - `GetAgentsEligibleForWeekend()` — agents with `HasWeekendShift = false`  
-  - `SpinWheelCandidates(weekStart)` — returns random-ordered eligible agents for the offer wheel  
-  - `MarkOfferAccepted(offerId, agentId)`  
-  - `SubmitTimeOffRequest(dto, agentId)` — creates a `Pending` request; agent cannot submit overlapping requests  
-  - `GetPendingRequests(teamId)` — returns all `Pending` requests for a leader's team, newest first  
-  - `ApproveRequest(requestId, leaderId, leaderNote?)` — sets `Status = Approved`, stamps `ReviewedByLeaderId` + `ReviewedAt`; if `Vacation` or `DayOff` automatically creates matching `AgentSchedule` entries for the date range  
-  - `DenyRequest(requestId, leaderId, leaderNote?)` — sets `Status = Denied`; no schedule entries created  
-  - `GetMyRequests(agentId)` — agent's own request history with current status  
+- [x] **5.6** `Services/ScheduleService.cs`  
 
 ### Controllers & Views
-- [ ] **5.7** `Controllers/ScheduleController.cs`  
-  - `[Authorize(Roles="BrandManager,TeamLeader")]` for `WeekView`, `ApproveRequest`, `DenyRequest`, `SetAgentDay`  
-  - All roles can access `AgentView`, `MyRequests`, `SubmitRequest`  
-- [ ] **5.8** Views:  
-  - `WeekView` — weekly calendar grid (FullCalendar), colour-coded by shift type  
-    - Click cell → modal to assign/edit a day  
-    - Bulk-assign a week from template  
-    - **Pending Requests badge** in the header — count of unreviewed requests for the leader's team  
-  - `AgentView` — read-only personal schedule for agents; shows approved time-off in calendar  
-  - `WeekendWheel` — animated random-selector; record offer, mark accepted/declined  
-  - `MyRequests` — agent view of their own submitted requests:  
-    - List/table: type, dates, status badge (Pending → amber, Approved → green, Denied → red), leader note  
-    - **"+ New Request"** button → opens `SubmitRequest` modal  
-  - `SubmitRequest` — modal form for agents:  
-    - Request type selector (Vacation / Day Off / Schedule Change)  
-    - Date picker (single date for Day Off / Schedule Change; date range for Vacation)  
-    - For Schedule Change: custom start time + end time pickers  
-    - Free text reason field  
-    - Submit → saved as `Pending`; toast confirms submission  
-  - `ReviewRequests` — team leader queue (restricted):  
-    - Table of all `Pending` requests for the leader's teams  
-    - Columns: Agent name, Type, Dates/Times, Reason, Submitted  
-    - Per-row actions: **Approve** (green) / **Deny** (red) — both open a small confirmation modal with optional leader note field  
-    - Approved requests are immediately reflected in the `WeekView` calendar  
-    - Agent receives a toast on their next page load when their request is actioned  
+- [x] **5.7** `Controllers/ScheduleController.cs`  
+- [x] **5.8** Views:  
+  - `WeekView` — weekly grid, click-to-edit modal, pending requests badge  
+  - `AgentView` — read-only personal week view  
+  - `WeekendWheel` — animated spin selector with offer recording  
+  - `MyRequests` — agent request history + submit modal  
+  - `ReviewRequests` — leader queue with approve/deny confirmation modal  
 
-**Phase 5 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 5 Status:** `[x] IN PROGRESS` → `[x] DONE`
 
 ---
 
@@ -609,3 +555,4 @@ Unified/
 15. **Vault bulk provision scope** — `VaultService.BulkProvision` must enforce server-side that a TeamLeader's `TargetUserIds` list contains only members of their own teams. Reject with 403 if any ID falls outside scope.  
 16. **No vault data in exports** — `ReportsController` and any CSV/print feature must never include vault fields. The `VaultEntry` model must never be referenced from any Report view model.
 17. **Process template `[BLANK]` token** — the literal string `[BLANK]` (uppercase, square brackets) is the canonical placeholder. The JS highlighter and the "Insert [BLANK]" toolbar button must both produce exactly this string. Do not use alternative formats like `{{blank}}` or `___`.
+18. **Razor comments** — always use `@* comment text *@` for comments in `.cshtml` files. Never use `{{!-- --}}` (Handlebars) or `<!-- -->` (HTML) for code-level comments; these render as visible text or HTML output. `@* *@` is stripped at compile time and never reaches the browser.

@@ -27,7 +27,7 @@
         <select name="brandIds" class="form-select" multiple>
             @foreach (var brand in (IEnumerable<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands)
             {
-                <option value="@brand.Id" @(isSelected(brand.Id) ? "selected" : "")>@brand.Name</option>
+                <option value="@brand.Id" selected="@(isSelected(brand.Id) ? "selected" : null)">@brand.Name</option>
             }
         </select>
         <div class="form-text">Leave empty = global (all brands).</div>

@@ -28,6 +28,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
 builder.Services.AddScoped<Unified.Services.ProcessTemplateService>();
 builder.Services.AddScoped<Unified.Services.UpdateService>();
+builder.Services.AddScoped<Unified.Services.ScheduleService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

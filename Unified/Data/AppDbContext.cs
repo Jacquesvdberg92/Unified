@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
 using Unified.Models.ProcessTemplates;
+using Unified.Models.Schedule;
 using Unified.Models.Updates;
 
 namespace Unified.Data;
@@ -21,6 +22,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<ProcessTemplateBrand> ProcessTemplateBrands => Set<ProcessTemplateBrand>();
     public DbSet<Update> Updates => Set<Update>();
     public DbSet<UpdateBrand> UpdateBrands => Set<UpdateBrand>();
+    public DbSet<ShiftTemplate> ShiftTemplates => Set<ShiftTemplate>();
+    public DbSet<AgentSchedule> AgentSchedules => Set<AgentSchedule>();
+    public DbSet<WeekendShiftOffer> WeekendShiftOffers => Set<WeekendShiftOffer>();
+    public DbSet<TimeOffRequest> TimeOffRequests => Set<TimeOffRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -66,5 +71,39 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(ub => ub.Brand)
             .WithMany()
             .HasForeignKey(ub => ub.BrandId);
+
+        // Schedule
+        builder.Entity<AgentSchedule>()
+            .HasOne(s => s.Agent)
+            .WithMany()
+            .HasForeignKey(s => s.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<AgentSchedule>()
+            .HasOne(s => s.ShiftTemplate)
+            .WithMany()
+            .HasForeignKey(s => s.ShiftTemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<WeekendShiftOffer>()
+            .HasOne(o => o.OfferedToAgent)
+            .WithMany()
+            .HasForeignKey(o => o.OfferedToAgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<WeekendShiftOffer>()
+            .HasOne(o => o.CreatedByLeader)
+            .WithMany()
+            .HasForeignKey(o => o.CreatedByLeaderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<TimeOffRequest>()
+            .HasOne(r => r.Agent)
+            .WithMany()
+            .HasForeignKey(r => r.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<TimeOffRequest>()
+            .HasOne(r => r.ReviewedByLeader)
+            .WithMany()
+            .HasForeignKey(r => r.ReviewedByLeaderId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
