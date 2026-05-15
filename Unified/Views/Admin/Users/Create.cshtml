@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Create User</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="CreateUser" method="post">
+            <div asp-validation-summary="All" class="alert alert-danger d-none" id="valSummary"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Display Name</label>
+                <input name="displayName" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input name="email" type="email" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input name="password" type="password" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select" asp-items="ViewBag.AllRoles"></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Teams</label>
+                @foreach (var team in (IEnumerable<Unified.Models.Identity.Team>)ViewBag.AllTeams)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="teamIds" value="@team.Id" />
+                        <label class="form-check-label">@team.Name</label>
+                    </div>
+                }
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Users" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>

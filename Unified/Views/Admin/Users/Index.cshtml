@@ -1,0 +1,50 @@
+@model IEnumerable<Unified.Models.Identity.AppUser>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Users</h1>
+    <a asp-action="CreateUser" class="btn btn-primary btn-sm">
+        <i class="ri-user-add-line me-1"></i> New User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table id="usersTable" class="table table-hover nowrap w-100">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Teams</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    var role = ((Dictionary<string, IList<string>>)ViewBag.UserRoles)[user.Id].FirstOrDefault() ?? "—";
+                    var teams = string.Join(", ", user.Teams.Select(t => t.Team?.Name ?? ""));
+                    <tr>
+                        <td>@user.DisplayName</td>
+                        <td>@user.Email</td>
+                        <td><span class="badge bg-secondary">@role</span></td>
+                        <td>@teams</td>
+                        <td>
+                            <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="@Url.Content("~/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js")"></script>
+    <script>
+        $(function () { $('#usersTable').DataTable({ responsive: true }); });
+    </script>
+}

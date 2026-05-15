@@ -1,0 +1,46 @@
+@model Unified.Models.Identity.Team
+@{
+    ViewData["Title"] = "Edit Team";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Edit Team — @Model.Name</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="EditTeam" asp-route-id="@Model.Id" method="post">
+            <div class="mb-3">
+                <label class="form-label">Team Name</label>
+                <input name="name" value="@Model.Name" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Language</label>
+                <input name="language" value="@Model.Language" class="form-control" placeholder="e.g. EN, JP, PT" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Team Leader</label>
+                <select name="teamLeaderId" class="form-select" asp-items="ViewBag.TeamLeaders">
+                    <option value="">— None —</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Members</label>
+                <p class="text-muted small">Current members listed below. To modify, select users from the roster.</p>
+                <div id="memberRoster">
+                    @foreach (var at in Model.Members)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="memberIds"
+                                   value="@at.AgentId" checked />
+                            <label class="form-check-label">@at.Agent?.DisplayName (@at.Agent?.Email)</label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Teams" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
