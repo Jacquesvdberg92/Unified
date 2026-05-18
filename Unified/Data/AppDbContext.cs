@@ -115,7 +115,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(r => r.ReviewedByLeader)
             .WithMany()
             .HasForeignKey(r => r.ReviewedByLeaderId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         // Performance
         builder.Entity<PerformanceReview>()
@@ -152,13 +152,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(e => e.ProvisionedByUser)
             .WithMany()
             .HasForeignKey(e => e.ProvisionedByUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<VaultCategory>()
             .HasOne(c => c.CreatedByUser)
             .WithMany()
             .HasForeignKey(c => c.CreatedByUserId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.Entity<VaultAccessLog>()
             .HasOne(l => l.User)
@@ -170,7 +170,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(l => l.Entry)
             .WithMany()
             .HasForeignKey(l => l.EntryId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
 
         // Seed default vault categories
         builder.Entity<VaultCategory>().HasData(

@@ -1,0 +1,27 @@
+@{
+    var crumbs = ViewData["Breadcrumbs"] as List<(string Label, string? Url)>;
+    var pageTitle = ViewData["Title"] as string ?? "Page";
+}
+@if (crumbs != null && crumbs.Count > 0)
+{
+    <div class="d-flex align-items-center justify-content-between page-header-breadcrumb flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="page-title fw-medium fs-18 mb-0">@pageTitle</h2>
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    @foreach (var crumb in crumbs)
+                    {
+                        if (crumb.Url != null)
+                        {
+                            <li class="breadcrumb-item"><a href="@crumb.Url">@crumb.Label</a></li>
+                        }
+                        else
+                        {
+                            <li class="breadcrumb-item active" aria-current="page">@crumb.Label</li>
+                        }
+                    }
+                </ol>
+            </nav>
+        </div>
+    </div>
+}

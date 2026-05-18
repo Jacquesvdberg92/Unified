@@ -8,12 +8,18 @@
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
     <h1 class="page-title fw-semibold fs-18 mb-0">Email Templates</h1>
     <div class="d-flex gap-2">
-        <a asp-action="BrandManager" class="btn btn-outline-secondary btn-sm">
-            <i class="ri-building-line me-1"></i> Brands
-        </a>
-        <a asp-action="Create" class="btn btn-primary btn-sm">
-            <i class="ri-add-line me-1"></i> New Template
-        </a>
+        @if (User.IsInRole("BrandManager"))
+        {
+            <a asp-action="BrandManager" class="btn btn-outline-secondary btn-sm">
+                <i class="ri-building-line me-1"></i> Brands
+            </a>
+        }
+        @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader") || User.IsInRole("SwissArmyKnife"))
+        {
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="ri-add-line me-1"></i> New Template
+            </a>
+        }
     </div>
 </div>
 

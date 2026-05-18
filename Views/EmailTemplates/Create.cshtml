@@ -44,6 +44,7 @@
                                             data-token="@token">@token</button>
                                 }
                             </div>
+                            <div id="quillToolbar"></div>
                             <div id="quillEditor" style="min-height:250px;">@Html.Raw(Model.BodyHtml)</div>
                         </div>
                         <input type="hidden" asp-for="BodyHtml" id="bodyHtmlInput" />
@@ -70,9 +71,22 @@
 
 @section Scripts {
     <link href="@Url.Content("~/assets/libs/quill/quill.snow.css")" rel="stylesheet" />
-    <script src="@Url.Content("~/assets/libs/quill/quill.min.js")"></script>
+    <script src="@Url.Content("~/assets/libs/quill/quill.js")"></script>
     <script>
-        const quill = new Quill('#quillEditor', { theme: 'snow', modules: { toolbar: '#tokenToolbar' } });
+        const quill = new Quill('#quillEditor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ color: [] }, { background: [] }],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ align: [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
 
         // Sync hidden input before submit
         document.querySelector('form').addEventListener('submit', function () {

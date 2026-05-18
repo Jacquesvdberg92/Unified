@@ -1,41 +1,47 @@
 @using Unified.Models.Schedule
+@using Unified.Models.Identity
 @model List<AgentSchedule>
 
 @{
     ViewData["Title"] = "My Schedule";
-    var weekStart  = (DateTime)ViewBag.WeekStart;
-    var shifts     = (IEnumerable<ShiftTemplate>)ViewBag.ShiftTemplates;
-    var prevWeek   = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
-    var nextWeek   = weekStart.AddDays(7).ToString("yyyy-MM-dd");
-    var weekDays   = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
-    var lookup     = Model.ToDictionary(s => s.Date.Date);
+    var weekStart     = (DateTime)ViewBag.WeekStart;
+    var weekdayShifts = (IEnumerable<ShiftTemplate>)ViewBag.WeekdayShifts;
+    var weekendShifts = (IEnumerable<ShiftTemplate>)ViewBag.WeekendShifts;
+    var teamSchedules = (IEnumerable<AgentSchedule>)ViewBag.TeamSchedules;
+    var teamMembers   = (IEnumerable<AppUser>)ViewBag.TeamMembers;
+    var prevWeek      = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
+    var nextWeek      = weekStart.AddDays(7).ToString("yyyy-MM-dd");
+    var weekDays      = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
+    var myLookup      = Model.ToDictionary(s => s.Date.Date);
+    var teamLookup    = teamSchedules.ToDictionary(s => $"{s.AgentId}_{s.Date:yyyy-MM-dd}");
 
-    string Label(AgentSchedule? e)
+    string EntryLabel(AgentSchedule? e)
     {
-        if (e is null) return "—";
+        if (e is null) return "";
         return e.Type switch
         {
             ScheduleEntryType.DayOff   => "Day Off",
             ScheduleEntryType.Vacation => "Vacation",
-            ScheduleEntryType.Custom   => $"{e.CustomStartTime:hh\\:mm}–{e.CustomEndTime:hh\\:mm}",
-            _                          => e.ShiftTemplate?.Name ?? "Regular"
+            ScheduleEntryType.Custom   => $"Reduced {e.CustomStartTime:hh\\:mm}-{e.CustomEndTime:hh\\:mm}",
+            _                          => e.ShiftTemplate?.Name ?? "Working"
         };
     }
 
-    string Badge(AgentSchedule? e)
+    (string text, string bg) BadgeColors(AgentSchedule? e)
     {
-        if (e is null) return "bg-label-secondary";
+        if (e is null) return ("text-secondary", "bg-transparent");
         return e.Type switch
         {
-            ScheduleEntryType.DayOff   => "bg-label-warning",
-            ScheduleEntryType.Vacation => "bg-label-info",
-            ScheduleEntryType.Custom   => "bg-label-primary",
-            _                          => "bg-label-success"
+            ScheduleEntryType.DayOff   => ("text-warning-emphasis", "bg-warning-subtle"),
+            ScheduleEntryType.Vacation => ("text-info-emphasis",    "bg-info-subtle"),
+            ScheduleEntryType.Custom   => ("text-primary-emphasis", "bg-primary-subtle"),
+            _                          => ("text-success-emphasis", "bg-success-subtle")
         };
     }
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
+
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold mb-0"><i class="bx bx-calendar-check me-2"></i>My Schedule</h4>
         <a asp-action="MyRequests" class="btn btn-outline-primary btn-sm">
@@ -43,43 +49,310 @@
         </a>
     </div>
 
-    @* Week nav *@
     <div class="card mb-3">
-        <div class="card-body py-2 d-flex align-items-center gap-3">
+        <div class="card-body py-2 d-flex align-items-center gap-3 flex-wrap">
             <a asp-action="AgentView" asp-route-weekStart="@prevWeek"
                class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-left"></i></a>
             <span class="fw-semibold">
-                @weekStart.ToString("dd MMM") – @weekStart.AddDays(6).ToString("dd MMM yyyy")
+                @weekStart.ToString("dd MMM") - @weekStart.AddDays(6).ToString("dd MMM yyyy")
             </span>
             <a asp-action="AgentView" asp-route-weekStart="@nextWeek"
                class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-right"></i></a>
+            <span class="ms-auto text-muted small">Click a day below to set your shift</span>
         </div>
     </div>
 
-    @* Day cards *@
-    <div class="row g-3">
-        @foreach (var day in weekDays)
-        {
-            lookup.TryGetValue(day.Date, out var entry);
-            var isWeekend = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
-            <div class="col-sm-6 col-md-4 col-lg-3 col-xl-@(isWeekend ? "2" : "")">
-                <div class="card h-100 @(isWeekend ? "border-warning" : "")">
-                    <div class="card-header py-2 d-flex justify-content-between">
-                        <span class="fw-semibold">@day.ToString("ddd dd MMM")</span>
-                        @if (isWeekend)
+    @* <%-- SECTION 1: MY ALLOCATION (editable) --%> *@
+    <div class="card mb-4">
+        <div class="card-header py-2 d-flex align-items-center gap-2">
+            <i class="bx bx-user-check text-primary"></i>
+            <span class="fw-semibold">My Allocation</span>
+            <small class="text-muted ms-1">click a day to update</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 text-center align-middle agent-sched-grid"
+                       style="min-width:700px; table-layout:fixed">
+                    <colgroup>
+                        @foreach (var day in weekDays)
                         {
-                            <span class="badge bg-label-warning">Weekend</span>
+                            <col style="width:@(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "100px" : "130px")">
                         }
-                    </div>
-                    <div class="card-body py-2 text-center">
-                        <span class="badge @Badge(entry) fs-6 px-3 py-2">@Label(entry)</span>
-                        @if (entry?.Note is not null)
-                        {
-                            <p class="text-muted small mt-2 mb-0">@entry.Note</p>
-                        }
-                    </div>
-                </div>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            @foreach (var day in weekDays)
+                            {
+                                var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                <th class="sched-th @(isWe ? "sched-th-weekend" : "")">
+                                    @day.ToString("ddd")<br />
+                                    <small class="fw-normal opacity-75">@day.ToString("dd MMM")</small>
+                                    @if (isWe)
+                                    {
+                                        <br /><small class="opacity-50" style="font-size:.65rem">Weekend</small>
+                                    }
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            @foreach (var day in weekDays)
+                            {
+                                myLookup.TryGetValue(day.Date, out var entry);
+                                var isWe   = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                var colors = BadgeColors(entry);
+                                <td class="p-2 @(isWe ? "sched-we-cell" : "")">
+                                    <span class="sched-pill @colors.text @colors.bg @(entry is null ? "sched-pill-empty" : "") agent-cell"
+                                          style="white-space:pre-line;cursor:pointer;min-height:48px"
+                                          data-bs-toggle="modal" data-bs-target="#myDayModal"
+                                          data-date="@day.ToString("yyyy-MM-dd")"
+                                          data-weekend="@isWe.ToString().ToLower()"
+                                          data-entry-id="@(entry?.Id ?? 0)"
+                                          data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
+                                          data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
+                                          data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
+                                          data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
+                                          data-note="@(entry?.Note ?? "")">
+                                        @(string.IsNullOrEmpty(EntryLabel(entry)) ? "-" : EntryLabel(entry))
+                                    </span>
+                                    @if (entry?.Note is not null)
+                                    {
+                                        <div class="text-muted mt-1" style="font-size:.68rem">@entry.Note</div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        }
+        </div>
+    </div>
+
+    <div class="d-flex gap-3 flex-wrap mb-4">
+        <span class="sched-pill text-success-emphasis bg-success-subtle px-3">Working Day</span>
+        <span class="sched-pill text-primary-emphasis bg-primary-subtle px-3">Reduced Hours</span>
+        <span class="sched-pill text-warning-emphasis bg-warning-subtle px-3">Day Off</span>
+        <span class="sched-pill text-info-emphasis bg-info-subtle px-3">Vacation / Leave</span>
+        <span class="sched-pill sched-pill-empty text-secondary bg-transparent px-3" style="border:1px dashed currentColor">Not set</span>
+    </div>
+
+    @* <%-- SECTION 2: FULL TEAM SCHEDULE (read-only) --%> *@
+    <div class="card">
+        <div class="card-header py-2 d-flex align-items-center gap-2">
+            <i class="bx bx-group text-secondary"></i>
+            <span class="fw-semibold">Team Schedule</span>
+            <small class="text-muted ms-1">everyone's working hours this week</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 align-middle text-center agent-sched-grid"
+                       style="min-width:760px; table-layout:fixed">
+                    <colgroup>
+                        <col style="width:160px">
+                        @foreach (var day in weekDays)
+                        {
+                            <col style="width:@(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "90px" : "110px")">
+                        }
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="sched-th text-start ps-3">Agent</th>
+                            @foreach (var day in weekDays)
+                            {
+                                var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                <th class="sched-th @(isWe ? "sched-th-weekend" : "")">
+                                    @day.ToString("ddd")<br />
+                                    <small class="fw-normal opacity-75">@day.ToString("dd MMM")</small>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var member in teamMembers)
+                        {
+                            <tr>
+                                <td class="text-start ps-3 small fw-semibold">@member.DisplayName</td>
+                                @foreach (var day in weekDays)
+                                {
+                                    teamLookup.TryGetValue($"{member.Id}_{day:yyyy-MM-dd}", out var entry);
+                                    var isWe   = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                    var colors = BadgeColors(entry);
+                                    <td class="p-1 @(isWe ? "sched-we-cell" : "")">
+                                        <span class="sched-pill @colors.text @colors.bg @(entry is null ? "sched-pill-empty" : "")"
+                                              style="white-space:pre-line;min-height:32px;font-size:.72rem">
+                                            @if (entry is not null)
+                                            {
+                                                if (entry.Type == ScheduleEntryType.Regular && entry.ShiftTemplate != null)
+                                                {
+                                                    @($"{entry.ShiftTemplate.StartTime:hh\\:mm}-{entry.ShiftTemplate.EndTime:hh\\:mm}")
+                                                }
+                                                else
+                                                {
+                                                    @EntryLabel(entry)
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @("-")
+                                            }
+                                        </span>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                        @if (!teamMembers.Any())
+                        {
+                            <tr><td colspan="8" class="text-muted py-4 text-center">No team schedule data available.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+<div class="modal fade" id="myDayModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SetMyDay" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="weekStart"  value="@weekStart.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="entry.Id"   id="my-entry-id" value="0" />
+                <input type="hidden" name="entry.Date" id="my-date" />
+
+                <div class="modal-header py-2">
+                    <div>
+                        <h6 class="modal-title mb-0">My Schedule</h6>
+                        <small class="text-muted" id="my-date-display"></small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">What are you doing this day?</label>
+                        <select name="entry.Type" id="my-type" class="form-select" onchange="myToggle(this.value)">
+                            <option value="0">Working Day (use shift)</option>
+                            <option value="1">Reduced Day (custom hours)</option>
+                            <option value="2">Day Off</option>
+                            <option value="3">Vacation / Leave</option>
+                        </select>
+                    </div>
+
+                    <div id="my-shiftRow" class="mb-3">
+                        <label class="form-label fw-semibold">Shift</label>
+                        <select name="entry.ShiftTemplateId" id="my-shift" class="form-select">
+                            <option value="">-- Select --</option>
+                            <optgroup label="Weekday Shifts" id="my-og-weekday">
+                                @foreach (var s in weekdayShifts)
+                                {
+                                    <option value="@s.Id">@s.Name</option>
+                                }
+                            </optgroup>
+                            <optgroup label="Weekend Shifts" id="my-og-weekend">
+                                @foreach (var s in weekendShifts)
+                                {
+                                    <option value="@s.Id">@s.Name</option>
+                                }
+                            </optgroup>
+                        </select>
+                        <div class="form-text text-muted" id="my-shift-hint"></div>
+                    </div>
+
+                    <div id="my-customRow" class="row g-2 mb-3" style="display:none">
+                        <div class="col">
+                            <label class="form-label fw-semibold">Start Time</label>
+                            <input type="time" name="entry.CustomStartTime" id="my-custom-start" class="form-control" step="900" />
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-semibold">End Time</label>
+                            <input type="time" name="entry.CustomEndTime" id="my-custom-end" class="form-control" step="900" />
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">Any start/end within your approved hours.</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold">Note <small class="fw-normal text-muted">(optional)</small></label>
+                        <input type="text" name="entry.Note" id="my-note" class="form-control form-control-sm"
+                               placeholder="e.g. approved by TL, dentist at 10" />
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<style>
+.sched-pill {
+    display: block;
+    padding: .25rem .4rem;
+    border-radius: .375rem;
+    font-size: .76rem;
+    font-weight: 500;
+    line-height: 1.3;
+}
+.sched-pill-empty {
+    border: 1px dashed currentColor !important;
+    background: transparent !important;
+    opacity: .55;
+}
+.sched-pill:not(.sched-pill-empty):hover { opacity: .82; }
+.agent-cell { cursor: pointer; }
+.sched-th {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    font-size: .78rem;
+    vertical-align: middle;
+}
+.sched-th-weekend { color: var(--bs-warning-text-emphasis); }
+.sched-we-cell { background: rgba(var(--bs-warning-rgb), .07); }
+.agent-sched-grid td, .agent-sched-grid th { font-size: .78rem; vertical-align: middle; }
+</style>
+<script>
+(function () {
+    var modal = document.getElementById('myDayModal');
+    modal.addEventListener('show.bs.modal', function (e) {
+        var btn       = e.relatedTarget;
+        var isWeekend = btn.dataset.weekend === 'true';
+
+        document.getElementById('my-date').value         = btn.dataset.date;
+        document.getElementById('my-date-display').textContent = fmtDate(btn.dataset.date, isWeekend);
+        document.getElementById('my-entry-id').value     = btn.dataset.entryId || '0';
+        document.getElementById('my-type').value         = btn.dataset.entryType || '0';
+        document.getElementById('my-shift').value        = btn.dataset.shiftId || '';
+        document.getElementById('my-custom-start').value = btn.dataset.customStart || '';
+        document.getElementById('my-custom-end').value   = btn.dataset.customEnd || '';
+        document.getElementById('my-note').value         = btn.dataset.note || '';
+
+        document.getElementById('my-og-weekday').style.display = isWeekend ? 'none' : '';
+        document.getElementById('my-og-weekend').style.display = isWeekend ? '' : 'none';
+
+        document.getElementById('my-shift-hint').textContent = isWeekend
+            ? 'Weekend: Morning (08:00-15:00) or Evening (14:00-21:00).'
+            : 'Select the shift that matches your allocated working hours.';
+
+        myToggle(btn.dataset.entryType || '0');
+    });
+})();
+
+function myToggle(val) {
+    document.getElementById('my-shiftRow').style.display  = val === '0' ? '' : 'none';
+    document.getElementById('my-customRow').style.display = val === '1' ? '' : 'none';
+}
+
+function fmtDate(d, isWeekend) {
+    var dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'short', year:'numeric' })
+           + (isWeekend ? ' (Weekend)' : '');
+}
+</script>
+}

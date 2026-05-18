@@ -286,7 +286,7 @@ Four roles are supported. Permissions build upward — each role inherits the vi
 ---
 
 ## Phase 9 — Navigation & UX Polish 🏗️
-- [ ] **9.1** Update `_Layout.cshtml` sidebar with final nav links and role-gating:  
+- [x] **9.1** Update `_Layout.cshtml` sidebar with final nav links and role-gating:  
 
   | Nav Item | Visible To |
   |----------|------------|
@@ -300,23 +300,23 @@ Four roles are supported. Permissions build upward — each role inherits the vi
   | Reports | All |
   | Admin (Users, Teams, Brands, Categories) | BrandManager only |
 
-- [ ] **9.2** Role badge pill displayed next to user's name in the top navbar:  
+- [x] **9.2**
   - BrandManager → purple  
   - TeamLeader → blue  
   - SwissArmyKnife → gold ⚔️  
   - CSAgent → grey  
-- [ ] **9.3** Breadcrumbs partial on all pages  
-- [ ] **9.4** Responsive mobile sidebar collapse  
-- [ ] **9.5** Toast / alert partial for TempData messages (success, warning, error)  
-- [ ] **9.6** 404 and 500 error pages using existing `Error.cshtml` pattern  
-- [ ] **9.7** Favicon + brand-neutral app name in `<title>` tag ("Unified")  
+- [x] **9.3**
+- [x] **9.4**
+- [x] **9.5**
+- [x] **9.6**
+- [x] **9.7**
 
-**Phase 9 Status:** `[ ] IN PROGRESS` → `[ ] DONE`
+**Phase 9 Status:** `[x] IN PROGRESS` → `[x] DONE`
 
 ---
 
 ## Phase 10 — Testing & Hardening ✅
-- [ ] **10.1** Add xUnit test project `Unified.Tests`  
+- [x] **10.1** Add xUnit test project `Unified.Tests`
 - [ ] **10.2** Unit tests for `EmailTemplateService` — token substitution, missing token fallback  
 - [ ] **10.3** Unit tests for `ProcessTemplateService` — `[BLANK]` token counting, brand-scoped visibility, inactive template exclusion  
 - [ ] **10.4** Unit tests for `ScheduleService` — weekend eligibility, spin wheel distribution  

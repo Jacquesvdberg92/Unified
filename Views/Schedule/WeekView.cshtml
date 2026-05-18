@@ -4,18 +4,18 @@
 
 @{
     ViewData["Title"] = "Weekly Schedule";
-    var teams          = (IEnumerable<Team>)ViewBag.Teams;
-    var selTeamId      = (int)ViewBag.SelectedTeamId;
-    var weekStart      = (DateTime)ViewBag.WeekStart;
-    var shifts         = (IEnumerable<ShiftTemplate>)ViewBag.ShiftTemplates;
-    var pendingCount   = (int)ViewBag.PendingCount;
-    var teamAgents     = (IEnumerable<AppUser>)ViewBag.TeamAgents;
-    var prevWeek       = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
-    var nextWeek       = weekStart.AddDays(7).ToString("yyyy-MM-dd");
-    var weekDays       = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
-
-    // Build lookup: agentId+date → entry
-    var lookup = Model.ToDictionary(s => $"{s.AgentId}_{s.Date:yyyy-MM-dd}");
+    var teams        = (IEnumerable<Team>)ViewBag.Teams;
+    var selTeamId    = (int)ViewBag.SelectedTeamId;
+    var weekStart    = (DateTime)ViewBag.WeekStart;
+    var shifts       = (IEnumerable<ShiftTemplate>)ViewBag.ShiftTemplates;
+    var pendingCount = (int)ViewBag.PendingCount;
+    var agentGroup   = (IEnumerable<AppUser>)ViewBag.AgentGroup;
+    var leaderGroup  = (IEnumerable<AppUser>)ViewBag.LeaderGroup;
+    var managerGroup = (IEnumerable<AppUser>)ViewBag.ManagerGroup;
+    var prevWeek     = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
+    var nextWeek     = weekStart.AddDays(7).ToString("yyyy-MM-dd");
+    var weekDays     = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
+    var lookup       = Model.ToDictionary(s => $"{s.AgentId}_{s.Date:yyyy-MM-dd}");
 
     string EntryLabel(AgentSchedule? e)
     {
@@ -24,46 +24,47 @@
         {
             ScheduleEntryType.DayOff   => "Day Off",
             ScheduleEntryType.Vacation => "Vacation",
-            ScheduleEntryType.Custom   => $"{e.CustomStartTime:hh\\:mm}–{e.CustomEndTime:hh\\:mm}",
+            ScheduleEntryType.Custom   => $"Reduced\n{e.CustomStartTime:hh\\:mm}-{e.CustomEndTime:hh\\:mm}",
             _                          => e.ShiftTemplate?.Name ?? "Regular"
         };
     }
 
-    string EntryBadge(AgentSchedule? e)
+    // Returns (text class, bg class) that work in both light & dark mode
+    (string text, string bg) EntryColors(AgentSchedule? e)
     {
-        if (e is null) return "bg-label-secondary";
+        if (e is null) return ("text-secondary", "bg-transparent");
         return e.Type switch
         {
-            ScheduleEntryType.DayOff   => "bg-label-warning",
-            ScheduleEntryType.Vacation => "bg-label-info",
-            ScheduleEntryType.Custom   => "bg-label-primary",
-            _                          => "bg-label-success"
+            ScheduleEntryType.DayOff   => ("text-warning-emphasis", "bg-warning-subtle"),
+            ScheduleEntryType.Vacation => ("text-info-emphasis",    "bg-info-subtle"),
+            ScheduleEntryType.Custom   => ("text-primary-emphasis", "bg-primary-subtle"),
+            _                          => ("text-success-emphasis", "bg-success-subtle")
         };
     }
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    @* Header *@
+    @* -- Header ---------------------------------------------------------- *@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold mb-0"><i class="bx bx-calendar me-2"></i>Weekly Schedule</h4>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
+        <div class="d-flex gap-2 flex-wrap">
             @if (pendingCount > 0)
             {
                 <a asp-action="ReviewRequests" asp-route-teamId="@selTeamId"
                    class="btn btn-warning btn-sm position-relative">
                     <i class="bx bx-bell me-1"></i>Requests
-                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
-                        @pendingCount
-                    </span>
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">@pendingCount</span>
                 </a>
             }
             <a asp-action="WeekendWheel" asp-route-weekStart="@weekStart.ToString("yyyy-MM-dd")"
-               class="btn btn-outline-secondary btn-sm"><i class="bx bx-rotate-right me-1"></i>Weekend Wheel</a>
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bx bx-rotate-right me-1"></i>Weekend Wheel
+            </a>
         </div>
     </div>
 
-    @* Team + week selector *@
+    @* -- Team + week selector --------------------------------------------- *@
     <div class="card mb-3">
         <div class="card-body py-2">
             <form method="get" class="d-flex flex-wrap gap-3 align-items-center">
@@ -80,7 +81,7 @@
                     <a asp-action="WeekView" asp-route-teamId="@selTeamId" asp-route-weekStart="@prevWeek"
                        class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-left"></i></a>
                     <span class="fw-semibold small">
-                        @weekStart.ToString("dd MMM") – @weekStart.AddDays(6).ToString("dd MMM yyyy")
+                        @weekStart.ToString("dd MMM") - @weekStart.AddDays(6).ToString("dd MMM yyyy")
                     </span>
                     <a asp-action="WeekView" asp-route-teamId="@selTeamId" asp-route-weekStart="@nextWeek"
                        class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-right"></i></a>
@@ -90,49 +91,156 @@
         </div>
     </div>
 
-    @* Schedule grid *@
+    @* -- Schedule grid ---------------------------------------------------- *@
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered mb-0 align-middle text-center" style="min-width:900px">
+                <table class="table table-bordered mb-0 align-middle text-center schedule-grid" style="min-width:960px; table-layout:fixed">
+                    <colgroup>
+                        <col style="width:170px">
+                        @foreach (var day in weekDays)
+                        {
+                            <col style="width:@(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "95px" : "115px")">
+                        }
+                    </colgroup>
                     <thead class="table-dark">
                         <tr>
-                            <th class="text-start ps-3" style="min-width:160px">Agent</th>
+                            <th class="text-start ps-3">Agent</th>
                             @foreach (var day in weekDays)
                             {
-                                <th class="@(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "bg-opacity-75" : "")">
-                                    @day.ToString("ddd")<br /><small class="fw-normal">@day.ToString("dd MMM")</small>
+                                var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                <th class="@(isWe ? "text-warning" : "")">
+                                    @day.ToString("ddd")<br />
+                                    <small class="fw-normal opacity-75">@day.ToString("dd MMM")</small>
                                 </th>
                             }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var agent in teamAgents)
+                        @* Agents *@
+                        @if (agentGroup.Any())
                         {
-                            <tr>
-                                <td class="text-start ps-3 fw-semibold">@agent.DisplayName</td>
-                                @foreach (var day in weekDays)
-                                {
-                                    lookup.TryGetValue($"{agent.Id}_{day:yyyy-MM-dd}", out var entry);
-                                    <td>
-                                        <span class="badge @EntryBadge(entry) w-100" style="cursor:pointer"
-                                              data-bs-toggle="modal" data-bs-target="#editModal"
-                                              data-agent-id="@agent.Id"
-                                              data-agent-name="@agent.DisplayName"
-                                              data-date="@day.ToString("yyyy-MM-dd")"
-                                              data-entry-id="@(entry?.Id ?? 0)"
-                                              data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
-                                              data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
-                                              data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
-                                              data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
-                                              data-note="@(entry?.Note ?? "")">
-                                            @(string.IsNullOrEmpty(EntryLabel(entry)) ? "—" : EntryLabel(entry))
-                                        </span>
-                                    </td>
-                                }
+                            <tr class="section-header">
+                                <td colspan="8" class="text-start ps-3 py-1 sched-section-hdr">
+                                    <small class="fw-bold text-uppercase text-muted">Agents</small>
+                                </td>
                             </tr>
+                            @foreach (var agent in agentGroup)
+                            {
+                                <tr>
+                                    <td class="text-start ps-3 small fw-semibold">@agent.DisplayName</td>
+                                    @foreach (var day in weekDays)
+                                    {
+                                        lookup.TryGetValue($"{agent.Id}_{day:yyyy-MM-dd}", out var entry);
+                                        var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                        var ec = EntryColors(entry);
+                                        <td class="p-1 @(isWe ? "bg-warning bg-opacity-10" : "")">
+                                            <span class="sched-pill @ec.text @ec.bg @(entry is null ? "sched-pill-empty" : "") sched-cell"
+                                                  style="white-space:pre-line;cursor:pointer;min-height:32px"
+                                                  data-bs-toggle="modal" data-bs-target="#editModal"
+                                                  data-agent-id="@agent.Id"
+                                                  data-agent-name="@agent.DisplayName"
+                                                  data-date="@day.ToString("yyyy-MM-dd")"
+                                                  data-weekend="@isWe.ToString().ToLower()"
+                                                  data-entry-id="@(entry?.Id ?? 0)"
+                                                  data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
+                                                  data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
+                                                  data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-note="@(entry?.Note ?? "")">
+                                                @(string.IsNullOrEmpty(EntryLabel(entry)) ? "-" : EntryLabel(entry))
+                                            </span>
+                                        </td>
+                                    }
+                                </tr>
+                            }
                         }
-                        @if (!teamAgents.Any())
+
+                        @* Team Leaders *@
+                        @if (leaderGroup.Any())
+                        {
+                            <tr class="section-header">
+                                <td colspan="8" class="text-start ps-3 py-1 sched-section-hdr">
+                                    <small class="fw-bold text-uppercase text-muted">Team Leaders</small>
+                                </td>
+                            </tr>
+                            @foreach (var agent in leaderGroup)
+                            {
+                                <tr>
+                                    <td class="text-start ps-3 small fw-semibold">
+                                        @agent.DisplayName
+                                        <span class="badge bg-primary ms-1" style="font-size:.6rem">TL</span>
+                                    </td>
+                                    @foreach (var day in weekDays)
+                                    {
+                                        lookup.TryGetValue($"{agent.Id}_{day:yyyy-MM-dd}", out var entry);
+                                        var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                        var ec = EntryColors(entry);
+                                        <td class="p-1 @(isWe ? "bg-warning bg-opacity-10" : "")">
+                                            <span class="sched-pill @ec.text @ec.bg @(entry is null ? "sched-pill-empty" : "") sched-cell"
+                                                  style="white-space:pre-line;cursor:pointer;min-height:32px"
+                                                  data-bs-toggle="modal" data-bs-target="#editModal"
+                                                  data-agent-id="@agent.Id"
+                                                  data-agent-name="@agent.DisplayName"
+                                                  data-date="@day.ToString("yyyy-MM-dd")"
+                                                  data-weekend="@isWe.ToString().ToLower()"
+                                                  data-entry-id="@(entry?.Id ?? 0)"
+                                                  data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
+                                                  data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
+                                                  data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-note="@(entry?.Note ?? "")">
+                                                @(string.IsNullOrEmpty(EntryLabel(entry)) ? "-" : EntryLabel(entry))
+                                            </span>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+
+                        @* Managers *@
+                        @if (managerGroup.Any())
+                        {
+                            <tr class="section-header">
+                                <td colspan="8" class="text-start ps-3 py-1 sched-section-hdr">
+                                    <small class="fw-bold text-uppercase text-muted">Managers</small>
+                                </td>
+                            </tr>
+                            @foreach (var agent in managerGroup)
+                            {
+                                <tr>
+                                    <td class="text-start ps-3 small fw-semibold">
+                                        @agent.DisplayName
+                                        <span class="badge bg-purple ms-1" style="font-size:.6rem">MGR</span>
+                                    </td>
+                                    @foreach (var day in weekDays)
+                                    {
+                                        lookup.TryGetValue($"{agent.Id}_{day:yyyy-MM-dd}", out var entry);
+                                        var isWe = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                                        var ec = EntryColors(entry);
+                                        <td class="p-1 @(isWe ? "bg-warning bg-opacity-10" : "")">
+                                            <span class="sched-pill @ec.text @ec.bg @(entry is null ? "sched-pill-empty" : "") sched-cell"
+                                                  style="white-space:pre-line;cursor:pointer;min-height:32px"
+                                                  data-bs-toggle="modal" data-bs-target="#editModal"
+                                                  data-agent-id="@agent.Id"
+                                                  data-agent-name="@agent.DisplayName"
+                                                  data-date="@day.ToString("yyyy-MM-dd")"
+                                                  data-weekend="@isWe.ToString().ToLower()"
+                                                  data-entry-id="@(entry?.Id ?? 0)"
+                                                  data-entry-type="@((int)(entry?.Type ?? ScheduleEntryType.Regular))"
+                                                  data-shift-id="@(entry?.ShiftTemplateId ?? 0)"
+                                                  data-custom-start="@(entry?.CustomStartTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-custom-end="@(entry?.CustomEndTime?.ToString(@"hh\:mm") ?? "")"
+                                                  data-note="@(entry?.Note ?? "")">
+                                                @(string.IsNullOrEmpty(EntryLabel(entry)) ? "-" : EntryLabel(entry))
+                                            </span>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+
+                        @if (!agentGroup.Any() && !leaderGroup.Any() && !managerGroup.Any())
                         {
                             <tr><td colspan="8" class="text-muted py-4">No agents in this team.</td></tr>
                         }
@@ -143,66 +251,81 @@
     </div>
 </div>
 
-@* Edit Day Modal *@
+@* -- Edit Day Modal ----------------------------------------------------- *@
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form asp-action="SetAgentDay" method="post">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="teamId" value="@selTeamId" />
-                <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
-                <input type="hidden" name="entry.Id" id="modal-entry-id" value="0" />
+                <input type="hidden" name="teamId"        value="@selTeamId" />
+                <input type="hidden" name="weekStart"     value="@weekStart.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="entry.Id"      id="modal-entry-id" value="0" />
                 <input type="hidden" name="entry.AgentId" id="modal-agent-id" />
-                <input type="hidden" name="entry.Date" id="modal-date" />
+                <input type="hidden" name="entry.Date"    id="modal-date" />
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Schedule — <span id="modal-agent-name"></span></h5>
+                <div class="modal-header py-2">
+                    <div>
+                        <h6 class="modal-title mb-0" id="modal-agent-name"></h6>
+                        <small class="text-muted" id="modal-date-display"></small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Date</label>
-                        <input class="form-control" id="modal-date-display" readonly />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <select name="entry.Type" id="modal-type" class="form-select" onchange="toggleCustomTimes(this.value)">
-                            <option value="0">Regular</option>
-                            <option value="1">Custom</option>
+                        <label class="form-label fw-semibold">Entry Type</label>
+                        <select name="entry.Type" id="modal-type" class="form-select" onchange="schedToggle(this.value)">
+                            <option value="0">Working Day (use shift)</option>
+                            <option value="1">Reduced Day (custom hours)</option>
                             <option value="2">Day Off</option>
-                            <option value="3">Vacation</option>
+                            <option value="3">Vacation / Leave</option>
                         </select>
                     </div>
-                    <div class="mb-3" id="shiftRow">
-                        <label class="form-label">Shift Template</label>
+
+                    <div id="shiftRow" class="mb-3">
+                        <label class="form-label fw-semibold">Shift</label>
                         <select name="entry.ShiftTemplateId" id="modal-shift" class="form-select">
-                            <option value="">— None —</option>
-                            @foreach (var s in shifts)
-                            {
-                                <option value="@s.Id">@s.Name (@s.StartTime.ToString(@"hh\:mm")–@s.EndTime.ToString(@"hh\:mm"))</option>
-                            }
+                            <option value="">- Select -</option>
+                            <optgroup label="Weekday Shifts" id="og-weekday">
+                                @foreach (var s in shifts.Where(s => !s.IsWeekendShift))
+                                {
+                                    <option value="@s.Id" data-weekend="false">@s.Name</option>
+                                }
+                            </optgroup>
+                            <optgroup label="Weekend Shifts" id="og-weekend">
+                                @foreach (var s in shifts.Where(s => s.IsWeekendShift))
+                                {
+                                    <option value="@s.Id" data-weekend="true">@s.Name</option>
+                                }
+                            </optgroup>
                         </select>
+                        <div class="form-text text-muted" id="shift-hint"></div>
                     </div>
-                    <div id="customRow" style="display:none">
-                        <div class="row g-2 mb-3">
-                            <div class="col">
-                                <label class="form-label">Start</label>
-                                <input type="time" name="entry.CustomStartTime" id="modal-custom-start" class="form-control" />
-                            </div>
-                            <div class="col">
-                                <label class="form-label">End</label>
-                                <input type="time" name="entry.CustomEndTime" id="modal-custom-end" class="form-control" />
-                            </div>
+
+                    <div id="customRow" class="row g-2 mb-3" style="display:none">
+                        <div class="col">
+                            <label class="form-label fw-semibold">Start Time</label>
+                            <input type="time" name="entry.CustomStartTime" id="modal-custom-start" class="form-control" step="900" />
+                        </div>
+                        <div class="col">
+                            <label class="form-label fw-semibold">End Time</label>
+                            <input type="time" name="entry.CustomEndTime" id="modal-custom-end" class="form-control" step="900" />
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">Standard hours are 09:00-18:00. A reduced day can be any shorter window.</small>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <input type="text" name="entry.Note" id="modal-note" class="form-control" placeholder="Optional note" />
+
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold">Note <small class="fw-normal text-muted">(optional)</small></label>
+                        <input type="text" name="entry.Note" id="modal-note" class="form-control form-control-sm"
+                               placeholder="e.g. dentist, early finish approved by TL" />
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
                 </div>
             </form>
         </div>
@@ -210,30 +333,71 @@
 </div>
 
 @section Scripts {
+<style>
+.schedule-grid td, .schedule-grid th { font-size: 0.78rem; vertical-align: middle; }
+
+/* Pill cells - theme-aware */
+.sched-pill {
+    display: block;
+    padding: .2rem .35rem;
+    border-radius: .375rem;
+    font-size: .75rem;
+    font-weight: 500;
+    line-height: 1.3;
+}
+.sched-pill-empty {
+    border: 1px dashed currentColor !important;
+    background: transparent !important;
+    opacity: .5;
+}
+.sched-cell { cursor: pointer; }
+.sched-cell:hover, .sched-pill:not(.sched-pill-empty):hover { opacity: .82; }
+
+/* Section group headers */
+.sched-section-hdr {
+    background: var(--bs-secondary-bg) !important;
+    color: var(--bs-secondary-color) !important;
+}
+</style>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     var modal = document.getElementById('editModal');
     modal.addEventListener('show.bs.modal', function (e) {
-        var btn = e.relatedTarget;
-        document.getElementById('modal-agent-id').value    = btn.dataset.agentId;
-        document.getElementById('modal-agent-name').textContent = btn.dataset.agentName;
-        document.getElementById('modal-date').value        = btn.dataset.date;
-        document.getElementById('modal-date-display').value = btn.dataset.date;
-        document.getElementById('modal-entry-id').value   = btn.dataset.entryId;
-        document.getElementById('modal-type').value       = btn.dataset.entryType;
-        document.getElementById('modal-shift').value      = btn.dataset.shiftId;
-        document.getElementById('modal-custom-start').value = btn.dataset.customStart;
-        document.getElementById('modal-custom-end').value   = btn.dataset.customEnd;
-        document.getElementById('modal-note').value        = btn.dataset.note;
-        toggleCustomTimes(btn.dataset.entryType);
-    });
-});
+        var btn       = e.relatedTarget;
+        var isWeekend = btn.dataset.weekend === 'true';
 
-function toggleCustomTimes(val) {
-    var isCustom = val == '1';
-    var isRegular = val == '0';
-    document.getElementById('customRow').style.display = isCustom ? '' : 'none';
-    document.getElementById('shiftRow').style.display  = isRegular ? '' : 'none';
+        document.getElementById('modal-agent-id').value       = btn.dataset.agentId;
+        document.getElementById('modal-agent-name').textContent = btn.dataset.agentName;
+        document.getElementById('modal-date').value           = btn.dataset.date;
+        document.getElementById('modal-date-display').textContent = fmtDate(btn.dataset.date, isWeekend);
+        document.getElementById('modal-entry-id').value       = btn.dataset.entryId || '0';
+        document.getElementById('modal-type').value           = btn.dataset.entryType || '0';
+        document.getElementById('modal-shift').value          = btn.dataset.shiftId || '';
+        document.getElementById('modal-custom-start').value   = btn.dataset.customStart || '';
+        document.getElementById('modal-custom-end').value     = btn.dataset.customEnd || '';
+        document.getElementById('modal-note').value           = btn.dataset.note || '';
+
+        // Show only the relevant shift group
+        document.getElementById('og-weekday').style.display = isWeekend ? 'none' : '';
+        document.getElementById('og-weekend').style.display = isWeekend ? '' : 'none';
+
+        document.getElementById('shift-hint').textContent = isWeekend
+            ? 'Weekend: Fixed slots - Morning (08:00-15:00) or Evening (14:00-21:00).'
+            : 'Weekday: Standard is 09:00-18:00. Shift can move earlier or later.';
+
+        schedToggle(btn.dataset.entryType || '0');
+    });
+})();
+
+function schedToggle(val) {
+    document.getElementById('shiftRow').style.display  = val === '0' ? '' : 'none';
+    document.getElementById('customRow').style.display = val === '1' ? '' : 'none';
+}
+
+function fmtDate(d, isWeekend) {
+    var dt = new Date(d + 'T00:00:00');
+    var s  = dt.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'short', year:'numeric' });
+    return isWeekend ? s + ' ?? Weekend' : s;
 }
 </script>
 }

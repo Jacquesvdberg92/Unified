@@ -1,0 +1,51 @@
+@{
+    var success = TempData["Success"] as string;
+    var warning = TempData["Warning"] as string;
+    var error   = TempData["Error"]   as string;
+}
+@if (success != null || warning != null || error != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (success != null)
+            {
+                <text>
+                Toastify({
+                    text: "@Html.Raw(success.Replace("\"", "\\\""))",
+                    duration: 4000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: "#28a745" },
+                    stopOnFocus: true
+                }).showToast();
+                </text>
+            }
+            @if (warning != null)
+            {
+                <text>
+                Toastify({
+                    text: "@Html.Raw(warning.Replace("\"", "\\\""))",
+                    duration: 5000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: "#ffc107", color: "#212529" },
+                    stopOnFocus: true
+                }).showToast();
+                </text>
+            }
+            @if (error != null)
+            {
+                <text>
+                Toastify({
+                    text: "@Html.Raw(error.Replace("\"", "\\\""))",
+                    duration: 6000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: "#dc3545" },
+                    stopOnFocus: true
+                }).showToast();
+                </text>
+            }
+        });
+    </script>
+}

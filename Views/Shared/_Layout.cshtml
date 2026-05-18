@@ -9,10 +9,11 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="Description" content="Unified — Internal operations tool">
 
-        <!-- TITLE -->
+		<!-- TITLE -->
 		<title>@ViewData["Title"] — Unified</title>
 
-        <!-- FAVICON -->
+		<!-- FAVICON -->
+		<link rel="icon" type="image/x-icon" href="@Url.Content("~/favicon.ico")">
 
         <!-- BOOTSTRAP CSS -->
 	    <link  id="style" href="@Url.Content("~/assets/libs/bootstrap/css/bootstrap.min.css")" rel="stylesheet">
@@ -28,7 +29,10 @@
         <!-- MAIN JS -->
         <script src="@Url.Content("~/assets/js/main.js")"></script>
 
-        @await RenderSectionAsync("Styles", required: false)
+		@await RenderSectionAsync("Styles", required: false)
+
+		<!-- TOASTIFY CSS -->
+		<link rel="stylesheet" href="@Url.Content("~/assets/libs/toastify-js/src/toastify.css")">
 
 	</head>
 
@@ -62,9 +66,10 @@
 
             <div class="main-content app-content">
                 <div class="container-fluid">
+                    <partial name="~/Views/Shared/_Breadcrumbs.cshtml" />
                     @RenderBody()
                 </div>
-            </div> 
+            </div>
             <!-- END MAIN-CONTENT -->
 
             <!-- FOOTER -->
@@ -79,7 +84,12 @@
 
         <partial name="~/Views/Shared/Layouts/_scripts.cshtml">
 
+        <!-- TOASTIFY JS -->
+        <script src="@Url.Content("~/assets/libs/toastify-js/src/toastify.js")"></script>
+
         @await RenderSectionAsync("Scripts", required: false)
+
+        <partial name="~/Views/Shared/_Toast.cshtml" />
 
         <partial name="~/Views/Shared/_PinnedUpdatesToast.cshtml" />
 

@@ -10,7 +10,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -53,6 +53,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
 app.UseRouting();
 
@@ -72,3 +74,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Make Program accessible for WebApplicationFactory in integration tests
+public partial class Program { }
+

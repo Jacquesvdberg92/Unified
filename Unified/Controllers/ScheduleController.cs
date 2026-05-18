@@ -37,12 +37,30 @@ public class ScheduleController : Controller
         var pendingCount   = selTeamId > 0 ? await _service.GetPendingCountForTeamAsync(selTeamId) : 0;
         var teamAgents     = selTeamId > 0 ? await GetTeamAgentsAsync(selTeamId) : new();
 
+        // Split into role groups for the Excel-style grouped grid
+        var agentGroup   = new List<AppUser>();
+        var leaderGroup  = new List<AppUser>();
+        var managerGroup = new List<AppUser>();
+
+        foreach (var u in teamAgents)
+        {
+            var userRoles = await _users.GetRolesAsync(u);
+            if (userRoles.Contains(Roles.BrandManager))
+                managerGroup.Add(u);
+            else if (userRoles.Contains(Roles.TeamLeader))
+                leaderGroup.Add(u);
+            else
+                agentGroup.Add(u);
+        }
+
         ViewBag.Teams          = teams;
         ViewBag.SelectedTeamId = selTeamId;
         ViewBag.WeekStart      = week;
         ViewBag.ShiftTemplates = shifts;
         ViewBag.PendingCount   = pendingCount;
-        ViewBag.TeamAgents     = teamAgents;
+        ViewBag.AgentGroup     = agentGroup;
+        ViewBag.LeaderGroup    = leaderGroup;
+        ViewBag.ManagerGroup   = managerGroup;
 
         return View(schedules);
     }
@@ -73,11 +91,49 @@ public class ScheduleController : Controller
         var userId = _users.GetUserId(User)!;
         var week   = ParseWeek(weekStart);
         var schedules = await _service.GetAgentScheduleAsync(userId, week, week.AddDays(6));
-        var shifts    = await _service.GetShiftTemplatesAsync();
+        var allShifts = await _service.GetShiftTemplatesAsync();
 
-        ViewBag.WeekStart      = week;
-        ViewBag.ShiftTemplates = shifts;
+        // Load the agent's team so the full schedule can be shown below
+        var agentTeamId = await _db.AgentTeams
+            .Where(at => at.AgentId == userId)
+            .Select(at => (int?)at.TeamId)
+            .FirstOrDefaultAsync();
+
+        List<AgentSchedule> teamSchedules = new();
+        List<AppUser>       teamMembers   = new();
+        if (agentTeamId.HasValue)
+        {
+            teamSchedules = await _service.GetWeeklyScheduleAsync(agentTeamId.Value, week);
+            teamMembers   = await GetTeamAgentsAsync(agentTeamId.Value);
+        }
+
+        ViewBag.WeekStart         = week;
+        ViewBag.ShiftTemplates    = allShifts;
+        ViewBag.WeekdayShifts     = allShifts.Where(s => !s.IsWeekendShift).ToList();
+        ViewBag.WeekendShifts     = allShifts.Where(s => s.IsWeekendShift).ToList();
+        ViewBag.TeamSchedules     = teamSchedules;
+        ViewBag.TeamMembers       = teamMembers;
         return View(schedules);
+    }
+
+    // POST: agent self-assigns a single day on their own schedule
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetMyDay(AgentSchedule entry, string weekStart)
+    {
+        ModelState.Remove(nameof(entry.Agent));
+        ModelState.Remove(nameof(entry.ShiftTemplate));
+
+        entry.AgentId = _users.GetUserId(User)!;
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid schedule entry.";
+            return RedirectToAction(nameof(AgentView), new { weekStart });
+        }
+
+        await _service.SetAgentDayAsync(entry);
+        TempData["Success"] = "Your schedule was updated.";
+        return RedirectToAction(nameof(AgentView), new { weekStart });
     }
 
     // ── Weekend wheel ──────────────────────────────────────────────────────

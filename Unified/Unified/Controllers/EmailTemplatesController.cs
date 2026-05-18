@@ -18,8 +18,7 @@ public class EmailTemplatesController : Controller
 
     // ── Templates ─────────────────────────────────────────────────────────
 
-    [AllowAnonymous]
-    [Authorize]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> Index(int? brandId)
     {
         var templates = await _svc.GetAllTemplatesAsync(brandId);
@@ -69,6 +68,7 @@ public class EmailTemplatesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> Preview(int id, int? brandId)
     {
         var template = await _svc.GetByIdAsync(id);

@@ -22,6 +22,10 @@ public class AdminController : Controller
         _db = db;
     }
 
+    // ── Index ──────────────────────────────────────────────────────────────
+
+    public IActionResult Index() => RedirectToAction(nameof(Users));
+
     // ── Users ──────────────────────────────────────────────────────────────
 
     public async Task<IActionResult> Users()

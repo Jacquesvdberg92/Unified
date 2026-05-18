@@ -48,6 +48,7 @@
                                             data-token="@token">@token</button>
                                 }
                             </div>
+                            <div id="quillToolbar"></div>
                             <div id="quillEditor" style="min-height:250px;">@Html.Raw(Model.BodyHtml)</div>
                         </div>
                         <input type="hidden" asp-for="BodyHtml" id="bodyHtmlInput" />
@@ -90,10 +91,47 @@
 
 @section Scripts {
     <link href="@Url.Content("~/assets/libs/quill/quill.snow.css")" rel="stylesheet" />
-    <script src="@Url.Content("~/assets/libs/quill/quill.min.js")"></script>
+    <script src="@Url.Content("~/assets/libs/quill/quill.js")"></script>
     <script>
-        const quill = new Quill('#quillEditor', { theme: 'snow', modules: { toolbar: '#tokenToolbar' } });
+        const quill = new Quill('#quillEditor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ color: [] }, { background: [] }],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ align: [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
         quill.root.innerHTML = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BodyHtml));
+
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
+        });
+
+        document.querySelectorAll('.token-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const token = this.dataset.token;
+                const range = quill.getSelection(true);
+                quill.insertText(range.index, token);
+                quill.setSelection(range.index + token.length);
+                updatePreview();
+            });
+        });
+
+        function updatePreview() {
+            const frame = document.getElementById('previewFrame');
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            doc.open(); doc.write(quill.root.innerHTML); doc.close();
+        }
+        quill.on('text-change', updatePreview);
+        updatePreview();
+    </script>
+}
 
         document.querySelector('form').addEventListener('submit', function () {
             document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
