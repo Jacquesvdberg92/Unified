@@ -28,16 +28,16 @@
                 <div class="col-md-3"><strong>CRM:</strong> @(brand.CrmUrl ?? "—")</div>
                 <div class="col-md-3"><strong>Quemetrics:</strong> @(brand.QuemetricsUrl ?? "—")</div>
                 <div class="col-md-6">
-                    <strong>Website Links:</strong>
+                    <strong>Brand Links:</strong>
                     @{
-                        var links = brand.GetWebsiteLinks();
+                        var links = brand.GetBrandLinks();
                     }
                     @if (links.Any())
                     {
                         <ul class="mb-0 ps-3">
                             @foreach (var l in links)
                             {
-                                <li>@l.Region — <a href="@l.Url" target="_blank">@l.Url</a></li>
+                                <li>@l.Label — <a href="@l.Url" target="_blank">@l.Url</a></li>
                             }
                         </ul>
                     }

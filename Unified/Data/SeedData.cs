@@ -148,24 +148,66 @@ public static class SeedData
         await db.SaveChangesAsync();
 
         // ── Brands ───────────────────────────────────────────────────────
-        var brandDefs = new[]
-        {
-            new { Name = "Brand 1", Crm = "https://crm.brand1.test",   Qm = "https://qm.brand1.test"  },
-            new { Name = "Brand 2", Crm = "https://crm.brand2.test",   Qm = "https://qm.brand2.test"  },
-            new { Name = "Brand 3", Crm = "https://crm.brand3.test",   Qm = "https://qm.brand3.test"  },
-            new { Name = "Brand 4", Crm = "https://crm.brand4.test",   Qm = "https://qm.brand4.test"  },
-        };
-        foreach (var b in brandDefs)
-        {
-            if (!await db.Brands.AnyAsync(x => x.Name == b.Name))
-                db.Brands.Add(new Brand
-                {
-                    Name           = b.Name,
-                    CrmUrl         = b.Crm,
-                    QuemetricsUrl  = b.Qm,
-                    WebsiteLinksJson = "[]"
-                });
-        }
+        const string colbariLinks = """
+            [
+              {"Label":"Bank Details - EN","Url":"https://docs.colbari.com/bank-details-en"},
+              {"Label":"Bank Details - PT","Url":"https://docs.colbari.com/bank-details-pt"},
+              {"Label":"FNS",              "Url":"https://docs.colbari.com/fns"},
+              {"Label":"FNS - PT",         "Url":"https://docs.colbari.com/fns-pt"},
+              {"Label":"JAF",              "Url":"https://docs.colbari.com/jaf"},
+              {"Label":"DOA",              "Url":"https://docs.colbari.com/doa"},
+              {"Label":"Joint FNS",        "Url":"https://docs.colbari.com/joint-fns"},
+              {"Label":"FATCA",            "Url":"https://docs.colbari.com/fatca"},
+              {"Label":"BOR",              "Url":"https://docs.colbari.com/bor"},
+              {"Label":"Corporate FNS",    "Url":"https://docs.colbari.com/corporate-fns"}
+            ]
+            """;
+
+        const string bullfxLinks = """
+            [
+              {"Label":"Bank Details - EN","Url":"https://docs.bullfx.com/bank-details-en"},
+              {"Label":"Bank Details - PT","Url":"https://docs.bullfx.com/bank-details-pt"},
+              {"Label":"FNS",              "Url":"https://docs.bullfx.com/fns"},
+              {"Label":"FNS - PT",         "Url":"https://docs.bullfx.com/fns-pt"},
+              {"Label":"JAF",              "Url":"https://docs.bullfx.com/jaf"},
+              {"Label":"DOA",              "Url":"https://docs.bullfx.com/doa"},
+              {"Label":"Joint FNS",        "Url":"https://docs.bullfx.com/joint-fns"},
+              {"Label":"FATCA",            "Url":"https://docs.bullfx.com/fatca"},
+              {"Label":"BOR",              "Url":"https://docs.bullfx.com/bor"},
+              {"Label":"Corporate FNS",    "Url":"https://docs.bullfx.com/corporate-fns"}
+            ]
+            """;
+
+        if (!await db.Brands.AnyAsync(x => x.Name == "Colbari"))
+            db.Brands.Add(new Brand
+            {
+                Name           = "Colbari",
+                SiteUrl        = "https://colbari.com",
+                CrmUrl         = "https://crm.colbari.local",
+                RedmineUrl     = "https://redmine.colbari.local",
+                QuemetricsUrl  = "https://quemetrics.colbari.local",
+                EmailDealing   = "dealing@colbari.com",
+                EmailAml       = "aml@colbari.com",
+                EmailAssign    = "assign@colbari.com",
+                EmailDemo      = "demo@colbari.com",
+                BrandLinksJson = colbariLinks
+            });
+
+        if (!await db.Brands.AnyAsync(x => x.Name == "BullFX"))
+            db.Brands.Add(new Brand
+            {
+                Name           = "BullFX",
+                SiteUrl        = "https://bullfx.com",
+                CrmUrl         = "https://crm.bullfx.local",
+                RedmineUrl     = "https://redmine.bullfx.local",
+                QuemetricsUrl  = "https://quemetrics.bullfx.local",
+                EmailDealing   = "dealing@bullfx.com",
+                EmailAml       = "aml@bullfx.com",
+                EmailAssign    = "assign@bullfx.com",
+                EmailDemo      = "demo@bullfx.com",
+                BrandLinksJson = bullfxLinks
+            });
+
         await db.SaveChangesAsync();
 
         // Seed shift templates
@@ -353,7 +395,7 @@ public static class SeedData
                     "<p>Dear Client,</p>" +
                     "<p>Welcome to <strong>{{BrandName}}</strong>! We are delighted to have you on board.</p>" +
                     "<p>Your dedicated support team is available to assist you at any time. " +
-                    "Please visit our website at {{WebsiteUrl}} for the latest information.</p>" +
+                    "Please visit our website at {{SiteUrl}} for the latest information.</p>" +
                     "<p>If you have any questions, do not hesitate to contact us.</p>" +
                     "{{FooterSignature}}",
                 IsActive  = true,
@@ -371,7 +413,7 @@ public static class SeedData
                     "<p>Dear Client,</p>" +
                     "<p>We are writing to inform you that your recent withdrawal request is currently being processed.</p>" +
                     "<p>Our team is working diligently to complete this as quickly as possible. " +
-                    "If you have any questions, please contact your account manager or reach out via {{WebsiteUrl}}.</p>" +
+                    "If you have any questions, please contact your account manager or reach out via {{SiteUrl}}.</p>" +
                     "<p>We apologise for any inconvenience and thank you for your patience.</p>" +
                     "{{FooterSignature}}",
                 IsActive  = true,
@@ -389,7 +431,7 @@ public static class SeedData
                     "<p>Dear Client,</p>" +
                     "<p>To continue using your <strong>{{BrandName}}</strong> account, we require you to " +
                     "complete your identity verification.</p>" +
-                    "<p>Please log in to your account at {{WebsiteUrl}} and upload the following documents:</p>" +
+                    "<p>Please log in to your account at {{SiteUrl}} and upload the following documents:</p>" +
                     "<ul><li>Proof of Identity (passport or national ID)</li>" +
                     "<li>Proof of Address (utility bill or bank statement dated within 3 months)</li></ul>" +
                     "<p>If you have already submitted these documents, please disregard this email.</p>" +
@@ -410,7 +452,8 @@ public static class SeedData
                     BodyHtml    =
                         $"<p>Dear Client,</p>" +
                         $"<p>Welcome to <strong>{brand.Name}</strong>! We are thrilled to have you with us.</p>" +
-                        $"<p>Visit us at {{{{WebsiteUrl}}}} or contact our support team at {{{{CrmUrl}}}}.</p>" +
+                        $"<p>Visit us at {{{{SiteUrl}}}} or contact our dealing desk at {{{{Email:Dealing}}}}.</p>" +
+                        "<p>For bank transfer details please see <a href=\"{{Link:Bank Details - EN}}\">Bank Details</a>.</p>" +
                         "{{FooterSignature}}",
                     IsActive  = true,
                     BrandId   = brand.Id,

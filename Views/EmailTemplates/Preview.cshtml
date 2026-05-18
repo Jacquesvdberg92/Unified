@@ -75,6 +75,9 @@
             <button id="copyBodyBtn" class="btn btn-success" @(!hasBrand ? "disabled" : "")>
                 <i class="ri-file-copy-line me-1"></i>Copy Email Body (HTML)
             </button>
+            <button id="copyPlainBtn" class="btn btn-outline-secondary" @(!hasBrand ? "disabled" : "")>
+                <i class="ri-text me-1"></i>Copy as Plain Text
+            </button>
             <button id="copySubjectBtn" class="btn btn-outline-success" @(!hasBrand ? "disabled" : "")>
                 <i class="ri-text me-1"></i>Copy Subject Line
             </button>
@@ -143,6 +146,33 @@
             navigator.clipboard.writeText(renderedSubject).then(function () {
                 flashBtn(copySubjectBtn, 'Subject copied!', origSubject);
             });
+        });
+    }
+
+    var copyPlainBtn = document.getElementById('copyPlainBtn');
+    if (copyPlainBtn && !copyPlainBtn.hasAttribute('disabled')) {
+        var origPlain = copyPlainBtn.innerHTML;
+        copyPlainBtn.addEventListener('click', function () {
+            // Render HTML into an off-screen div, then read innerText for clean plain text
+            var scratch = document.createElement('div');
+            scratch.style.cssText = 'position:absolute;left:-9999px;top:-9999px;white-space:pre-wrap;';
+            scratch.innerHTML = renderedHtml;
+            document.body.appendChild(scratch);
+            var plainText = scratch.innerText;
+            document.body.removeChild(scratch);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(plainText).then(function () {
+                    flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
+                });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = plainText;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
+            }
         });
     }
 </script>

@@ -19,7 +19,7 @@ public class EmailTemplateServiceTests
             CrmUrl             = "https://crm.test",
             QuemetricsUrl      = "https://calls.test",
             FooterSignatureHtml = "<p>Footer</p>",
-            WebsiteLinksJson   = """[{"Region":"EU","Url":"https://eu.test"}]"""
+            BrandLinksJson     = """[{"Label":"EU","Url":"https://eu.test"}]"""
         };
         db.Brands.Add(brand);
 
@@ -27,7 +27,7 @@ public class EmailTemplateServiceTests
         {
             Title      = "Master",
             SubjectLine = "Hello {{BrandName}}",
-            BodyHtml   = "<p>Visit {{WebsiteUrl}} | CRM {{CrmUrl}} | Calls {{CallSystemUrl}} | {{FooterSignature}} | {{Region}}</p>",
+            BodyHtml   = "<p>Visit {{WebsiteUrl}} | CRM {{CrmUrl}} | Calls {{CallSystemUrl}} | {{FooterSignature}} | {{Link:EU}}</p>",
             IsActive   = true
         };
         db.EmailTemplates.Add(template);
@@ -41,7 +41,6 @@ public class EmailTemplateServiceTests
         Assert.Contains("https://crm.test", clone.BodyHtml);
         Assert.Contains("https://calls.test", clone.BodyHtml);
         Assert.Contains("<p>Footer</p>", clone.BodyHtml);
-        Assert.Contains("EU", clone.BodyHtml);
     }
 
     [Fact]
@@ -53,7 +52,7 @@ public class EmailTemplateServiceTests
         {
             Name             = "NoUrl",
             CrmUrl           = null,
-            WebsiteLinksJson = "[]"
+            BrandLinksJson   = "[]"
         };
         db.Brands.Add(brand);
 

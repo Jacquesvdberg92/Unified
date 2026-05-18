@@ -16,8 +16,8 @@ public class ProcessTemplateServiceTests
         await db.SaveChangesAsync();
 
         // Two brands
-        var b1 = new Brand { Name = "BrandA", WebsiteLinksJson = "[]" };
-        var b2 = new Brand { Name = "BrandB", WebsiteLinksJson = "[]" };
+        var b1 = new Brand { Name = "BrandA", BrandLinksJson = "[]" };
+        var b2 = new Brand { Name = "BrandB", BrandLinksJson = "[]" };
         db.Brands.AddRange(b1, b2);
         await db.SaveChangesAsync();
 

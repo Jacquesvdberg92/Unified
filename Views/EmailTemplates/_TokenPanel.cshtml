@@ -1,0 +1,71 @@
+@* Token reference panel — rendered inside Create.cshtml and Edit.cshtml *@
+@* Each button calls insertToken(token) which is defined on the host page *@
+
+<style>
+    .token-group-label {
+        font-size: .7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #6c757d;
+        margin: .6rem 0 .3rem;
+    }
+    .token-btn-panel {
+        font-size: .75rem;
+        padding: .2rem .45rem;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+</style>
+
+@{
+    var groups = new[]
+    {
+        new {
+            Label  = "General",
+            Tokens = new[] {
+                "{{BrandName}}", "{{SiteUrl}}", "{{FooterSignature}}", "{{ZohoSignature}}"
+            }
+        },
+        new {
+            Label  = "Tool URLs",
+            Tokens = new[] {
+                "{{CrmUrl}}", "{{RedmineUrl}}", "{{QuemetricsUrl}}"
+            }
+        },
+        new {
+            Label  = "Department Emails",
+            Tokens = new[] {
+                "{{Email:Dealing}}", "{{Email:AML}}", "{{Email:Assign}}", "{{Email:Demo}}"
+            }
+        },
+        new {
+            Label  = "Document Links",
+            Tokens = new[] {
+                "{{Link:Bank Details - EN}}", "{{Link:Bank Details - PT}}",
+                "{{Link:FNS}}",              "{{Link:FNS - PT}}",
+                "{{Link:JAF}}",              "{{Link:DOA}}",
+                "{{Link:Joint FNS}}",        "{{Link:FATCA}}",
+                "{{Link:BOR}}",              "{{Link:Corporate FNS}}"
+            }
+        }
+    };
+}
+
+@foreach (var group in groups)
+{
+    <div class="token-group-label">@group.Label</div>
+    <div class="d-flex flex-wrap gap-1 mb-1">
+        @foreach (var token in group.Tokens)
+        {
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary token-btn-panel"
+                    onclick="insertToken('@token')">@token</button>
+        }
+    </div>
+}
+
+<div class="form-text mt-2">
+    <i class="bx bx-info-circle me-1"></i>
+    Click a token to insert it at the cursor in the editor.
+</div>

@@ -1,38 +1,174 @@
 @model Unified.Models.EmailTemplates.Brand
 
-<div class="mb-3">
-    <label class="form-label">Brand Name <span class="text-danger">*</span></label>
-    <input asp-for="Name" class="form-control" required />
+@* ── Section A — Identity ─────────────────────────────────────────────── *@
+<h6 class="fw-semibold text-muted text-uppercase mb-3 mt-2">
+    <i class="bx bx-tag me-1"></i> Identity
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <label class="form-label">Brand Name <span class="text-danger">*</span></label>
+        <input asp-for="Name" class="form-control" required />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Logo URL</label>
+        <input asp-for="LogoUrl" class="form-control" placeholder="https://..." />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Primary Colour</label>
+        <input asp-for="PrimaryColour" class="form-control form-control-color w-100" type="color" />
+    </div>
 </div>
-<div class="mb-3">
-    <label class="form-label">Logo URL</label>
-    <input asp-for="LogoUrl" class="form-control" placeholder="https://..." />
+
+@* ── Section B — Site & Tool URLs ────────────────────────────────────── *@
+<h6 class="fw-semibold text-muted text-uppercase mb-3">
+    <i class="bx bx-link me-1"></i> Site &amp; Tool URLs
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <label class="form-label">Site URL</label>
+        <input asp-for="SiteUrl" class="form-control" placeholder="https://example.com" />
+        <div class="form-text">Token: <code>{{SiteUrl}}</code></div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">CRM URL</label>
+        <input asp-for="CrmUrl" class="form-control" placeholder="https://crm.example.com" />
+        <div class="form-text">Token: <code>{{CrmUrl}}</code></div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Redmine URL</label>
+        <input asp-for="RedmineUrl" class="form-control" placeholder="https://redmine.example.com" />
+        <div class="form-text">Token: <code>{{RedmineUrl}}</code></div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Quemetrics URL</label>
+        <input asp-for="QuemetricsUrl" class="form-control" placeholder="https://quemetrics.example.com" />
+        <div class="form-text">Token: <code>{{QuemetricsUrl}}</code></div>
+    </div>
 </div>
-<div class="mb-3">
-    <label class="form-label">Primary Colour</label>
-    <input asp-for="PrimaryColour" class="form-control" type="color" />
+
+@* ── Section C — Department Emails ───────────────────────────────────── *@
+<h6 class="fw-semibold text-muted text-uppercase mb-3">
+    <i class="bx bx-envelope me-1"></i> Department Emails
+</h6>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Dealing</label>
+        <input asp-for="EmailDealing" class="form-control" placeholder="dealing@example.com" type="email" />
+        <div class="form-text">Token: <code>{{Email:Dealing}}</code></div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">AML Team</label>
+        <input asp-for="EmailAml" class="form-control" placeholder="aml@example.com" type="email" />
+        <div class="form-text">Token: <code>{{Email:AML}}</code></div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Assign</label>
+        <input asp-for="EmailAssign" class="form-control" placeholder="assign@example.com" type="email" />
+        <div class="form-text">Token: <code>{{Email:Assign}}</code></div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Demo</label>
+        <input asp-for="EmailDemo" class="form-control" placeholder="demo@example.com" type="email" />
+        <div class="form-text">Token: <code>{{Email:Demo}}</code></div>
+    </div>
 </div>
-<div class="mb-3">
-    <label class="form-label">CRM URL</label>
-    <input asp-for="CrmUrl" class="form-control" placeholder="https://crm.example.com" />
+
+@* ── Section D — Document / Regional Links ───────────────────────────── *@
+<h6 class="fw-semibold text-muted text-uppercase mb-3">
+    <i class="bx bx-file-blank me-1"></i> Document &amp; Regional Links
+</h6>
+<div class="mb-4">
+    <div class="form-text mb-2">
+        Each row becomes a <code>{{Link:&lt;Label&gt;}}</code> token in templates.
+    </div>
+    <table class="table table-sm table-bordered align-middle" id="brandLinksTable">
+        <thead class="table-light">
+            <tr>
+                <th style="width:40%">Label</th>
+                <th>URL</th>
+                <th style="width:80px" class="text-center">Remove</th>
+            </tr>
+        </thead>
+        <tbody id="brandLinksBody">
+            @* rows injected by JS on page load *@
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="addBrandLinkRow">
+        <i class="bx bx-plus me-1"></i> Add Row
+    </button>
+    <textarea asp-for="BrandLinksJson" id="brandLinksJson" class="d-none"></textarea>
 </div>
-<div class="mb-3">
-    <label class="form-label">Quemetrics URL</label>
-    <input asp-for="QuemetricsUrl" class="form-control" placeholder="https://quemetrics.example.com" />
-</div>
-<div class="mb-3">
-    <label class="form-label">Website Links (JSON)</label>
-    <textarea asp-for="WebsiteLinksJson" class="form-control font-monospace" rows="4"
-              placeholder='[{"Region":"Global","Url":"https://example.com"}]'></textarea>
-    <div class="form-text">JSON array of <code>{"Region":"...", "Url":"..."}</code> objects.</div>
-</div>
+
+@* ── Section E — Signatures ───────────────────────────────────────────── *@
+<h6 class="fw-semibold text-muted text-uppercase mb-3">
+    <i class="bx bx-pen me-1"></i> Signatures
+</h6>
 <div class="mb-3">
     <label class="form-label">Footer Signature HTML</label>
     <textarea asp-for="FooterSignatureHtml" class="form-control font-monospace" rows="5"
               placeholder="HTML signature pasted into ZoHo..."></textarea>
+    <div class="form-text">Token: <code>{{FooterSignature}}</code></div>
 </div>
 <div class="mb-3">
     <label class="form-label">ZoHo Signature Setup Notes</label>
     <textarea asp-for="ZohoSignatureNote" class="form-control" rows="3"
               placeholder="Instructions for setting up this signature in ZoHo..."></textarea>
+    <div class="form-text">Token: <code>{{ZohoSignature}}</code></div>
 </div>
+
+<script>
+(function () {
+    const DEFAULT_LABELS = [
+        "Bank Details - EN",
+        "Bank Details - PT",
+        "FNS",
+        "FNS - PT",
+        "JAF",
+        "DOA",
+        "Joint FNS",
+        "FATCA",
+        "BOR",
+        "Corporate FNS"
+    ];
+
+    const tbody     = document.getElementById('brandLinksBody');
+    const jsonInput = document.getElementById('brandLinksJson');
+    const addBtn    = document.getElementById('addBrandLinkRow');
+    const form      = jsonInput.closest('form');
+
+    function escAttr(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function createRow(label, url) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            `<td><input type="text" class="form-control form-control-sm link-label" value="${escAttr(label)}" placeholder="e.g. Bank Details - EN" /></td>` +
+            `<td><input type="url"  class="form-control form-control-sm link-url"   value="${escAttr(url)}"   placeholder="https://..." /></td>` +
+            `<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>`;
+        tr.querySelector('.remove-row').addEventListener('click', () => tr.remove());
+        tbody.appendChild(tr);
+    }
+
+    function serialise() {
+        const rows = [...tbody.querySelectorAll('tr')].map(tr => ({
+            Label: tr.querySelector('.link-label').value.trim(),
+            Url:   tr.querySelector('.link-url').value.trim()
+        })).filter(r => r.Label || r.Url);
+        jsonInput.value = JSON.stringify(rows);
+    }
+
+    // Load existing data, or seed default rows for a new brand
+    let existing = [];
+    try { existing = JSON.parse(jsonInput.value || '[]'); } catch (_) {}
+
+    if (existing.length > 0) {
+        existing.forEach(r => createRow(r.Label || '', r.Url || ''));
+    } else {
+        DEFAULT_LABELS.forEach(lbl => createRow(lbl, ''));
+    }
+
+    addBtn.addEventListener('click', () => createRow('', ''));
+    form.addEventListener('submit', serialise);
+})();
+</script>

@@ -40,16 +40,8 @@
                     <div class="mb-3">
                         <label class="form-label">Body HTML</label>
                         <div class="border rounded">
-                            <div id="tokenToolbar" class="p-2 border-bottom bg-light d-flex flex-wrap gap-1">
-                                <span class="me-2 fw-semibold small align-self-center">Insert token:</span>
-                                @foreach (var token in new[] { "{{BrandName}}", "{{WebsiteUrl}}", "{{CrmUrl}}", "{{CallSystemUrl}}", "{{FooterSignature}}", "{{Region}}" })
-                                {
-                                    <button type="button" class="btn btn-sm btn-outline-secondary token-btn"
-                                            data-token="@token">@token</button>
-                                }
-                            </div>
                             <div id="quillToolbar"></div>
-                            <div id="quillEditor" style="min-height:250px;">@Html.Raw(Model.BodyHtml)</div>
+                            <div id="quillEditor" style="min-height:250px;"></div>
                         </div>
                         <input type="hidden" asp-for="BodyHtml" id="bodyHtmlInput" />
                     </div>
@@ -80,6 +72,20 @@
         </div>
     </div>
     <div class="col-lg-4">
+        @* ── Available Tokens panel ── *@
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center justify-content-between"
+                 style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#tokenPanel" aria-expanded="true">
+                <span class="fw-semibold"><i class="bx bx-code-alt me-1"></i> Available Tokens</span>
+                <i class="bx bx-chevron-up" id="tokenChevron"></i>
+            </div>
+            <div class="collapse show" id="tokenPanel">
+                <div class="card-body py-2 px-3">
+                    @await Html.PartialAsync("_TokenPanel")
+                </div>
+            </div>
+        </div>
+        @* ── Live Preview ── *@
         <div class="card">
             <div class="card-header">Live Preview</div>
             <div class="card-body p-0">
@@ -113,38 +119,21 @@
             document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
         });
 
-        document.querySelectorAll('.token-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const token = this.dataset.token;
-                const range = quill.getSelection(true);
-                quill.insertText(range.index, token);
-                quill.setSelection(range.index + token.length);
-                updatePreview();
-            });
-        });
-
-        function updatePreview() {
-            const frame = document.getElementById('previewFrame');
-            const doc = frame.contentDocument || frame.contentWindow.document;
-            doc.open(); doc.write(quill.root.innerHTML); doc.close();
+        // Token insert — used by _TokenPanel buttons
+        function insertToken(token) {
+            quill.focus();
+            const range = quill.getSelection(true);
+            quill.insertText(range.index, token);
+            quill.setSelection(range.index + token.length);
+            updatePreview();
         }
-        quill.on('text-change', updatePreview);
-        updatePreview();
-    </script>
-}
 
-        document.querySelector('form').addEventListener('submit', function () {
-            document.getElementById('bodyHtmlInput').value = quill.root.innerHTML;
+        // Chevron toggle icon
+        document.getElementById('tokenPanel').addEventListener('hide.bs.collapse', function () {
+            document.getElementById('tokenChevron').classList.replace('bx-chevron-up', 'bx-chevron-down');
         });
-
-        document.querySelectorAll('.token-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const token = this.dataset.token;
-                const range = quill.getSelection(true);
-                quill.insertText(range.index, token);
-                quill.setSelection(range.index + token.length);
-                updatePreview();
-            });
+        document.getElementById('tokenPanel').addEventListener('show.bs.collapse', function () {
+            document.getElementById('tokenChevron').classList.replace('bx-chevron-down', 'bx-chevron-up');
         });
 
         function updatePreview() {

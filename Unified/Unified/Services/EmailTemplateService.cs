@@ -65,16 +65,16 @@ public class EmailTemplateService
         return clone;
     }
 
-    // Returns the website URL for a brand, optionally filtered by region
-    public async Task<string?> GetBrandLinkAsync(int brandId, string? region = null)
+    // Returns the URL for a brand link, optionally filtered by label
+    public async Task<string?> GetBrandLinkAsync(int brandId, string? label = null)
     {
         var brand = await _db.Brands.FindAsync(brandId);
         if (brand == null) return null;
 
-        var links = brand.GetWebsiteLinks();
-        if (region != null)
+        var links = brand.GetBrandLinks();
+        if (label != null)
         {
-            var match = links.FirstOrDefault(l => l.Region.Equals(region, StringComparison.OrdinalIgnoreCase));
+            var match = links.FirstOrDefault(l => l.Label.Equals(label, StringComparison.OrdinalIgnoreCase));
             return match?.Url;
         }
         return links.FirstOrDefault()?.Url;
@@ -175,28 +175,42 @@ public class EmailTemplateService
 
     private static string SubstituteTokens(string input, Brand brand)
     {
-        var links = brand.GetWebsiteLinks();
-        var websiteUrl = links.FirstOrDefault()?.Url ?? string.Empty;
+        var links = brand.GetBrandLinks();
+        var firstUrl = links.FirstOrDefault()?.Url ?? string.Empty;
 
         // Standard fixed tokens
         var result = input
-            .Replace("{{BrandName}}", brand.Name)
-            .Replace("{{WebsiteUrl}}", websiteUrl)
-            .Replace("{{CrmUrl}}", brand.CrmUrl ?? string.Empty)
-            .Replace("{{CallSystemUrl}}", brand.QuemetricsUrl ?? string.Empty)
-            .Replace("{{QuemetricsUrl}}", brand.QuemetricsUrl ?? string.Empty)
-            .Replace("{{FooterSignature}}", brand.FooterSignatureHtml ?? string.Empty)
-            .Replace("{{ZohoSignature}}", brand.ZohoSignatureNote ?? string.Empty)
-            .Replace("{{Region}}", links.FirstOrDefault()?.Region ?? string.Empty);
+            .Replace("{{BrandName}}",         brand.Name)
+            .Replace("{{SiteUrl}}",           brand.SiteUrl         ?? string.Empty)
+            .Replace("{{CrmUrl}}",            brand.CrmUrl          ?? string.Empty)
+            .Replace("{{RedmineUrl}}",        brand.RedmineUrl      ?? string.Empty)
+            .Replace("{{QuemetricsUrl}}",     brand.QuemetricsUrl   ?? string.Empty)
+            .Replace("{{Email:Dealing}}",     brand.EmailDealing    ?? string.Empty)
+            .Replace("{{Email:AML}}",         brand.EmailAml        ?? string.Empty)
+            .Replace("{{Email:Assign}}",      brand.EmailAssign     ?? string.Empty)
+            .Replace("{{Email:Demo}}",        brand.EmailDemo       ?? string.Empty)
+            .Replace("{{FooterSignature}}",   brand.FooterSignatureHtml ?? string.Empty)
+            .Replace("{{ZohoSignature}}",     brand.ZohoSignatureNote   ?? string.Empty)
+            // Backward-compat aliases
+            .Replace("{{WebsiteUrl}}",        firstUrl)
+            .Replace("{{CallSystemUrl}}",     brand.QuemetricsUrl   ?? string.Empty);
 
-        // Dynamic regional link tokens: {{WebsiteUrl:RegionName}}
-        // Looks up the brand's WebsiteLinks for the matching region.
-        // If found, replaces with the URL; otherwise leaves an empty string.
+        // Dynamic labelled link tokens: {{Link:<label>}}
+        // Looks up BrandLinksJson by Label (case-insensitive).
+        result = Regex.Replace(result, @"\{\{Link:([^}]+)\}\}", m =>
+        {
+            var label = m.Groups[1].Value.Trim();
+            var match = links.FirstOrDefault(l =>
+                l.Label.Equals(label, StringComparison.OrdinalIgnoreCase));
+            return match?.Url ?? string.Empty;
+        });
+
+        // Backward-compat: {{WebsiteUrl:RegionName}} -> lookup by label
         result = Regex.Replace(result, @"\{\{WebsiteUrl:([^}]+)\}\}", m =>
         {
-            var region = m.Groups[1].Value.Trim();
-            var match  = links.FirstOrDefault(l =>
-                l.Region.Equals(region, StringComparison.OrdinalIgnoreCase));
+            var label = m.Groups[1].Value.Trim();
+            var match = links.FirstOrDefault(l =>
+                l.Label.Equals(label, StringComparison.OrdinalIgnoreCase));
             return match?.Url ?? string.Empty;
         });
 
