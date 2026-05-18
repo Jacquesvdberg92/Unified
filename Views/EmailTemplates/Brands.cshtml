@@ -1,0 +1,292 @@
+@model IEnumerable<Unified.Models.EmailTemplates.Brand>
+@{
+    ViewData["Title"] = "Brands";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">
+        <i class="bx bx-buildings me-2"></i>Brands
+    </h1>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <div class="input-group" style="max-width:280px">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bx bx-search text-muted"></i>
+            </span>
+            <input type="text" id="brandSearch" class="form-control border-start-0 ps-0"
+                   placeholder="Search brands…" autocomplete="off" />
+        </div>
+        <select id="brandJump" class="form-select" style="max-width:200px">
+            <option value="">Jump to brand…</option>
+            @foreach (var b in Model)
+            {
+                <option value="brand-@b.Id">@b.Name</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No brands have been configured yet.</div>
+}
+
+@foreach (var brand in Model)
+{
+    <div class="card mb-4 shadow-sm brand-card" data-brand-name="@brand.Name.ToLower()" id="brand-@brand.Id">
+        @* ── Card header — brand name + colour swatch ── *@
+        <div class="card-header d-flex align-items-center gap-3 py-3"
+             style="border-left: 5px solid @(brand.PrimaryColour ?? "#6c757d");">
+            @if (!string.IsNullOrWhiteSpace(brand.LogoUrl))
+            {
+                <img src="@brand.LogoUrl" alt="@brand.Name logo"
+                     style="height:36px;object-fit:contain;" />
+            }
+            else
+            {
+                <span class="avatar avatar-md rounded-2 d-flex align-items-center justify-content-center fw-bold fs-5"
+                      style="background:@(brand.PrimaryColour ?? "#6c757d");color:#fff;min-width:40px;">
+                    @brand.Name.Substring(0, 1).ToUpper()
+                </span>
+            }
+            <h5 class="mb-0 fw-semibold">@brand.Name</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-4">
+
+                @* ── Section A — Site & Tool URLs ── *@
+                <div class="col-md-6">
+                    <h6 class="fw-semibold text-muted text-uppercase mb-2">
+                        <i class="bx bx-link me-1"></i> Site &amp; Tool URLs
+                    </h6>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width:110px">Site</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.SiteUrl))
+                                    {
+                                        <a href="@brand.SiteUrl" target="_blank">@brand.SiteUrl</a>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">CRM</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.CrmUrl))
+                                    {
+                                        <a href="@brand.CrmUrl" target="_blank">@brand.CrmUrl</a>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Redmine</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.RedmineUrl))
+                                    {
+                                        <a href="@brand.RedmineUrl" target="_blank">@brand.RedmineUrl</a>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Quemetrics</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.QuemetricsUrl))
+                                    {
+                                        <a href="@brand.QuemetricsUrl" target="_blank">@brand.QuemetricsUrl</a>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                @* ── Section B — Department Emails ── *@
+                <div class="col-md-6">
+                    <h6 class="fw-semibold text-muted text-uppercase mb-2">
+                        <i class="bx bx-envelope me-1"></i> Department Emails
+                    </h6>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width:80px">Dealing</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.EmailDealing))
+                                    {
+                                        <a href="mailto:@brand.EmailDealing">@brand.EmailDealing</a>
+                                        <button class="btn btn-xs btn-outline-secondary ms-2 copy-btn"
+                                                data-copy="@brand.EmailDealing" title="Copy">
+                                            <i class="bx bx-copy-alt"></i>
+                                        </button>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">AML</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.EmailAml))
+                                    {
+                                        <a href="mailto:@brand.EmailAml">@brand.EmailAml</a>
+                                        <button class="btn btn-xs btn-outline-secondary ms-2 copy-btn"
+                                                data-copy="@brand.EmailAml" title="Copy">
+                                            <i class="bx bx-copy-alt"></i>
+                                        </button>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Assign</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.EmailAssign))
+                                    {
+                                        <a href="mailto:@brand.EmailAssign">@brand.EmailAssign</a>
+                                        <button class="btn btn-xs btn-outline-secondary ms-2 copy-btn"
+                                                data-copy="@brand.EmailAssign" title="Copy">
+                                            <i class="bx bx-copy-alt"></i>
+                                        </button>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Demo</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(brand.EmailDemo))
+                                    {
+                                        <a href="mailto:@brand.EmailDemo">@brand.EmailDemo</a>
+                                        <button class="btn btn-xs btn-outline-secondary ms-2 copy-btn"
+                                                data-copy="@brand.EmailDemo" title="Copy">
+                                            <i class="bx bx-copy-alt"></i>
+                                        </button>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                @* ── Section C — Document / Regional Links ── *@
+                @{
+                    var links = brand.GetBrandLinks();
+                }
+                @if (links.Any())
+                {
+                    <div class="col-12">
+                        <h6 class="fw-semibold text-muted text-uppercase mb-2">
+                            <i class="bx bx-file-blank me-1"></i> Document &amp; Regional Links
+                        </h6>
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <tbody>
+                                @foreach (var link in links)
+                                {
+                                    <tr>
+                                        <td style="width:180px">
+                                            <a href="@link.Url" target="_blank"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bx bx-link-external me-1"></i>@link.Label
+                                            </a>
+                                        </td>
+                                        <td class="text-muted small text-truncate" style="max-width:320px">
+                                            <span title="@link.Url">@link.Url</span>
+                                        </td>
+                                        <td style="width:44px">
+                                            <button class="btn btn-sm btn-outline-secondary copy-btn"
+                                                    data-copy="@link.Url" title="Copy URL">
+                                                <i class="bx bx-copy-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @* ── Section D — Signatures ── *@
+                @if (!string.IsNullOrWhiteSpace(brand.FooterSignatureHtml) || !string.IsNullOrWhiteSpace(brand.ZohoSignatureNote))
+                {
+                    <div class="col-12">
+                        <hr class="my-1" />
+                        <h6 class="fw-semibold text-muted text-uppercase mb-2">
+                            <i class="bx bx-pen me-1"></i> Signatures
+                        </h6>
+                        @if (!string.IsNullOrWhiteSpace(brand.ZohoSignatureNote))
+                        {
+                            <p class="text-muted small mb-2">@brand.ZohoSignatureNote</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(brand.FooterSignatureHtml))
+                        {
+                            <div class="border rounded p-3 bg-light mb-2" id="sig-@brand.Id">
+                                @Html.Raw(brand.FooterSignatureHtml)
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary copy-sig-btn"
+                                    data-sig="@System.Text.Json.JsonSerializer.Serialize(brand.FooterSignatureHtml)">
+                                <i class="ri-clipboard-line me-1"></i> Copy Signature HTML
+                            </button>
+                        }
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // Copy-to-clipboard for email addresses
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var text = this.dataset.copy;
+            navigator.clipboard.writeText(text).then(function () {
+                btn.innerHTML = '<i class="bx bx-check"></i>';
+                setTimeout(function () { btn.innerHTML = '<i class="bx bx-copy-alt"></i>'; }, 2000);
+            });
+        });
+    });
+
+    // Copy signature HTML
+    document.querySelectorAll('.copy-sig-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var sig = JSON.parse(this.dataset.sig);
+            navigator.clipboard.writeText(sig).then(function () {
+                btn.textContent = '✓ Copied!';
+                setTimeout(function () {
+                    btn.innerHTML = '<i class="ri-clipboard-line me-1"></i> Copy Signature HTML';
+                }, 2500);
+            });
+        });
+    });
+
+    // Search bar — show/hide brand cards
+    var searchInput = document.getElementById('brandSearch');
+    var allCards = document.querySelectorAll('.brand-card');
+
+    searchInput.addEventListener('input', function () {
+        var term = this.value.toLowerCase().trim();
+        allCards.forEach(function (card) {
+            card.style.display = (!term || card.dataset.brandName.includes(term)) ? '' : 'none';
+        });
+    });
+
+    // Jump-to dropdown — scroll to brand card
+    document.getElementById('brandJump').addEventListener('change', function () {
+        var id = this.value;
+        if (!id) return;
+        var target = document.getElementById(id);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.classList.add('border', 'border-primary');
+            setTimeout(function () { target.classList.remove('border', 'border-primary'); }, 2000);
+        }
+        this.value = '';
+    });
+</script>
+}

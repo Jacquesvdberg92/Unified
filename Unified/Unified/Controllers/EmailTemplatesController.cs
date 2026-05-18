@@ -107,6 +107,13 @@ public class EmailTemplatesController : Controller
         return View(brands);
     }
 
+    // Read-only brand directory — all authenticated users
+    public async Task<IActionResult> Brands()
+    {
+        var brands = await _svc.GetAllBrandsAsync();
+        return View(brands);
+    }
+
     [Authorize(Roles = Roles.BrandManager)]
     public IActionResult CreateBrand() => View(new Brand());
 
