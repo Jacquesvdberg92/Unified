@@ -25,50 +25,71 @@ public class ScheduleController : Controller
 
     // ── Week view (leaders/admins) ─────────────────────────────────────────
 
-    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
-    public async Task<IActionResult> WeekView(int? teamId, string? weekStart)
+    public async Task<IActionResult> WeekView(string? weekStart)
     {
-        var teams = await _db.Teams.OrderBy(t => t.Name).ToListAsync();
-        var selTeamId = teamId ?? teams.FirstOrDefault()?.Id ?? 0;
-        var week = ParseWeek(weekStart);
+        var week   = ParseWeek(weekStart);
+        var shifts = await _service.GetShiftTemplatesAsync();
+        var teams  = await _db.Teams.OrderBy(t => t.Name).ToListAsync();
 
-        var schedules      = selTeamId > 0 ? await _service.GetWeeklyScheduleAsync(selTeamId, week) : new();
-        var shifts         = await _service.GetShiftTemplatesAsync();
-        var pendingCount   = selTeamId > 0 ? await _service.GetPendingCountForTeamAsync(selTeamId) : 0;
-        var teamAgents     = selTeamId > 0 ? await GetTeamAgentsAsync(selTeamId) : new();
+        // Load ALL schedules for the week (all agents across all teams)
+        var weekEnd    = week.AddDays(7);
+        var allScheds  = await _db.AgentSchedules
+            .Include(s => s.ShiftTemplate)
+            .Where(s => s.Date >= week && s.Date < weekEnd)
+            .ToListAsync();
 
-        // Split into role groups for the Excel-style grouped grid
-        var agentGroup   = new List<AppUser>();
-        var leaderGroup  = new List<AppUser>();
-        var managerGroup = new List<AppUser>();
+        // Build role-grouped data
+        // managerGroup: all Brand Managers
+        // teamSections: per-team list of (leaders, agents)
+        var managerGroup   = new List<AppUser>();
+        // teamId -> (leaders, agents)
+        var teamSections   = new List<(Team Team, List<AppUser> Leaders, List<AppUser> Agents)>();
 
-        foreach (var u in teamAgents)
+        var allUsers = await _db.Users.OrderBy(u => u.DisplayName).ToListAsync();
+
+        // Collect all user roles efficiently
+        var userRoleMap = new Dictionary<string, IList<string>>();
+        foreach (var u in allUsers)
+            userRoleMap[u.Id] = await _users.GetRolesAsync(u);
+
+        // Managers (cross-team)
+        managerGroup = allUsers.Where(u => userRoleMap[u.Id].Contains(Roles.BrandManager)).ToList();
+
+        // Per-team: leaders + agents
+        foreach (var team in teams)
         {
-            var userRoles = await _users.GetRolesAsync(u);
-            if (userRoles.Contains(Roles.BrandManager))
-                managerGroup.Add(u);
-            else if (userRoles.Contains(Roles.TeamLeader))
-                leaderGroup.Add(u);
-            else
-                agentGroup.Add(u);
+            var memberIds = await _db.AgentTeams
+                .Where(at => at.TeamId == team.Id)
+                .Select(at => at.AgentId)
+                .ToListAsync();
+
+            var members = allUsers.Where(u => memberIds.Contains(u.Id)).ToList();
+            var leaders = members.Where(u => userRoleMap[u.Id].Contains(Roles.TeamLeader)).ToList();
+            var agents  = members.Where(u => !userRoleMap[u.Id].Contains(Roles.TeamLeader)
+                                          && !userRoleMap[u.Id].Contains(Roles.BrandManager)).ToList();
+            teamSections.Add((team, leaders, agents));
         }
 
-        ViewBag.Teams          = teams;
-        ViewBag.SelectedTeamId = selTeamId;
+        // Pending count (all teams combined) — leaders/managers only
+        var canEdit = User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.TeamLeader);
+        var pendingCount = canEdit
+            ? await _db.TimeOffRequests.CountAsync(r => r.Status == Unified.Models.Schedule.TimeOffStatus.Pending)
+            : 0;
+
         ViewBag.WeekStart      = week;
         ViewBag.ShiftTemplates = shifts;
         ViewBag.PendingCount   = pendingCount;
-        ViewBag.AgentGroup     = agentGroup;
-        ViewBag.LeaderGroup    = leaderGroup;
         ViewBag.ManagerGroup   = managerGroup;
+        ViewBag.TeamSections   = teamSections;
+        ViewBag.CanEdit        = canEdit;
 
-        return View(schedules);
+        return View(allScheds);
     }
 
     // POST: assign / edit a single day
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
-    public async Task<IActionResult> SetAgentDay(AgentSchedule entry, int teamId, string weekStart)
+    public async Task<IActionResult> SetAgentDay(AgentSchedule entry, string weekStart)
     {
         ModelState.Remove(nameof(entry.Agent));
         ModelState.Remove(nameof(entry.ShiftTemplate));
@@ -76,12 +97,12 @@ public class ScheduleController : Controller
         if (!ModelState.IsValid)
         {
             TempData["Error"] = "Invalid schedule entry.";
-            return RedirectToAction(nameof(WeekView), new { teamId, weekStart });
+            return RedirectToAction(nameof(WeekView), new { weekStart });
         }
 
         await _service.SetAgentDayAsync(entry);
         TempData["Success"] = "Schedule updated.";
-        return RedirectToAction(nameof(WeekView), new { teamId, weekStart });
+        return RedirectToAction(nameof(WeekView), new { weekStart });
     }
 
     // ── Agent personal view ────────────────────────────────────────────────

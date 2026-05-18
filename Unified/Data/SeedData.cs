@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
 using Unified.Models.ProcessTemplates;
 
@@ -7,6 +9,51 @@ namespace Unified.Data;
 
 public static class SeedData
 {
+    // ── helpers ──────────────────────────────────────────────────────────
+
+    private static async Task<AppUser> EnsureUser(
+        UserManager<AppUser> um, string email, string displayName,
+        string password, string role)
+    {
+        var user = await um.FindByEmailAsync(email);
+        if (user is null)
+        {
+            user = new AppUser
+            {
+                UserName       = email,
+                Email          = email,
+                DisplayName    = displayName,
+                EmailConfirmed = true
+            };
+            var r = await um.CreateAsync(user, password);
+            if (r.Succeeded)
+                await um.AddToRoleAsync(user, role);
+            else
+                user = await um.FindByEmailAsync(email) ?? user;
+        }
+        return user;
+    }
+
+    private static async Task<Team> EnsureTeam(AppDbContext db, string name)
+    {
+        var team = await db.Teams.FirstOrDefaultAsync(t => t.Name == name);
+        if (team is null)
+        {
+            team = new Team { Name = name };
+            db.Teams.Add(team);
+            await db.SaveChangesAsync();
+        }
+        return team;
+    }
+
+    private static async Task AssignTeam(AppDbContext db, string userId, int teamId)
+    {
+        if (!await db.AgentTeams.AnyAsync(at => at.AgentId == userId && at.TeamId == teamId))
+            db.AgentTeams.Add(new AgentTeam { AgentId = userId, TeamId = teamId });
+    }
+
+    // ── main ─────────────────────────────────────────────────────────────
+
     public static async Task InitialiseAsync(IServiceProvider services)
     {
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -16,77 +63,108 @@ public static class SeedData
 
         await db.Database.MigrateAsync();
 
-        // Seed roles
+        // ── Roles ────────────────────────────────────────────────────────
         string[] roles = [Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.SwissArmyKnife];
         foreach (var role in roles)
-        {
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
-        }
 
-        // Seed default BrandManager account
-        var adminEmail    = config["Seed:AdminEmail"]    ?? "admin@unified.local";
-        var adminPassword = config["Seed:AdminPassword"] ?? "Admin@1234!";
-        var adminName     = config["Seed:AdminName"]     ?? "Brand Manager";
+        // ── Brand Managers ───────────────────────────────────────────────
+        var mgr1 = await EnsureUser(userManager, "manager1@unified.local", "Manager One",   "Unified@1234!", Roles.BrandManager);
+        var mgr2 = await EnsureUser(userManager, "manager2@unified.local", "Manager Two",   "Unified@1234!", Roles.BrandManager);
 
+        // legacy single-account seeds (keep working)
+        var adminEmail = config["Seed:AdminEmail"] ?? "admin@unified.local";
         if (await userManager.FindByEmailAsync(adminEmail) is null)
-        {
-            var admin = new AppUser
-            {
-                UserName    = adminEmail,
-                Email       = adminEmail,
-                DisplayName = adminName,
-                EmailConfirmed = true
-            };
-            var result = await userManager.CreateAsync(admin, adminPassword);
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(admin, Roles.BrandManager);
-        }
+            await EnsureUser(userManager, adminEmail,
+                config["Seed:AdminName"] ?? "Brand Manager",
+                config["Seed:AdminPassword"] ?? "Admin@1234!", Roles.BrandManager);
 
-        // Seed default TeamLeader account
-        var leaderEmail    = config["Seed:LeaderEmail"]    ?? "leader@unified.local";
-        var leaderPassword = config["Seed:LeaderPassword"] ?? "Leader@1234!";
-        var leaderName     = config["Seed:LeaderName"]     ?? "Team Leader";
+        // ── Teams ────────────────────────────────────────────────────────
+        var team1 = await EnsureTeam(db, "Team 1");
+        var team2 = await EnsureTeam(db, "Team 2");
+        var team3 = await EnsureTeam(db, "Team 3");
+        var team4 = await EnsureTeam(db, "Team 4");
 
+        // ── Team Leaders ─────────────────────────────────────────────────
+        var ldr1 = await EnsureUser(userManager, "leader1@unified.local", "Leader One",   "Unified@1234!", Roles.TeamLeader);
+        var ldr2 = await EnsureUser(userManager, "leader2@unified.local", "Leader Two",   "Unified@1234!", Roles.TeamLeader);
+        var ldr3 = await EnsureUser(userManager, "leader3@unified.local", "Leader Three", "Unified@1234!", Roles.TeamLeader);
+        var ldr4 = await EnsureUser(userManager, "leader4@unified.local", "Leader Four",  "Unified@1234!", Roles.TeamLeader);
+
+        // legacy single-account seed
+        var leaderEmail = config["Seed:LeaderEmail"] ?? "leader@unified.local";
         if (await userManager.FindByEmailAsync(leaderEmail) is null)
+            await EnsureUser(userManager, leaderEmail,
+                config["Seed:LeaderName"] ?? "Team Leader",
+                config["Seed:LeaderPassword"] ?? "Leader@1234!", Roles.TeamLeader);
+
+        // Assign leaders to teams and set as team leader
+        async Task SetLeader(Team team, AppUser leader)
         {
-            var leader = new AppUser
-            {
-                UserName       = leaderEmail,
-                Email          = leaderEmail,
-                DisplayName    = leaderName,
-                EmailConfirmed = true
-            };
-            var result = await userManager.CreateAsync(leader, leaderPassword);
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(leader, Roles.TeamLeader);
+            team.TeamLeaderId = leader.Id;
+            await AssignTeam(db, leader.Id, team.Id);
         }
+        await SetLeader(team1, ldr1);
+        await SetLeader(team2, ldr2);
+        await SetLeader(team3, ldr3);
+        await SetLeader(team4, ldr4);
+        await db.SaveChangesAsync();
 
-        // Seed default CSAgent account
-        var agentEmail    = config["Seed:AgentEmail"]    ?? "agent@unified.local";
-        var agentPassword = config["Seed:AgentPassword"] ?? "Agent@1234!";
-        var agentName     = config["Seed:AgentName"]     ?? "CS Agent";
+        // ── CS Agents (15) ───────────────────────────────────────────────
+        var agentDefs = new[]
+        {
+            ("agent01@unified.local",  "Agent One"),
+            ("agent02@unified.local",  "Agent Two"),
+            ("agent03@unified.local",  "Agent Three"),
+            ("agent04@unified.local",  "Agent Four"),
+            ("agent05@unified.local",  "Agent Five"),
+            ("agent06@unified.local",  "Agent Six"),
+            ("agent07@unified.local",  "Agent Seven"),
+            ("agent08@unified.local",  "Agent Eight"),
+            ("agent09@unified.local",  "Agent Nine"),
+            ("agent10@unified.local",  "Agent Ten"),
+            ("agent11@unified.local",  "Agent Eleven"),
+            ("agent12@unified.local",  "Agent Twelve"),
+            ("agent13@unified.local",  "Agent Thirteen"),
+            ("agent14@unified.local",  "Agent Fourteen"),
+            ("agent15@unified.local",  "Agent Fifteen"),
+        };
 
+        // legacy single-account seed
+        var agentEmail = config["Seed:AgentEmail"] ?? "agent@unified.local";
         if (await userManager.FindByEmailAsync(agentEmail) is null)
-        {
-            var agent = new AppUser
-            {
-                UserName       = agentEmail,
-                Email          = agentEmail,
-                DisplayName    = agentName,
-                EmailConfirmed = true
-            };
-            var result = await userManager.CreateAsync(agent, agentPassword);
-            if (result.Succeeded)
-                await userManager.AddToRoleAsync(agent, Roles.CSAgent);
-        }
+            await EnsureUser(userManager, agentEmail,
+                config["Seed:AgentName"] ?? "CS Agent",
+                config["Seed:AgentPassword"] ?? "Agent@1234!", Roles.CSAgent);
 
-        // Seed demo teams
-        string[] teamNames = ["ENG Team", "JP Team", "PT Team"];
-        foreach (var name in teamNames)
+        var teams = new[] { team1, team2, team3, team4 };
+        for (int i = 0; i < agentDefs.Length; i++)
         {
-            if (!await db.Teams.AnyAsync(t => t.Name == name))
-                db.Teams.Add(new Team { Name = name });
+            var (email, name) = agentDefs[i];
+            var agent = await EnsureUser(userManager, email, name, "Unified@1234!", Roles.CSAgent);
+            await AssignTeam(db, agent.Id, teams[i % teams.Length].Id);
+        }
+        await db.SaveChangesAsync();
+
+        // ── Brands ───────────────────────────────────────────────────────
+        var brandDefs = new[]
+        {
+            new { Name = "Brand 1", Crm = "https://crm.brand1.test",   Qm = "https://qm.brand1.test"  },
+            new { Name = "Brand 2", Crm = "https://crm.brand2.test",   Qm = "https://qm.brand2.test"  },
+            new { Name = "Brand 3", Crm = "https://crm.brand3.test",   Qm = "https://qm.brand3.test"  },
+            new { Name = "Brand 4", Crm = "https://crm.brand4.test",   Qm = "https://qm.brand4.test"  },
+        };
+        foreach (var b in brandDefs)
+        {
+            if (!await db.Brands.AnyAsync(x => x.Name == b.Name))
+                db.Brands.Add(new Brand
+                {
+                    Name           = b.Name,
+                    CrmUrl         = b.Crm,
+                    QuemetricsUrl  = b.Qm,
+                    WebsiteLinksJson = "[]"
+                });
         }
         await db.SaveChangesAsync();
 
@@ -259,6 +337,166 @@ public static class SeedData
                 }
             );
             await db.SaveChangesAsync();
+        }
+
+        // ── Email Templates ──────────────────────────────────────────────
+        if (!await db.EmailTemplates.AnyAsync())
+        {
+            var brands = await db.Brands.ToListAsync();
+
+            // Master welcome template
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Title       = "Welcome Email - Master",
+                SubjectLine = "Welcome to {{BrandName}}",
+                BodyHtml    =
+                    "<p>Dear Client,</p>" +
+                    "<p>Welcome to <strong>{{BrandName}}</strong>! We are delighted to have you on board.</p>" +
+                    "<p>Your dedicated support team is available to assist you at any time. " +
+                    "Please visit our website at {{WebsiteUrl}} for the latest information.</p>" +
+                    "<p>If you have any questions, do not hesitate to contact us.</p>" +
+                    "{{FooterSignature}}",
+                IsActive  = true,
+                BrandId   = null,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            // Master withdrawal delay template
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Title       = "Withdrawal Delay Notice - Master",
+                SubjectLine = "Update on Your Withdrawal Request",
+                BodyHtml    =
+                    "<p>Dear Client,</p>" +
+                    "<p>We are writing to inform you that your recent withdrawal request is currently being processed.</p>" +
+                    "<p>Our team is working diligently to complete this as quickly as possible. " +
+                    "If you have any questions, please contact your account manager or reach out via {{WebsiteUrl}}.</p>" +
+                    "<p>We apologise for any inconvenience and thank you for your patience.</p>" +
+                    "{{FooterSignature}}",
+                IsActive  = true,
+                BrandId   = null,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            // Master account verification template
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Title       = "Account Verification Request - Master",
+                SubjectLine = "Action Required: Verify Your Account",
+                BodyHtml    =
+                    "<p>Dear Client,</p>" +
+                    "<p>To continue using your <strong>{{BrandName}}</strong> account, we require you to " +
+                    "complete your identity verification.</p>" +
+                    "<p>Please log in to your account at {{WebsiteUrl}} and upload the following documents:</p>" +
+                    "<ul><li>Proof of Identity (passport or national ID)</li>" +
+                    "<li>Proof of Address (utility bill or bank statement dated within 3 months)</li></ul>" +
+                    "<p>If you have already submitted these documents, please disregard this email.</p>" +
+                    "{{FooterSignature}}",
+                IsActive  = true,
+                BrandId   = null,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            // Per-brand welcome clones
+            foreach (var brand in brands)
+            {
+                db.EmailTemplates.Add(new EmailTemplate
+                {
+                    Title       = $"Welcome Email - {brand.Name}",
+                    SubjectLine = $"Welcome to {brand.Name}",
+                    BodyHtml    =
+                        $"<p>Dear Client,</p>" +
+                        $"<p>Welcome to <strong>{brand.Name}</strong>! We are thrilled to have you with us.</p>" +
+                        $"<p>Visit us at {{{{WebsiteUrl}}}} or contact our support team at {{{{CrmUrl}}}}.</p>" +
+                        "{{FooterSignature}}",
+                    IsActive  = true,
+                    BrandId   = brand.Id,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        // ── Schedule ─────────────────────────────────────────────────────
+        if (!await db.AgentSchedules.AnyAsync())
+        {
+            var dayShift   = await db.ShiftTemplates.FirstOrDefaultAsync(s => s.Name.StartsWith("Day Shift"));
+            var nightShift = await db.ShiftTemplates.FirstOrDefaultAsync(s => s.Name.StartsWith("Night Shift"));
+
+            if (dayShift != null && nightShift != null)
+            {
+                // Get all agents
+                var agents = await userManager.GetUsersInRoleAsync(Roles.CSAgent);
+                // Align to Monday of the current week
+                var today   = DateTime.UtcNow.Date;
+                var weekStart = today.AddDays(-(int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1);
+
+                int idx = 0;
+                foreach (var agent in agents)
+                {
+                    var shift = idx % 2 == 0 ? dayShift : nightShift;
+                    // Seed Mon-Fri for the current week
+                    for (int day = 0; day < 5; day++)
+                    {
+                        var date = weekStart.AddDays(day);
+                        if (!await db.AgentSchedules.AnyAsync(s => s.AgentId == agent.Id && s.Date == date))
+                        {
+                            db.AgentSchedules.Add(new Unified.Models.Schedule.AgentSchedule
+                            {
+                                AgentId         = agent.Id,
+                                Date            = date,
+                                ShiftTemplateId = shift.Id,
+                                Type            = Unified.Models.Schedule.ScheduleEntryType.Regular
+                            });
+                        }
+                    }
+                    idx++;
+                }
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ── Vault ─────────────────────────────────────────────────────────
+        if (!await db.VaultEntries.AnyAsync())
+        {
+            var vaultSvc    = services.GetRequiredService<Unified.Services.VaultService>();
+            var allAgents   = await userManager.GetUsersInRoleAsync(Roles.CSAgent);
+            var leaders     = await userManager.GetUsersInRoleAsync(Roles.TeamLeader);
+            var allUsers    = allAgents.Concat(leaders).ToList();
+            var agentIds    = allUsers.Select(u => u.Id).ToList();
+
+            var provisionerId = (await userManager.GetUsersInRoleAsync(Roles.BrandManager))
+                                    .FirstOrDefault()?.Id ?? agentIds.First();
+
+            var crmCat  = await db.VaultCategories.FirstAsync(c => c.Name == "CRM");
+            var qmCat   = await db.VaultCategories.FirstAsync(c => c.Name == "Quemetrics");
+
+            // Provision CRM access for all agents/leaders
+            await vaultSvc.BulkProvisionAsync(
+                categoryId           : crmCat.Id,
+                label                : "CRM Login",
+                username             : "agent.unified",
+                plainPassword        : "CRM@test1234!",
+                url                  : "https://crm.test",
+                notes                : "Seeded test credentials - change before use.",
+                targetUserIds        : agentIds,
+                provisionedByUserId  : provisionerId);
+
+            // Provision Quemetrics access for all agents/leaders
+            await vaultSvc.BulkProvisionAsync(
+                categoryId           : qmCat.Id,
+                label                : "Quemetrics Login",
+                username             : "agent.unified",
+                plainPassword        : "QM@test1234!",
+                url                  : "https://quemetrics.test",
+                notes                : "Seeded test credentials - change before use.",
+                targetUserIds        : agentIds,
+                provisionedByUserId  : provisionerId);
         }
     }
 }

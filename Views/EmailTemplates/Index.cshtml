@@ -3,6 +3,7 @@
     ViewData["Title"] = "Email Templates";
     var brands = (List<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
     var selectedBrandId = (int?)ViewBag.SelectedBrandId;
+    var canEdit = User.IsInRole("BrandManager") || User.IsInRole("TeamLeader") || User.IsInRole("SwissArmyKnife");
 }
 
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
@@ -14,7 +15,7 @@
                 <i class="ri-building-line me-1"></i> Brands
             </a>
         }
-        @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader") || User.IsInRole("SwissArmyKnife"))
+        @if (canEdit)
         {
             <a asp-action="Create" class="btn btn-primary btn-sm">
                 <i class="ri-add-line me-1"></i> New Template
@@ -25,7 +26,7 @@
 
 <div class="card mb-3">
     <div class="card-body py-2">
-        <form method="get" class="d-flex align-items-center gap-3">
+        <form method="get" class="d-flex align-items-center gap-3 flex-wrap">
             <label class="mb-0 fw-semibold">Filter by Brand:</label>
             <select name="brandId" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
                 <option value="">All</option>
@@ -34,6 +35,10 @@
                     <option value="@b.Id" selected="@(selectedBrandId == b.Id ? "selected" : null)">@b.Name</option>
                 }
             </select>
+            @if (selectedBrandId.HasValue)
+            {
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">Clear</a>
+            }
         </form>
     </div>
 </div>
@@ -46,7 +51,6 @@
                     <th>Title</th>
                     <th>Subject</th>
                     <th>Brand</th>
-                    <th>Status</th>
                     <th>Updated</th>
                     <th>Actions</th>
                 </tr>
@@ -56,7 +60,7 @@
                 {
                     <tr>
                         <td>@t.Title</td>
-                        <td>@t.SubjectLine</td>
+                        <td class="text-muted small">@t.SubjectLine</td>
                         <td>
                             @if (t.Brand != null)
                             {
@@ -67,24 +71,26 @@
                                 <span class="badge bg-secondary">Master</span>
                             }
                         </td>
-                        <td>
-                            @if (t.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Inactive</span>
-                            }
-                        </td>
                         <td>@t.UpdatedAt.ToString("dd MMM yyyy")</td>
-                        <td>
-                            <a asp-action="Preview" asp-route-id="@t.Id" class="btn btn-sm btn-outline-info">Preview</a>
-                            <a asp-action="Edit" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                            <form asp-action="Delete" asp-route-id="@t.Id" method="post" class="d-inline"
-                                  onsubmit="return confirm('Delete this template?')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                            </form>
+                        <td class="text-nowrap">
+                            <a asp-action="Preview" asp-route-id="@t.Id"
+                               asp-route-brandId="@(t.BrandId)"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="ri-eye-line me-1"></i>Preview &amp; Copy
+                            </a>
+                            @if (canEdit)
+                            {
+                                <a asp-action="Edit" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary ms-1">
+                                    <i class="ri-edit-line me-1"></i>Edit
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@t.Id" method="post" class="d-inline ms-1"
+                                      onsubmit="return confirm('Delete this template?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </form>
+                            }
                         </td>
                     </tr>
                 }
@@ -95,5 +101,5 @@
 
 @section Scripts {
     <script src="@Url.Content("~/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js")"></script>
-    <script>$(function () { $('#templatesTable').DataTable({ responsive: true }); });</script>
+    <script>$(function () { $('#templatesTable').DataTable({ responsive: true, order: [[2,'asc'],[0,'asc']] }); });</script>
 }

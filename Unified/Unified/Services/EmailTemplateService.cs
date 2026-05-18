@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using Unified.Data;
 using Unified.Models.EmailTemplates;
 
@@ -86,13 +87,29 @@ public class EmailTemplateService
             ?? throw new InvalidOperationException("Template not found.");
 
         Brand? brand = template.Brand;
-        if (brandId.HasValue && brand == null)
-            brand = await _db.Brands.FindAsync(brandId);
+        if (brandId.HasValue)
+            brand = await _db.Brands.FindAsync(brandId) ?? brand;
 
         if (brand == null)
             return template.BodyHtml;
 
         return SubstituteTokens(template.BodyHtml, brand);
+    }
+
+    // Returns the resolved subject line for copy purposes
+    public async Task<string> RenderSubjectAsync(int templateId, int? brandId = null)
+    {
+        var template = await _db.EmailTemplates.Include(t => t.Brand).FirstOrDefaultAsync(t => t.Id == templateId)
+            ?? throw new InvalidOperationException("Template not found.");
+
+        Brand? brand = template.Brand;
+        if (brandId.HasValue)
+            brand = await _db.Brands.FindAsync(brandId) ?? brand;
+
+        if (brand == null)
+            return template.SubjectLine;
+
+        return SubstituteTokens(template.SubjectLine, brand);
     }
 
     public async Task<EmailTemplate> CreateAsync(EmailTemplate template)
@@ -161,12 +178,28 @@ public class EmailTemplateService
         var links = brand.GetWebsiteLinks();
         var websiteUrl = links.FirstOrDefault()?.Url ?? string.Empty;
 
-        return input
+        // Standard fixed tokens
+        var result = input
             .Replace("{{BrandName}}", brand.Name)
             .Replace("{{WebsiteUrl}}", websiteUrl)
             .Replace("{{CrmUrl}}", brand.CrmUrl ?? string.Empty)
-            .Replace("{{CallSystemUrl}}", brand.CallSystemUrl ?? string.Empty)
+            .Replace("{{CallSystemUrl}}", brand.QuemetricsUrl ?? string.Empty)
+            .Replace("{{QuemetricsUrl}}", brand.QuemetricsUrl ?? string.Empty)
             .Replace("{{FooterSignature}}", brand.FooterSignatureHtml ?? string.Empty)
+            .Replace("{{ZohoSignature}}", brand.ZohoSignatureNote ?? string.Empty)
             .Replace("{{Region}}", links.FirstOrDefault()?.Region ?? string.Empty);
+
+        // Dynamic regional link tokens: {{WebsiteUrl:RegionName}}
+        // Looks up the brand's WebsiteLinks for the matching region.
+        // If found, replaces with the URL; otherwise leaves an empty string.
+        result = Regex.Replace(result, @"\{\{WebsiteUrl:([^}]+)\}\}", m =>
+        {
+            var region = m.Groups[1].Value.Trim();
+            var match  = links.FirstOrDefault(l =>
+                l.Region.Equals(region, StringComparison.OrdinalIgnoreCase));
+            return match?.Url ?? string.Empty;
+        });
+
+        return result;
     }
 }

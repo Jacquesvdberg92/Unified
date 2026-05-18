@@ -17,7 +17,7 @@ public class EmailTemplateServiceTests
         {
             Name               = "TestBrand",
             CrmUrl             = "https://crm.test",
-            CallSystemUrl      = "https://calls.test",
+            QuemetricsUrl      = "https://calls.test",
             FooterSignatureHtml = "<p>Footer</p>",
             WebsiteLinksJson   = """[{"Region":"EU","Url":"https://eu.test"}]"""
         };

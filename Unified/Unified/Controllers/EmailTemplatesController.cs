@@ -6,7 +6,7 @@ using Unified.Services;
 
 namespace Unified.Controllers;
 
-[Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
+[Authorize]
 public class EmailTemplatesController : Controller
 {
     private readonly EmailTemplateService _svc;
@@ -18,7 +18,6 @@ public class EmailTemplatesController : Controller
 
     // ── Templates ─────────────────────────────────────────────────────────
 
-    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> Index(int? brandId)
     {
         var templates = await _svc.GetAllTemplatesAsync(brandId);
@@ -28,12 +27,14 @@ public class EmailTemplatesController : Controller
         return View(templates);
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     public IActionResult Create()
     {
         PopulateBrandsList();
         return View(new EmailTemplate());
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EmailTemplate model)
     {
@@ -43,6 +44,7 @@ public class EmailTemplatesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     public async Task<IActionResult> Edit(int id)
     {
         var template = await _svc.GetByIdAsync(id);
@@ -51,6 +53,7 @@ public class EmailTemplatesController : Controller
         return View(template);
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EmailTemplate model)
     {
@@ -60,6 +63,7 @@ public class EmailTemplatesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
@@ -68,21 +72,24 @@ public class EmailTemplatesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> Preview(int id, int? brandId)
     {
         var template = await _svc.GetByIdAsync(id);
         if (template == null) return NotFound();
 
-        var renderedHtml = await _svc.RenderPreviewAsync(id, brandId ?? template.BrandId);
-        var brands = await _svc.GetAllBrandsAsync();
+        var effectiveBrandId = brandId ?? template.BrandId;
+        var renderedHtml     = await _svc.RenderPreviewAsync(id, effectiveBrandId);
+        var renderedSubject  = await _svc.RenderSubjectAsync(id, effectiveBrandId);
+        var brands           = await _svc.GetAllBrandsAsync();
 
         ViewBag.RenderedHtml    = renderedHtml;
+        ViewBag.RenderedSubject = renderedSubject;
         ViewBag.Brands          = brands;
-        ViewBag.SelectedBrandId = brandId ?? template.BrandId;
+        ViewBag.SelectedBrandId = effectiveBrandId;
         return View(template);
     }
 
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CloneForBrand(int templateId, int brandId)
     {

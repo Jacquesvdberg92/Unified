@@ -15,7 +15,7 @@ public class Brand
         JsonSerializer.Deserialize<List<BrandWebsiteLink>>(WebsiteLinksJson) ?? new();
 
     public string? CrmUrl { get; set; }
-    public string? CallSystemUrl { get; set; }
+    public string? QuemetricsUrl { get; set; }
     public string? FooterSignatureHtml { get; set; }
     public string? ZohoSignatureNote { get; set; }
 }

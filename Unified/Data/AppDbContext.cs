@@ -174,10 +174,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
         // Seed default vault categories
         builder.Entity<VaultCategory>().HasData(
-            new VaultCategory { Id = 1, Name = "CRM",         IconCssClass = "bx bx-data",        IsCustom = false },
-            new VaultCategory { Id = 2, Name = "Quemetrics",  IconCssClass = "bx bx-bar-chart",   IsCustom = false },
-            new VaultCategory { Id = 3, Name = "Redmine",     IconCssClass = "bx bx-task",        IsCustom = false },
-            new VaultCategory { Id = 4, Name = "Call System", IconCssClass = "bx bx-phone-call",  IsCustom = false }
+            new VaultCategory { Id = 1, Name = "CRM",        IconCssClass = "bx bx-data",      IsCustom = false },
+            new VaultCategory { Id = 2, Name = "Quemetrics", IconCssClass = "bx bx-bar-chart", IsCustom = false },
+            new VaultCategory { Id = 3, Name = "Redmine",    IconCssClass = "bx bx-task",      IsCustom = false }
         );
 
         // Reports
