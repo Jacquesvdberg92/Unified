@@ -45,7 +45,7 @@
         const wrapper = document.querySelector(`[data-widget-key="${key}"]`);
         if (!wrapper) return;
         try {
-            const res = await fetch(`/Home/GetWidget/${key}`, {
+            const res = await fetch(`/Home/GetWidget?key=${encodeURIComponent(key)}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
             if (res.ok) wrapper.innerHTML = await res.text();
