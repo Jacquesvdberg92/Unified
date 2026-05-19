@@ -58,11 +58,11 @@
         <div class="card-body d-flex flex-wrap align-items-center gap-4 py-3">
             <div class="text-center" style="min-width:110px">
                 <p class="text-muted small text-uppercase mb-1">Today</p>
-                <div class="fw-semibold" id="sched-clock-date"></div>
+                <div class="fw-semibold text-muted" id="sched-clock-date"></div>
             </div>
             <div class="text-center" style="min-width:90px">
                 <p class="text-muted small text-uppercase mb-1">Time</p>
-                <div class="fw-bold fs-5" id="sched-live-clock"></div>
+                <div class="fw-bold fs-5 text-muted" id="sched-live-clock"></div>
             </div>
             <div class="text-center" style="min-width:90px">
                 <p class="text-muted small text-uppercase mb-1">Clocked In</p>
@@ -113,7 +113,7 @@
         <div class="card-body py-2 d-flex align-items-center gap-3 flex-wrap">
             <a asp-action="AgentView" asp-route-weekStart="@prevWeek"
                class="btn btn-outline-secondary btn-sm"><i class="bx bx-chevron-left"></i></a>
-            <span class="fw-semibold">
+            <span class="fw-semibold text-muted">
                 @weekStart.ToString("dd MMM") - @weekStart.AddDays(6).ToString("dd MMM yyyy")
             </span>
             <a asp-action="AgentView" asp-route-weekStart="@nextWeek"

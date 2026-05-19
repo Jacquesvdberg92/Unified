@@ -1,10 +1,16 @@
 @using Unified.Models.WorkDistribution
 @{
     ViewData["Title"] = "Work Distribution";
-    var today   = (DateTime)ViewBag.Today;
-    var todays  = ViewBag.TodaysEntry as WorkDistribution;
-    var recent  = (List<WorkDistribution>)ViewBag.Recent;
-    var canEdit = User.IsInRole(Unified.Models.Identity.Roles.BrandManager) || User.IsInRole(Unified.Models.Identity.Roles.TeamLeader);
+    var date     = (DateTime)ViewBag.Date;
+    var entry    = ViewBag.TodaysEntry as WorkDistribution;
+    var recent   = (List<WorkDistribution>)ViewBag.Recent;
+    var slots    = (List<CsLiveHelpSlot>)ViewBag.Slots;
+    var hours    = (IEnumerable<int>)ViewBag.SlotHours;
+    var eligible = (List<Unified.Models.Identity.AppUser>)ViewBag.Eligible;
+    var canEdit  = User.IsInRole(Unified.Models.Identity.Roles.BrandManager) || User.IsInRole(Unified.Models.Identity.Roles.TeamLeader);
+    var isToday  = date.Date == DateTime.Today;
+
+    CsLiveHelpSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -24,72 +30,145 @@
         </div>
     }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><i class="bx bx-list-ul me-2"></i>Work Distribution</h4>
-        @if (canEdit)
-        {
-            <a asp-action="Edit" class="btn btn-primary"><i class="bx bx-plus me-1"></i>Post Today's Distribution</a>
-        }
-    </div>
-
-    @* Today's card *@
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bx bx-calendar-check me-2"></i>Today — @today.ToString("dddd, dd MMM yyyy")</h5>
-            @if (canEdit && todays != null)
+    @* ── Header + date navigation ── *@
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-list-ul me-2"></i>Work Distribution — @date.ToString("dddd, dd MMM yyyy")</h4>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <a asp-action="Index" asp-route-date="@date.AddDays(-1).ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-secondary"><i class="bx bx-chevron-left"></i></a>
+            @if (!isToday)
             {
-                <a asp-action="Edit" asp-route-date="@today.ToString("yyyy-MM-dd")" class="btn btn-sm btn-outline-secondary">
-                    <i class="bx bx-edit me-1"></i>Edit
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Today</a>
+            }
+            <a asp-action="Index" asp-route-date="@date.AddDays(1).ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-secondary"><i class="bx bx-chevron-right"></i></a>
+            @if (canEdit)
+            {
+                <a asp-action="Edit" asp-route-date="@date.ToString("yyyy-MM-dd")" class="btn btn-sm btn-primary">
+                    <i class="bx bx-edit me-1"></i>@(entry != null ? "Edit Distribution" : "Post Distribution")
                 </a>
             }
         </div>
+    </div>
+
+    @* ── Work Distribution body ── *@
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bx bx-calendar-check me-2"></i>Distribution</h5>
+        </div>
         <div class="card-body">
-            @if (todays != null)
+            @if (entry != null)
             {
-                <pre class="work-dist-body mb-0">@todays.Body</pre>
-                <small class="text-muted">Posted by @(todays.CreatedBy?.DisplayName ?? "Unknown") · @todays.UpdatedAt.ToLocalTime().ToString("HH:mm")</small>
+                <pre class="work-dist-body mb-2 text-muted">@entry.Body</pre>
+                <small class="text-muted">Posted by @(entry.CreatedBy?.DisplayName ?? "Unknown") · @entry.UpdatedAt.ToLocalTime().ToString("HH:mm")</small>
             }
             else
             {
-                <p class="text-muted mb-0">No distribution posted yet for today.
+                <p class="text-muted mb-0">No distribution posted for this day.
                     @if (canEdit)
                     {
-                        <a asp-action="Edit">Post one now.</a>
+                        <a asp-action="Edit" asp-route-date="@date.ToString("yyyy-MM-dd")">Post one now.</a>
                     }
                 </p>
             }
         </div>
     </div>
 
-    @* Recent history *@
-    @if (recent.Any(r => r.Date != today.Date))
+    @* ── CS Live Help Schedule ── *@
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bx bx-headphone me-2"></i>CS Live Help Schedule</h5>
+            <div class="d-flex gap-2">
+                @if (canEdit)
+                {
+                    <a asp-controller="CsLiveHelp" asp-action="Generate" asp-route-date="@date.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm btn-primary"><i class="bx bx-pencil me-1"></i>Generate / Edit</a>
+                }
+                <a asp-controller="CsLiveHelp" asp-action="SwapLog"
+                   class="btn btn-sm btn-outline-info"><i class="bx bx-transfer me-1"></i>Swap Log</a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0 align-middle">
+                    <thead class="table">
+                        <tr>
+                            <th style="width:130px">Time Slot</th>
+                            <th>Agent 1</th>
+                            <th>Agent 2</th>
+                            @if (canEdit) { <th style="width:100px">Actions</th> }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in hours)
+                        {
+                            var slot = SlotFor(h);
+                            <tr>
+                                <td class="fw-semibold text-nowrap">@($"{h:D2}:00") – @($"{h+1:D2}:00")</td>
+                                <td>
+                                    @if (slot?.Agent1 != null)
+                                    {
+                                        <span class="badge bg-label-primary">@slot.Agent1.DisplayName</span>
+                                    }
+                                    else { <span class="text-muted fst-italic">Unassigned</span> }
+                                </td>
+                                <td>
+                                    @if (slot?.Agent2 != null)
+                                    {
+                                        <span class="badge bg-label-primary">@slot.Agent2.DisplayName</span>
+                                    }
+                                    else { <span class="text-muted fst-italic">Unassigned</span> }
+                                </td>
+                                @if (canEdit && slot != null)
+                                {
+                                    <td>
+                                        <button type="button" class="btn btn-xs btn-outline-warning"
+                                                data-bs-toggle="modal" data-bs-target="#swapModal"
+                                                data-slot-id="@slot.Id"
+                                                data-slot-label="@($"{h:D2}:00–{h+1:D2}:00")"
+                                                data-date="@date.ToString("yyyy-MM-dd")">
+                                            <i class="bx bx-transfer-alt"></i> Swap
+                                        </button>
+                                    </td>
+                                }
+                                else if (canEdit) { <td></td> }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ── Recent Distribution History ── *@
+    @if (recent.Any(r => r.Date != date.Date))
     {
         <h6 class="text-muted mb-3">Recent Distributions</h6>
         <div class="row g-3">
-            @foreach (var entry in recent.Where(r => r.Date != today.Date))
+            @foreach (var hist in recent.Where(r => r.Date != date.Date))
             {
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center py-2">
-                            <span class="fw-semibold">@entry.Date.ToString("dddd, dd MMM yyyy")</span>
+                            <span class="fw-semibold">@hist.Date.ToString("dddd, dd MMM yyyy")</span>
                             <div class="d-flex gap-2">
-                                <a asp-action="ViewDate" asp-route-date="@entry.Date.ToString("yyyy-MM-dd")"
+                                <a asp-action="Index" asp-route-date="@hist.Date.ToString("yyyy-MM-dd")"
                                    class="btn btn-sm btn-outline-primary">View</a>
                                 @if (canEdit)
                                 {
-                                    <a asp-action="Edit" asp-route-date="@entry.Date.ToString("yyyy-MM-dd")"
+                                    <a asp-action="Edit" asp-route-date="@hist.Date.ToString("yyyy-MM-dd")"
                                        class="btn btn-sm btn-outline-secondary">Edit</a>
                                     <form asp-action="Delete" method="post" class="d-inline"
                                           onsubmit="return confirm('Delete this entry?')">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@entry.Id" />
+                                        <input type="hidden" name="id" value="@hist.Id" />
                                         <button class="btn btn-sm btn-outline-danger">Delete</button>
                                     </form>
                                 }
                             </div>
                         </div>
                         <div class="card-body py-2">
-                            <pre class="work-dist-body mb-0 small text-truncate-3">@entry.Body</pre>
+                            <pre class="work-dist-body mb-0 small text-truncate-3">@hist.Body</pre>
                         </div>
                     </div>
                 </div>
@@ -97,6 +176,62 @@
         </div>
     }
 </div>
+
+@if (canEdit)
+{
+    <!-- Swap Modal -->
+    <div class="modal fade" id="swapModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form asp-controller="CsLiveHelp" asp-action="Swap" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnDate" id="swapReturnDate" value="@date.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="slotId" id="swapSlotId" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bx bx-transfer-alt me-2"></i>Swap Agent — <span id="swapSlotLabel"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Position</label>
+                            <select name="agentPosition" class="form-select">
+                                <option value="1">Agent 1</option>
+                                <option value="2">Agent 2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">New Agent</label>
+                            <select name="newAgentId" class="form-select">
+                                <option value="">— Unassign —</option>
+                                @foreach (var agent in eligible)
+                                {
+                                    <option value="@agent.Id">@agent.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Reason / Note</label>
+                            <input type="text" name="reason" class="form-control" placeholder="e.g. Agent sick, voluntary swap…" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning"><i class="bx bx-save me-1"></i>Apply Swap</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('swapModal').addEventListener('show.bs.modal', function (e) {
+            var btn = e.relatedTarget;
+            document.getElementById('swapSlotId').value       = btn.dataset.slotId;
+            document.getElementById('swapSlotLabel').textContent = btn.dataset.slotLabel;
+            document.getElementById('swapReturnDate').value   = btn.dataset.date;
+        });
+    </script>
+}
 
 <style>
     pre.work-dist-body {

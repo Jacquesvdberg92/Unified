@@ -9,6 +9,7 @@ using Unified.Models.Reports;
 using Unified.Models.Schedule;
 using Unified.Models.Updates;
 using Unified.Models.Vault;
+using Unified.Models.Poi;
 using Unified.Models.WorkDistribution;
 
 namespace Unified.Data;
@@ -45,7 +46,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<PublicHoliday>  PublicHolidays   => Set<PublicHoliday>();
 
     // Work Distribution
-    public DbSet<WorkDistribution> WorkDistributions => Set<WorkDistribution>();
+    public DbSet<WorkDistribution>    WorkDistributions    => Set<WorkDistribution>();
+    public DbSet<CsLiveHelpSlot>      CsLiveHelpSlots      => Set<CsLiveHelpSlot>();
+    public DbSet<CsLiveHelpSwapLog>   CsLiveHelpSwapLogs   => Set<CsLiveHelpSwapLog>();
+
+    // POI Simulations
+    public DbSet<PoiSimulation>       PoiSimulations       => Set<PoiSimulation>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -243,5 +249,60 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<AppUser>()
             .Property(u => u.HourlyRate)
             .HasPrecision(10, 2);
+
+        // CS Live Help
+        builder.Entity<CsLiveHelpSlot>()
+            .HasOne(s => s.Agent1)
+            .WithMany()
+            .HasForeignKey(s => s.Agent1Id)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<CsLiveHelpSlot>()
+            .HasOne(s => s.Agent2)
+            .WithMany()
+            .HasForeignKey(s => s.Agent2Id)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<CsLiveHelpSlot>()
+            .HasOne(s => s.CreatedBy)
+            .WithMany()
+            .HasForeignKey(s => s.CreatedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsLiveHelpSwapLog>()
+            .HasOne(l => l.Slot)
+            .WithMany()
+            .HasForeignKey(l => l.SlotId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<CsLiveHelpSwapLog>()
+            .HasOne(l => l.PreviousAgent)
+            .WithMany()
+            .HasForeignKey(l => l.PreviousAgentId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<CsLiveHelpSwapLog>()
+            .HasOne(l => l.NewAgent)
+            .WithMany()
+            .HasForeignKey(l => l.NewAgentId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Entity<CsLiveHelpSwapLog>()
+            .HasOne(l => l.ChangedBy)
+            .WithMany()
+            .HasForeignKey(l => l.ChangedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // POI Simulations
+        builder.Entity<PoiSimulation>()
+            .HasOne(p => p.Brand)
+            .WithMany()
+            .HasForeignKey(p => p.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PoiSimulation>()
+            .HasOne(p => p.LoggedBy)
+            .WithMany()
+            .HasForeignKey(p => p.LoggedById)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<PoiSimulation>()
+            .HasOne(p => p.ReceivedBy)
+            .WithMany()
+            .HasForeignKey(p => p.ReceivedById)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

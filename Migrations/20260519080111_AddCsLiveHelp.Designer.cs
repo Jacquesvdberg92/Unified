@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unified.Data;
 
@@ -11,9 +12,11 @@ using Unified.Data;
 namespace Unified.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519080111_AddCsLiveHelp")]
+    partial class AddCsLiveHelp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -543,52 +546,6 @@ namespace Unified.Migrations
                     b.HasIndex("ReviewId");
 
                     b.ToTable("ReviewItems");
-                });
-
-            modelBuilder.Entity("Unified.Models.Poi.PoiSimulation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BrandId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ClientId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LoggedById")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PoiReceived")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ReceivedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ReceivedById")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("SimulatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BrandId");
-
-                    b.HasIndex("LoggedById");
-
-                    b.HasIndex("ReceivedById");
-
-                    b.ToTable("PoiSimulations");
                 });
 
             modelBuilder.Entity("Unified.Models.ProcessTemplates.ProcessTemplate", b =>
@@ -1415,32 +1372,6 @@ namespace Unified.Migrations
                         .IsRequired();
 
                     b.Navigation("Review");
-                });
-
-            modelBuilder.Entity("Unified.Models.Poi.PoiSimulation", b =>
-                {
-                    b.HasOne("Unified.Models.EmailTemplates.Brand", "Brand")
-                        .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "LoggedBy")
-                        .WithMany()
-                        .HasForeignKey("LoggedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "ReceivedBy")
-                        .WithMany()
-                        .HasForeignKey("ReceivedById")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Brand");
-
-                    b.Navigation("LoggedBy");
-
-                    b.Navigation("ReceivedBy");
                 });
 
             modelBuilder.Entity("Unified.Models.ProcessTemplates.ProcessTemplate", b =>

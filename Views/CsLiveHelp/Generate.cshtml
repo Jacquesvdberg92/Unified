@@ -1,0 +1,101 @@
+@using Unified.Models.WorkDistribution
+@using Unified.Models.Identity
+@{
+    ViewData["Title"] = "Generate CS Live Help Schedule";
+    var date      = (DateTime)ViewBag.Date;
+    var slots     = (List<CsLiveHelpSlot>)ViewBag.Slots;
+    var hours     = (IEnumerable<int>)ViewBag.SlotHours;
+    var eligible  = (List<AppUser>)ViewBag.Eligible;
+
+    CsLiveHelpSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0">
+            <i class="bx bx-calendar-edit me-2"></i>Generate CS Live Help — @date.ToString("dddd, dd MMM yyyy")
+        </h4>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" asp-route-date="@date.ToString("yyyy-MM-dd")" class="btn btn-sm btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to View
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Generate" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <small class="text-muted">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Select 2 agents per slot. Only agents with CS Live Help access are listed.
+                    Saving this page <strong>replaces</strong> the entire day's schedule.
+                </small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width:140px">Time Slot</th>
+                                <th>Agent 1</th>
+                                <th>Agent 2</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in hours)
+                            {
+                                var slot = SlotFor(h);
+                                <tr>
+                                    <td class="fw-semibold text-nowrap">
+                                        @($"{h:D2}:00") – @($"{h+1:D2}:00")
+                                    </td>
+                                    <td>
+                                        <select name="slot_@(h)_agent1" class="form-select form-select-sm">
+                                            <option value="">— None —</option>
+                                            @foreach (var agent in eligible)
+                                            {
+                                                if (slot?.Agent1Id == agent.Id)
+                                                {
+                                                    <option value="@agent.Id" selected="selected">@agent.DisplayName</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@agent.Id">@agent.DisplayName</option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="slot_@(h)_agent2" class="form-select form-select-sm">
+                                            <option value="">— None —</option>
+                                            @foreach (var agent in eligible)
+                                            {
+                                                if (slot?.Agent2Id == agent.Id)
+                                                {
+                                                    <option value="@agent.Id" selected="selected">@agent.DisplayName</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@agent.Id">@agent.DisplayName</option>
+                                                }
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a asp-action="Index" asp-route-date="@date.ToString("yyyy-MM-dd")" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="bx bx-save me-1"></i>Save Schedule</button>
+        </div>
+    </form>
+</div>

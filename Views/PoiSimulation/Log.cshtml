@@ -1,0 +1,74 @@
+@using Unified.Models.EmailTemplates
+@{
+    ViewData["Title"] = "Log POI Simulation";
+    var brands = (List<Brand>)ViewBag.Brands;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bx bx-id-card me-2"></i>Log POI Simulation</h4>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bx bx-arrow-back me-1"></i>Back
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div>@err.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+
+                    <form asp-action="Log" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Client ID <span class="text-danger">*</span></label>
+                            <input type="text" name="clientId" class="form-control"
+                                   placeholder="e.g. 123456" required autofocus />
+                            <div class="form-text">Enter the account/client ID that was simulated.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Brand <span class="text-danger">*</span></label>
+                            <select name="brandId" class="form-select" required>
+                                <option value="">— Select brand —</option>
+                                @foreach (var b in brands)
+                                {
+                                    <option value="@b.Id">@b.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3"
+                                      placeholder="Optional: reason for simulation, ticket reference, etc."></textarea>
+                        </div>
+
+                        <div class="alert alert-warning small mb-4">
+                            <i class="bx bx-info-circle me-1"></i>
+                            <strong>Reminder:</strong> Trade will be restricted after <strong>3 days</strong>
+                            unless a valid ID copy is received and marked in the system.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bx bx-save me-1"></i>Log Simulation
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

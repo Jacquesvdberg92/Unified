@@ -1,0 +1,162 @@
+@using Unified.Models.WorkDistribution
+@{
+    ViewData["Title"] = "CS Live Help Schedule";
+    var date      = (DateTime)ViewBag.Date;
+    var slots     = (List<CsLiveHelpSlot>)ViewBag.Slots;
+    var hours     = (IEnumerable<int>)ViewBag.SlotHours;
+    var eligible  = (List<Unified.Models.Identity.AppUser>)ViewBag.Eligible;
+    var canManage = User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
+                    User.IsInRole(Unified.Models.Identity.Roles.TeamLeader);
+
+    CsLiveHelpSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-headphone me-2"></i>CS Live Help — @date.ToString("dddd, dd MMM yyyy")</h4>
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="Index" asp-route-date="@date.AddDays(-1).ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-secondary"><i class="bx bx-chevron-left"></i></a>
+            <a asp-action="Index" asp-route-date="@DateTime.Today.ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-secondary">Today</a>
+            <a asp-action="Index" asp-route-date="@date.AddDays(1).ToString("yyyy-MM-dd")"
+               class="btn btn-sm btn-outline-secondary"><i class="bx bx-chevron-right"></i></a>
+            @if (canManage)
+            {
+                <a asp-action="Generate" asp-route-date="@date.ToString("yyyy-MM-dd")"
+                   class="btn btn-sm btn-primary"><i class="bx bx-pencil me-1"></i>Generate / Edit</a>
+            }
+            <a asp-action="SwapLog" class="btn btn-sm btn-outline-info"><i class="bx bx-transfer me-1"></i>Swap Log</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width:130px">Time Slot</th>
+                            <th>Agent 1</th>
+                            <th>Agent 2</th>
+                            @if (canManage) { <th style="width:100px">Actions</th> }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var h in hours)
+                        {
+                            var slot = SlotFor(h);
+                            <tr>
+                                <td class="fw-semibold text-nowrap">
+                                    @($"{h:D2}:00") – @($"{h+1:D2}:00")
+                                </td>
+                                <td>
+                                    @if (slot?.Agent1 != null)
+                                    {
+                                        <span class="badge bg-label-primary">@slot.Agent1.DisplayName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">Unassigned</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (slot?.Agent2 != null)
+                                    {
+                                        <span class="badge bg-label-primary">@slot.Agent2.DisplayName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">Unassigned</span>
+                                    }
+                                </td>
+                                @if (canManage && slot != null)
+                                {
+                                    <td>
+                                        <button type="button" class="btn btn-xs btn-outline-warning"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#swapModal"
+                                                data-slot-id="@slot.Id"
+                                                data-slot-label="@($"{h:D2}:00–{h+1:D2}:00")"
+                                                data-date="@date.ToString("yyyy-MM-dd")">
+                                            <i class="bx bx-transfer-alt"></i> Swap
+                                        </button>
+                                    </td>
+                                }
+                                else if (canManage)
+                                {
+                                    <td></td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canManage)
+{
+    <!-- Swap Modal -->
+    <div class="modal fade" id="swapModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form asp-action="Swap" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnDate" id="swapReturnDate" value="@date.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="slotId" id="swapSlotId" />
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bx bx-transfer-alt me-2"></i>Swap Agent — <span id="swapSlotLabel"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Position</label>
+                            <select name="agentPosition" class="form-select">
+                                <option value="1">Agent 1</option>
+                                <option value="2">Agent 2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">New Agent</label>
+                            <select name="newAgentId" class="form-select">
+                                <option value="">— Unassign —</option>
+                                @foreach (var agent in eligible)
+                                {
+                                    <option value="@agent.Id">@agent.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Reason / Note</label>
+                            <input type="text" name="reason" class="form-control" placeholder="e.g. Agent sick, voluntary swap…" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning"><i class="bx bx-save me-1"></i>Apply Swap</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('swapModal').addEventListener('show.bs.modal', function (e) {
+            var btn = e.relatedTarget;
+            document.getElementById('swapSlotId').value    = btn.dataset.slotId;
+            document.getElementById('swapSlotLabel').textContent = btn.dataset.slotLabel;
+            document.getElementById('swapReturnDate').value = btn.dataset.date;
+        });
+    </script>
+}

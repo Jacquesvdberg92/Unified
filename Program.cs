@@ -34,6 +34,8 @@ builder.Services.AddScoped<Unified.Services.VaultService>();
 builder.Services.AddScoped<Unified.Services.ReportService>();
 builder.Services.AddScoped<Unified.Services.AttendanceService>();
 builder.Services.AddScoped<Unified.Services.WorkDistributionService>();
+builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
+builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

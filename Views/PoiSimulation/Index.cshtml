@@ -1,0 +1,193 @@
+@using Unified.Models.Poi
+@using Unified.Models.EmailTemplates
+@{
+    ViewData["Title"] = "POI Simulations";
+    var sims    = (List<PoiSimulation>)ViewBag.Simulations;
+    var brands  = (List<Brand>)ViewBag.Brands;
+    int? selBrand = ViewBag.BrandId as int?;
+    DateTime? selFrom   = ViewBag.From   as DateTime?;
+    DateTime? selTo     = ViewBag.To     as DateTime?;
+    PoiStatus? selStatus = ViewBag.Status as PoiStatus?;
+
+    string BadgeClass(PoiStatus s) => s switch {
+        PoiStatus.Received   => "bg-label-success",
+        PoiStatus.Restricted => "bg-label-danger",
+        _                    => "bg-label-warning"
+    };
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-id-card me-2"></i>POI Simulations</h4>
+        <div class="d-flex gap-2">
+            @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
+            {
+                <a asp-action="Report" class="btn btn-outline-info btn-sm">
+                    <i class="bx bx-bar-chart me-1"></i>Report
+                </a>
+            }
+            <a asp-action="Log" class="btn btn-primary btn-sm">
+                <i class="bx bx-plus me-1"></i>Log Simulation
+            </a>
+        </div>
+    </div>
+
+    @* Filter bar *@
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-sm-3">
+                    <label class="form-label mb-1 small fw-semibold">Brand</label>
+                    <select name="brandId" class="form-select form-select-sm">
+                        <option value="">All Brands</option>
+                        @foreach (var b in brands)
+                        {
+                            <option value="@b.Id" selected="@(selBrand == b.Id ? "selected" : null)">@b.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label class="form-label mb-1 small fw-semibold">From</label>
+                    <input type="date" name="from" class="form-control form-control-sm"
+                           value="@selFrom?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-sm-2">
+                    <label class="form-label mb-1 small fw-semibold">To</label>
+                    <input type="date" name="to" class="form-control form-control-sm"
+                           value="@selTo?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-sm-2">
+                    <label class="form-label mb-1 small fw-semibold">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        @foreach (var s in Enum.GetValues<PoiStatus>())
+                        {
+                            <option value="@s" selected="@(selStatus == s ? "selected" : null)">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-auto">
+                    <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* Summary strip *@
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <h3 class="mb-0">@sims.Count</h3>
+                    <small class="text-muted">Total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card text-center border-warning">
+                <div class="card-body py-3">
+                    <h3 class="mb-0 text-warning">@sims.Count(s => s.Status == PoiStatus.Pending)</h3>
+                    <small class="text-muted">Pending</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card text-center border-danger">
+                <div class="card-body py-3">
+                    <h3 class="mb-0 text-danger">@sims.Count(s => s.Status == PoiStatus.Restricted)</h3>
+                    <small class="text-muted">Restricted (3+ days)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Table *@
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table">
+                        <tr>
+                            <th>Client ID</th>
+                            <th>Brand</th>
+                            <th>Simulated</th>
+                            <th>Days</th>
+                            <th>Logged By</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Received By</th>
+                            <th style="width:120px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!sims.Any())
+                        {
+                            <tr><td colspan="9" class="text-center text-muted py-4">No records found.</td></tr>
+                        }
+                        @foreach (var sim in sims)
+                        {
+                            <tr class="@(sim.Status == PoiStatus.Restricted ? "table-danger" : "")">
+                                <td class="fw-semibold">@sim.ClientId</td>
+                                <td>@(sim.Brand?.Name ?? "—")</td>
+                                <td class="text-nowrap">@sim.SimulatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                <td>@sim.DaysSinceSimulation</td>
+                                <td>@(sim.LoggedBy?.DisplayName ?? "—")</td>
+                                <td class="text-muted small">@sim.Notes</td>
+                                <td>
+                                    <span class="badge @BadgeClass(sim.Status)">@sim.Status</span>
+                                </td>
+                                <td class="small">
+                                    @if (sim.PoiReceived)
+                                    {
+                                        <span>@(sim.ReceivedBy?.DisplayName ?? "—")<br />
+                                        <small class="text-muted">@sim.ReceivedAt?.ToLocalTime().ToString("dd MMM yyyy")</small></span>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                                <td>
+                                    @if (!sim.PoiReceived)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-xs btn-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#markReceivedModal"
+                                                data-sim-id="@sim.Id"
+                                                data-client-id="@sim.ClientId"
+                                                data-brand="@(sim.Brand?.Name ?? "—")"
+                                                data-simulated-at="@sim.SimulatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")"
+                                                data-return-url="@Context.Request.Path@Context.Request.QueryString">
+                                            <i class="bx bx-check me-1"></i>POI Received
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success small"><i class="bx bx-check-circle"></i> Done</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_MarkReceivedModal")

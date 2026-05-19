@@ -8,7 +8,8 @@ public class AppUser : IdentityUser
     public string? AvatarUrl { get; set; }
     public string? Language { get; set; }
     public bool IsSwissArmyKnife { get; set; }
-    public bool HasWeekendShift { get; set; }
+    public bool HasWeekendShift  { get; set; }
+    public bool HasCsLiveHelp    { get; set; }
 
     /// <summary>Normal hourly rate in USD used for pay calculations.</summary>
     public decimal HourlyRate { get; set; } = 0m;

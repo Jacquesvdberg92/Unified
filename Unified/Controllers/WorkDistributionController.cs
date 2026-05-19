@@ -11,24 +11,31 @@ namespace Unified.Controllers;
 public class WorkDistributionController : Controller
 {
     private readonly WorkDistributionService _svc;
+    private readonly CsLiveHelpService       _csLiveHelp;
     private readonly UserManager<AppUser>    _users;
 
-    public WorkDistributionController(WorkDistributionService svc, UserManager<AppUser> users)
+    public WorkDistributionController(WorkDistributionService svc, CsLiveHelpService csLiveHelp, UserManager<AppUser> users)
     {
-        _svc   = svc;
-        _users = users;
+        _svc        = svc;
+        _csLiveHelp = csLiveHelp;
+        _users      = users;
     }
 
-    // GET /WorkDistribution  — shows today's distribution + list of recent ones
-    public async Task<IActionResult> Index()
+    // GET /WorkDistribution  — unified page for a given date
+    public async Task<IActionResult> Index(DateTime? date)
     {
-        var today  = DateTime.Today;
-        var todays = await _svc.GetForDateAsync(today);
+        var d      = date?.Date ?? DateTime.Today;
+        var entry  = await _svc.GetForDateAsync(d);
         var recent = await _svc.GetRecentAsync(14);
+        var slots  = await _csLiveHelp.GetSlotsForDateAsync(d);
+        var eligible = await _csLiveHelp.GetEligibleAgentsAsync();
 
-        ViewBag.Today       = today;
-        ViewBag.TodaysEntry = todays;
+        ViewBag.Date        = d;
+        ViewBag.TodaysEntry = entry;
         ViewBag.Recent      = recent;
+        ViewBag.Slots       = slots;
+        ViewBag.SlotHours   = CsLiveHelpService.SlotHours;
+        ViewBag.Eligible    = eligible;
         return View();
     }
 

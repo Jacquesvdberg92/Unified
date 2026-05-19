@@ -1,0 +1,57 @@
+@* Partial: _MarkReceivedModal.cshtml
+   Trigger by adding data-bs-toggle="modal" data-bs-target="#markReceivedModal"
+   data-sim-id="..." data-client-id="..." data-brand="..." on any button.
+*@
+
+<div class="modal fade" id="markReceivedModal" tabindex="-1" aria-labelledby="markReceivedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form asp-controller="PoiSimulation" asp-action="MarkReceived" method="post" id="markReceivedForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="mrSimId" />
+            <input type="hidden" name="returnUrl" id="mrReturnUrl" />
+
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="markReceivedModalLabel">
+                        <i class="bx bx-check-shield me-2"></i>Confirm POI Received
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">You are marking the POI as <strong>received</strong> for:</p>
+                    <div class="card bg-light border-0 p-3 mb-2">
+                        <div class="row g-1 small">
+                            <div class="col-4 text-muted fw-semibold">Client ID</div>
+                            <div class="col-8 fw-bold" id="mrClientId">—</div>
+                            <div class="col-4 text-muted fw-semibold">Brand</div>
+                            <div class="col-8" id="mrBrand">—</div>
+                            <div class="col-4 text-muted fw-semibold">Simulated</div>
+                            <div class="col-8" id="mrSimulatedAt">—</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success small mb-0">
+                        <i class="bx bx-info-circle me-1"></i>
+                        Once confirmed, trade restrictions will be lifted for this account.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bx bx-check me-1"></i>Yes, POI Received
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('markReceivedModal').addEventListener('show.bs.modal', function (e) {
+        var btn = e.relatedTarget;
+        document.getElementById('mrSimId').value        = btn.dataset.simId;
+        document.getElementById('mrReturnUrl').value    = btn.dataset.returnUrl;
+        document.getElementById('mrClientId').textContent   = btn.dataset.clientId;
+        document.getElementById('mrBrand').textContent      = btn.dataset.brand;
+        document.getElementById('mrSimulatedAt').textContent = btn.dataset.simulatedAt;
+    });
+</script>

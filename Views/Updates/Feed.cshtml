@@ -55,7 +55,7 @@
                         <div class="mb-3 form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="archived" value="true"
                                    id="showArchived" @(showArchived ? "checked" : "") onchange="this.form.submit()" />
-                            <label class="form-check-label small" for="showArchived">Show archived</label>
+                            <label class="form-check-label small text-muted" for="showArchived">Show archived</label>
                         </div>
                         <button type="submit" class="btn btn-sm btn-primary w-100">Search</button>
                         <a asp-action="Feed" class="btn btn-sm btn-outline-secondary w-100 mt-1">Clear</a>

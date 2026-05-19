@@ -86,14 +86,15 @@ public class AdminController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> EditUser(string id, string displayName, string? language,
-        bool hasWeekendShift, string role, int[] teamIds)
+        bool hasWeekendShift, bool hasCsLiveHelp, string role, int[] teamIds)
     {
         var user = await _db.Users.Include(u => u.Teams).FirstOrDefaultAsync(u => u.Id == id);
         if (user == null) return NotFound();
 
-        user.DisplayName    = displayName;
-        user.Language       = language;
+        user.DisplayName     = displayName;
+        user.Language        = language;
         user.HasWeekendShift = hasWeekendShift;
+        user.HasCsLiveHelp   = hasCsLiveHelp;
         user.IsSwissArmyKnife = role == Roles.SwissArmyKnife;
 
         var currentRoles = await _userManager.GetRolesAsync(user);

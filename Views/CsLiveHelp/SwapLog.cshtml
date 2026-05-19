@@ -1,0 +1,94 @@
+@using Unified.Models.WorkDistribution
+@{
+    ViewData["Title"] = "CS Live Help — Swap Log";
+    var logs       = (List<CsLiveHelpSwapLog>)ViewBag.Logs;
+    var filterDate = ViewBag.FilterDate as DateTime?;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-transfer me-2"></i>CS Live Help — Swap Log</h4>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bx bx-arrow-back me-1"></i>Back to Schedule
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+                <div>
+                    <label class="form-label mb-1 fw-semibold">Filter by Date</label>
+                    <input type="date" name="date" class="form-control form-control-sm"
+                           value="@(filterDate?.ToString("yyyy-MM-dd") ?? "")" />
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                <a asp-action="SwapLog" class="btn btn-sm btn-outline-secondary">Clear</a>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            @if (!logs.Any())
+            {
+                <div class="p-4 text-muted fst-italic">No swap records found.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0 align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Slot</th>
+                                <th>Position</th>
+                                <th>Previous Agent</th>
+                                <th>New Agent</th>
+                                <th>Changed By</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in logs)
+                            {
+                                <tr>
+                                    <td class="text-nowrap">@log.ChangedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</td>
+                                    <td class="text-nowrap">
+                                        @if (log.Slot != null)
+                                        {
+                                            @($"{log.Slot.Date:dd MMM} {log.Slot.SlotHour:D2}:00–{log.Slot.SlotHour+1:D2}:00")
+                                        }
+                                    </td>
+                                    <td>@(log.AgentPosition == 1 ? "Agent 1" : "Agent 2")</td>
+                                    <td>
+                                        @if (log.PreviousAgent != null)
+                                        {
+                                            <span class="badge bg-label-danger">@log.PreviousAgent.DisplayName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (log.NewAgent != null)
+                                        {
+                                            <span class="badge bg-label-success">@log.NewAgent.DisplayName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </td>
+                                    <td>@(log.ChangedBy?.DisplayName ?? "—")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(log.Reason) ? "—" : log.Reason)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
