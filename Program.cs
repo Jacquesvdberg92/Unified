@@ -106,6 +106,9 @@ app.MapRazorPages();
 using (var scope = app.Services.CreateScope())
 {
     await SeedData.InitialiseAsync(scope.ServiceProvider);
+
+    if (app.Configuration["Seed:LoadDemoData"] == "true")
+        await DemoSeedData.LoadAsync(scope.ServiceProvider);
 }
 
 app.Run();
