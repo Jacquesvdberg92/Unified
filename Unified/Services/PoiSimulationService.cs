@@ -45,13 +45,19 @@ public class PoiSimulationService
     // ── Filtered list (for main log view) ────────────────────────────────
 
     public async Task<List<PoiSimulation>> GetFilteredAsync(
-        int? brandId, DateTime? from, DateTime? to, PoiStatus? status)
+        int? brandId, DateTime? from, DateTime? to, PoiStatus? status, string? clientId = null)
     {
         var q = _db.PoiSimulations
             .Include(p => p.Brand)
             .Include(p => p.LoggedBy)
             .Include(p => p.ReceivedBy)
             .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            var term = clientId.Trim();
+            q = q.Where(p => p.ClientId.Contains(term));
+        }
 
         if (brandId.HasValue)
             q = q.Where(p => p.BrandId == brandId.Value);
@@ -101,4 +107,12 @@ public class PoiSimulationService
             .Include(p => p.LoggedBy)
             .Include(p => p.ReceivedBy)
             .FirstOrDefaultAsync(p => p.Id == id);
+
+    public async Task<bool> ExistsForClientAndBrandAsync(string clientId, int brandId)
+    {
+        var normalizedClientId = clientId.Trim().ToUpper();
+        return await _db.PoiSimulations.AnyAsync(p =>
+            p.BrandId == brandId &&
+            p.ClientId.ToUpper() == normalizedClientId);
+    }
 }

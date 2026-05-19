@@ -22,9 +22,9 @@ public class PoiSimulationController : Controller
     }
 
     // GET /PoiSimulation — filterable log for all users
-    public async Task<IActionResult> Index(int? brandId, DateTime? from, DateTime? to, PoiStatus? status)
+    public async Task<IActionResult> Index(int? brandId, DateTime? from, DateTime? to, PoiStatus? status, string? clientId)
     {
-        var sims   = await _svc.GetFilteredAsync(brandId, from, to, status);
+        var sims   = await _svc.GetFilteredAsync(brandId, from, to, status, clientId);
         var brands = await _svc.GetBrandsAsync();
 
         ViewBag.Simulations = sims;
@@ -33,6 +33,7 @@ public class PoiSimulationController : Controller
         ViewBag.From        = from;
         ViewBag.To          = to;
         ViewBag.Status      = status;
+        ViewBag.ClientId    = clientId;
         return View();
     }
 
@@ -61,6 +62,20 @@ public class PoiSimulationController : Controller
         if (string.IsNullOrWhiteSpace(clientId))
         {
             ModelState.AddModelError("", "Client ID is required.");
+            ViewBag.Brands = await _svc.GetBrandsAsync();
+
+            if (isAjax)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+            }
+
+            return View();
+        }
+
+        if (await _svc.ExistsForClientAndBrandAsync(clientId, brandId))
+        {
+            ModelState.AddModelError("", "This client has already been simulated for the selected brand.");
             ViewBag.Brands = await _svc.GetBrandsAsync();
 
             if (isAjax)
