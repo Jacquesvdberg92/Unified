@@ -1,0 +1,43 @@
+@using Unified.Models.Attendance
+@model AttendanceLog
+
+@{
+    ViewData["Title"] = "Edit Attendance Times";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y" style="max-width:540px">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0">
+            <i class="bx bx-edit me-2"></i>Edit Times — @Model.WorkDate.ToString("ddd dd MMM yyyy")
+        </h4>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="EditLog" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Check-In Time</label>
+                    <input type="time" name="checkIn" class="form-control"
+                           value="@(Model.CheckInTime?.ToLocalTime().ToString("HH:mm"))" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Check-Out Time</label>
+                    <input type="time" name="checkOut" class="form-control"
+                           value="@(Model.CheckOutTime?.ToLocalTime().ToString("HH:mm"))" />
+                    <div class="form-text">Times are in your local timezone.</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i>Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

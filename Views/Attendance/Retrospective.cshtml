@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Log Missed Punch";
+    var today = DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">
+        <i class="bx bx-edit me-2"></i>Log Missed Punch
+    </h1>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm mt-2 mt-md-0">
+        <i class="bx bx-arrow-back me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="card shadow-sm" style="max-width:560px">
+    <div class="card-header fw-semibold">
+        <i class="bx bx-time me-1"></i> Retrospective Attendance Entry
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Use this form if you forgot to clock in or out on a previous day.
+            Your entry will be saved immediately and included in your attendance record.
+        </p>
+
+        <form asp-action="Retrospective" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Work Date</label>
+                <input type="date" name="workDate" class="form-control"
+                       value="@today" max="@today" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label class="form-label fw-semibold">Check-In Time</label>
+                    <input type="datetime-local" name="checkIn" class="form-control" required />
+                </div>
+                <div class="col-6">
+                    <label class="form-label fw-semibold">Check-Out Time</label>
+                    <input type="datetime-local" name="checkOut" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Reason / Note</label>
+                <textarea name="note" class="form-control" rows="3"
+                          placeholder="Briefly explain why this entry was missed…"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bx bx-send me-1"></i> Submit for Approval
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 @using Unified.Models.Schedule
 @using Unified.Models.Identity
+@using Unified.Models.Attendance
 @model List<AgentSchedule>
 
 @{
@@ -9,6 +10,9 @@
     var weekendShifts = (IEnumerable<ShiftTemplate>)ViewBag.WeekendShifts;
     var teamSchedules = (IEnumerable<AgentSchedule>)ViewBag.TeamSchedules;
     var teamMembers   = (IEnumerable<AppUser>)ViewBag.TeamMembers;
+    var todayLog      = ViewBag.TodayLog as AttendanceLog;
+    bool canClockIn   = todayLog == null || !todayLog.CheckInTime.HasValue;
+    bool canClockOut  = todayLog != null && todayLog.CheckInTime.HasValue && !todayLog.CheckOutTime.HasValue;
     var prevWeek      = weekStart.AddDays(-7).ToString("yyyy-MM-dd");
     var nextWeek      = weekStart.AddDays(7).ToString("yyyy-MM-dd");
     var weekDays      = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
@@ -47,6 +51,62 @@
         <a asp-action="MyRequests" class="btn btn-outline-primary btn-sm">
             <i class="bx bx-time me-1"></i>My Requests
         </a>
+    </div>
+
+    @* ── Clock In / Out card ──────────────────────────────────────────────── *@
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body d-flex flex-wrap align-items-center gap-4 py-3">
+            <div class="text-center" style="min-width:110px">
+                <p class="text-muted small text-uppercase mb-1">Today</p>
+                <div class="fw-semibold" id="sched-clock-date"></div>
+            </div>
+            <div class="text-center" style="min-width:90px">
+                <p class="text-muted small text-uppercase mb-1">Time</p>
+                <div class="fw-bold fs-5" id="sched-live-clock"></div>
+            </div>
+            <div class="text-center" style="min-width:90px">
+                <p class="text-muted small text-uppercase mb-1">Clocked In</p>
+                <div class="fw-bold text-success">@(todayLog?.CheckInTime != null ? todayLog.CheckInTime.Value.ToLocalTime().ToString("HH:mm") : "—")</div>
+            </div>
+            <div class="text-center" style="min-width:90px">
+                <p class="text-muted small text-uppercase mb-1">Clocked Out</p>
+                <div class="fw-bold text-danger">@(todayLog?.CheckOutTime != null ? todayLog.CheckOutTime.Value.ToLocalTime().ToString("HH:mm") : "—")</div>
+            </div>
+            <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
+                @if (TempData["Success"] != null)
+                {
+                    <span class="badge bg-success fs-6"><i class="bx bx-check me-1"></i>@TempData["Success"]</span>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <span class="badge bg-danger fs-6">@TempData["Error"]</span>
+                }
+                @if (canClockIn)
+                {
+                    <form asp-controller="Attendance" asp-action="ClockIn" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success">
+                            <i class="bx bx-log-in me-1"></i>Clock In
+                        </button>
+                    </form>
+                }
+                @if (canClockOut)
+                {
+                    <form asp-controller="Attendance" asp-action="ClockOut" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bx bx-log-out me-1"></i>Clock Out
+                        </button>
+                    </form>
+                }
+                @if (!canClockIn && !canClockOut && todayLog != null)
+                {
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bx bx-check-circle me-1"></i>Shift complete
+                    </span>
+                }
+            </div>
+        </div>
     </div>
 
     <div class="card mb-3">
@@ -354,5 +414,17 @@ function fmtDate(d, isWeekend) {
     return dt.toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'short', year:'numeric' })
            + (isWeekend ? ' (Weekend)' : '');
 }
+
+(function schedClock() {
+    function tick() {
+        var now = new Date();
+        var cl = document.getElementById('sched-live-clock');
+        var cd = document.getElementById('sched-clock-date');
+        if (cl) cl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (cd) cd.textContent = now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
 </script>
 }

@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Edit Work Distribution";
+    var date = (DateTime)ViewBag.Date;
+    var body = (string)ViewBag.Body;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">
+            <i class="bx bx-edit me-2"></i>Work Distribution — @date.ToString("dddd, dd MMM yyyy")
+        </h4>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bx bx-arrow-back me-1"></i>Back</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Save" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")" />
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Distribution for @date.ToString("dd MMM yyyy")</label>
+                    <textarea name="body" class="form-control font-monospace"
+                              rows="20"
+                              placeholder="Paste or type the work distribution message here...">@body</textarea>
+                    <div class="form-text">
+                        Tip: paste directly from the team chat — formatting and @@mentions will be preserved.
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i>Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    textarea.font-monospace {
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+</style>

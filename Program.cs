@@ -32,6 +32,8 @@ builder.Services.AddScoped<Unified.Services.ScheduleService>();
 builder.Services.AddScoped<Unified.Services.PerformanceService>();
 builder.Services.AddScoped<Unified.Services.VaultService>();
 builder.Services.AddScoped<Unified.Services.ReportService>();
+builder.Services.AddScoped<Unified.Services.AttendanceService>();
+builder.Services.AddScoped<Unified.Services.WorkDistributionService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

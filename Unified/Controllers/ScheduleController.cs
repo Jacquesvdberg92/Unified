@@ -15,12 +15,14 @@ public class ScheduleController : Controller
     private readonly ScheduleService      _service;
     private readonly AppDbContext         _db;
     private readonly UserManager<AppUser> _users;
+    private readonly AttendanceService    _attendance;
 
-    public ScheduleController(ScheduleService service, AppDbContext db, UserManager<AppUser> users)
+    public ScheduleController(ScheduleService service, AppDbContext db, UserManager<AppUser> users, AttendanceService attendance)
     {
-        _service = service;
-        _db      = db;
-        _users   = users;
+        _service    = service;
+        _db         = db;
+        _users      = users;
+        _attendance = attendance;
     }
 
     // ── Week view (leaders/admins) ─────────────────────────────────────────
@@ -134,6 +136,7 @@ public class ScheduleController : Controller
         ViewBag.WeekendShifts     = allShifts.Where(s => s.IsWeekendShift).ToList();
         ViewBag.TeamSchedules     = teamSchedules;
         ViewBag.TeamMembers       = teamMembers;
+        ViewBag.TodayLog          = await _attendance.GetTodayLogAsync(userId);
         return View(schedules);
     }
 

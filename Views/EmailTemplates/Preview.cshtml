@@ -76,7 +76,7 @@
                 <i class="ri-file-copy-line me-1"></i>Copy Email Body (HTML)
             </button>
             <button id="copyPlainBtn" class="btn btn-outline-secondary" @(!hasBrand ? "disabled" : "")>
-                <i class="ri-text me-1"></i>Copy as Plain Text
+                <i class="ri-clipboard-line me-1"></i>Copy as Rich Text (preserves links)
             </button>
             <button id="copySubjectBtn" class="btn btn-outline-success" @(!hasBrand ? "disabled" : "")>
                 <i class="ri-text me-1"></i>Copy Subject Line
@@ -153,20 +153,34 @@
     if (copyPlainBtn && !copyPlainBtn.hasAttribute('disabled')) {
         var origPlain = copyPlainBtn.innerHTML;
         copyPlainBtn.addEventListener('click', function () {
-            // Render HTML into an off-screen div, then read innerText for clean plain text
-            var scratch = document.createElement('div');
-            scratch.style.cssText = 'position:absolute;left:-9999px;top:-9999px;white-space:pre-wrap;';
-            scratch.innerHTML = renderedHtml;
-            document.body.appendChild(scratch);
-            var plainText = scratch.innerText;
-            document.body.removeChild(scratch);
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(plainText).then(function () {
-                    flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
+            // Use ClipboardItem with both text/html and text/plain so that
+            // pasting into any app (Gmail, Outlook, Google Docs) preserves
+            // hyperlinks exactly as if the user had selected & copied manually.
+            try {
+                var htmlBlob  = new Blob([renderedHtml], { type: 'text/html' });
+                // Plain-text fallback: strip tags but keep link text
+                var scratch = document.createElement('div');
+                scratch.style.cssText = 'position:absolute;left:-9999px;top:-9999px;white-space:pre-wrap;';
+                scratch.innerHTML = renderedHtml;
+                document.body.appendChild(scratch);
+                var plainText = scratch.innerText;
+                document.body.removeChild(scratch);
+                var textBlob  = new Blob([plainText], { type: 'text/plain' });
+                var item      = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+                navigator.clipboard.write([item]).then(function () {
+                    flashBtn(copyPlainBtn, 'Copied (with links)!', origPlain);
+                }).catch(function () {
+                    // Fallback: plain-text only
+                    navigator.clipboard.writeText(plainText).then(function () {
+                        flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
+                    });
                 });
-            } else {
+            } catch (e) {
+                // Browser doesn't support ClipboardItem – fall back to execCommand
                 var ta = document.createElement('textarea');
-                ta.value = plainText;
+                var sc2 = document.createElement('div');
+                sc2.innerHTML = renderedHtml;
+                ta.value = sc2.innerText;
                 document.body.appendChild(ta);
                 ta.select();
                 document.execCommand('copy');

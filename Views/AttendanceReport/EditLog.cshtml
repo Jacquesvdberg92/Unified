@@ -1,0 +1,115 @@
+@using Unified.Models.Attendance
+@using Unified.Models.Schedule
+@model AttendanceLog
+
+@{
+    ViewData["Title"] = "Fix Attendance Times";
+    var agentName     = (string)ViewBag.AgentName;
+    var sched         = ViewBag.ScheduleEntry as AgentSchedule;
+
+    // Resolve displayed shift times
+    TimeSpan? shiftStart = sched?.ShiftTemplate?.StartTime ?? sched?.CustomStartTime;
+    TimeSpan? shiftEnd   = sched?.ShiftTemplate?.EndTime   ?? sched?.CustomEndTime;
+    string    shiftName  = sched?.ShiftTemplate?.Name ?? (sched?.Type.ToString() ?? "No schedule found");
+}
+
+<div class="container-xxl flex-grow-1 container-p-y" style="max-width:600px">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold mb-0">
+            <i class="bx bx-edit me-2"></i>Fix Times — @agentName
+        </h4>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    @* ── Schedule for the day ────────────────────────────────────────────── *@
+    <div class="card mb-3 border-primary">
+        <div class="card-header bg-primary bg-opacity-10 fw-semibold text-primary">
+            <i class="bx bx-calendar-check me-1"></i>Scheduled Shift — @Model.WorkDate.ToString("dddd, dd MMM yyyy")
+        </div>
+        <div class="card-body py-3">
+            @if (sched != null)
+            {
+                <div class="d-flex gap-4 align-items-center flex-wrap">
+                    <div>
+                        <span class="text-muted small">Shift</span><br />
+                        <strong>@shiftName</strong>
+                    </div>
+                    @if (shiftStart.HasValue && shiftEnd.HasValue)
+                    {
+                        <div>
+                            <span class="text-muted small">Start</span><br />
+                            <strong>@shiftStart.Value.ToString(@"hh\:mm")</strong>
+                        </div>
+                        <div>
+                            <span class="text-muted small">End</span><br />
+                            <strong>@shiftEnd.Value.ToString(@"hh\:mm")</strong>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sched.Note))
+                    {
+                        <div>
+                            <span class="text-muted small">Note</span><br />
+                            <span>@sched.Note</span>
+                        </div>
+                    }
+                    <div>
+                        <span class="text-muted small">Type</span><br />
+                        @{
+                            var typeBadge = sched.Type switch
+                            {
+                                ScheduleEntryType.DayOff   => "bg-secondary",
+                                ScheduleEntryType.Vacation => "bg-info text-dark",
+                                ScheduleEntryType.Custom   => "bg-warning text-dark",
+                                _                          => "bg-primary"
+                            };
+                        }
+                        <span class="badge @typeBadge">@sched.Type</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <span class="text-muted"><i class="bx bx-info-circle me-1"></i>No schedule entry found for this day.</span>
+            }
+        </div>
+    </div>
+
+    @* ── Edit form ────────────────────────────────────────────────────────── *@
+    <div class="card shadow-sm">
+        <div class="card-header text-muted small">
+            <i class="bx bx-time me-1"></i>Actual Check-In / Check-Out
+        </div>
+        <div class="card-body">
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">@TempData["Error"]</div>
+            }
+
+            <form asp-action="EditLog" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Check-In Time</label>
+                        <input type="time" name="checkIn" class="form-control"
+                               value="@(Model.CheckInTime?.ToLocalTime().ToString("HH:mm"))" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Check-Out Time</label>
+                        <input type="time" name="checkOut" class="form-control"
+                               value="@(Model.CheckOutTime?.ToLocalTime().ToString("HH:mm"))" />
+                    </div>
+                </div>
+                <div class="form-text mb-3">Times are in local time. Leave blank to clear.</div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i>Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

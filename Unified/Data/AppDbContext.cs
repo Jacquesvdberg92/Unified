@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Unified.Models.Attendance;
 using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
 using Unified.Models.Performance;
@@ -8,6 +9,7 @@ using Unified.Models.Reports;
 using Unified.Models.Schedule;
 using Unified.Models.Updates;
 using Unified.Models.Vault;
+using Unified.Models.WorkDistribution;
 
 namespace Unified.Data;
 
@@ -37,6 +39,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<TeamReport>       TeamReports      => Set<TeamReport>();
     public DbSet<AgentStat>        AgentStats       => Set<AgentStat>();
     public DbSet<FTDLanguageStat>  FTDLanguageStats => Set<FTDLanguageStat>();
+
+    // Attendance
+    public DbSet<AttendanceLog>  AttendanceLogs   => Set<AttendanceLog>();
+    public DbSet<PublicHoliday>  PublicHolidays   => Set<PublicHoliday>();
+
+    // Work Distribution
+    public DbSet<WorkDistribution> WorkDistributions => Set<WorkDistribution>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -209,5 +218,30 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany(r => r.FTDLanguageStats)
             .HasForeignKey(f => f.ReportId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Attendance
+        builder.Entity<AttendanceLog>()
+            .HasOne(a => a.Agent)
+            .WithMany()
+            .HasForeignKey(a => a.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<AttendanceLog>()
+            .HasOne(a => a.ReviewedBy)
+            .WithMany()
+            .HasForeignKey(a => a.ReviewedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<AttendanceLog>()
+            .Property(a => a.PayType)
+            .HasConversion<string>();
+
+        builder.Entity<AttendanceLog>()
+            .Property(a => a.Status)
+            .HasConversion<string>();
+
+        builder.Entity<AppUser>()
+            .Property(u => u.HourlyRate)
+            .HasPrecision(10, 2);
     }
 }

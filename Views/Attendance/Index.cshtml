@@ -1,0 +1,193 @@
+@using Unified.Models.Attendance
+@{
+    ViewData["Title"] = "My Attendance";
+    var today = ViewBag.Today as AttendanceLog;
+    var history = (ViewBag.History as List<AttendanceLog>) ?? new List<AttendanceLog>();
+
+    bool canClockIn  = today == null || !today.CheckInTime.HasValue;
+    bool canClockOut = today != null && today.CheckInTime.HasValue && !today.CheckOutTime.HasValue;
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">
+        <i class="bx bx-time-five me-2"></i>My Attendance
+    </h1>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible">@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible">@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@* ── Live clock + today card ────────────────────────────────────────────── *@
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body py-4">
+                <p class="text-muted small text-uppercase mb-1">Current Time</p>
+                <h2 id="liveClock" class="fw-bold display-6 mb-0"></h2>
+                <p class="text-muted small mt-1" id="liveDate"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body py-4">
+                <p class="text-muted small text-uppercase mb-1">Clocked In</p>
+                @if (today?.CheckInTime != null)
+                {
+                    <h3 class="fw-bold text-success mb-0">@today.CheckInTime.Value.ToLocalTime().ToString("HH:mm")</h3>
+                }
+                else
+                {
+                    <h3 class="fw-bold text-muted mb-0">—</h3>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body py-4">
+                <p class="text-muted small text-uppercase mb-1">Clocked Out</p>
+                @if (today?.CheckOutTime != null)
+                {
+                    <h3 class="fw-bold text-danger mb-0">@today.CheckOutTime.Value.ToLocalTime().ToString("HH:mm")</h3>
+                }
+                else
+                {
+                    <h3 class="fw-bold text-muted mb-0">—</h3>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── Clock-in / clock-out buttons ───────────────────────────────────────── *@
+<div class="d-flex gap-3 mb-5">
+    @if (canClockIn)
+    {
+        <form asp-action="ClockIn" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-success btn-lg px-5">
+                <i class="bx bx-log-in me-2"></i>Clock In
+            </button>
+        </form>
+    }
+    @if (canClockOut)
+    {
+        <form asp-action="ClockOut" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger btn-lg px-5">
+                <i class="bx bx-log-out me-2"></i>Clock Out
+            </button>
+        </form>
+    }
+    @if (!canClockIn && !canClockOut && today != null)
+    {
+        <span class="badge bg-success fs-6 px-4 py-2 align-self-center">
+            <i class="bx bx-check-circle me-1"></i> Shift complete
+        </span>
+    }
+</div>
+
+@* ── 30-day history ──────────────────────────────────────────────────────── *@
+<div class="card shadow-sm">
+    <div class="card-header fw-semibold">
+        <i class="bx bx-history me-1"></i> Last 30 Days
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Clock In</th>
+                        <th>Clock Out</th>
+                        <th>Billable Hrs</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!history.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">No records yet.</td></tr>
+                    }
+                    @foreach (var log in history)
+                    {
+                        <tr>
+                            <td>@log.WorkDate.ToString("ddd dd MMM yyyy")</td>
+                            <td>@(log.CheckInTime?.ToLocalTime().ToString("HH:mm") ?? "—")</td>
+                            <td>@(log.CheckOutTime?.ToLocalTime().ToString("HH:mm") ?? "—")</td>
+                            <td>@(log.BillableHours.HasValue ? $"{log.BillableHours.Value:F1}h" : "—")</td>
+                            <td>
+                                @{
+                                    var typeBadge = log.PayType switch
+                                    {
+                                        DayPayType.Weekend       => "bg-warning text-dark",
+                                        DayPayType.PublicHoliday => "bg-danger",
+                                        DayPayType.Vacation      => "bg-info text-dark",
+                                        DayPayType.DayOff        => "bg-secondary",
+                                        _                        => "bg-primary"
+                                    };
+                                    var typeLabel = log.PayType switch
+                                    {
+                                        DayPayType.Weekend => "Weekend Shift",
+                                        _                  => log.PayType.ToString()
+                                    };
+                                }
+                                <span class="badge @typeBadge">@typeLabel</span>
+                            </td>
+                            <td>
+                                @{
+                                    var statusBadge = log.Status switch
+                                    {
+                                        AttendanceStatus.Approved      => "bg-success",
+                                        AttendanceStatus.Rejected      => "bg-danger",
+                                        AttendanceStatus.Retrospective => "bg-warning text-dark",
+                                        _                              => "bg-primary"
+                                    };
+                                }
+                                <span class="badge @statusBadge">@log.Status</span>
+                            </td>
+                            <td>
+                                @if (log.Status != AttendanceStatus.Approved)
+                                {
+                                    <a asp-action="EditLog" asp-route-id="@log.Id"
+                                       class="btn btn-xs btn-outline-secondary py-0 px-1">
+                                        <i class="bx bx-edit"></i> Edit
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function tick() {
+        var now = new Date();
+        document.getElementById('liveClock').textContent =
+            now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('liveDate').textContent =
+            now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    tick();
+    setInterval(tick, 1000);
+</script>
+}

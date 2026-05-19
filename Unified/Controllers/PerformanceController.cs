@@ -179,18 +179,30 @@ public class PerformanceController : Controller
             .Select(at => at.TeamId)
             .ToListAsync();
 
-        var agentIds = await _db.AgentTeams
-            .Where(at => teamIds.Contains(at.TeamId))
-            .Select(at => at.AgentId)
-            .Distinct()
-            .ToListAsync();
+        List<string> allIds;
 
-        var sakIds = await _db.Users
-            .Where(u => u.IsSwissArmyKnife)
-            .Select(u => u.Id)
-            .ToListAsync();
+        if (teamIds.Any())
+        {
+            var agentIds = await _db.AgentTeams
+                .Where(at => teamIds.Contains(at.TeamId))
+                .Select(at => at.AgentId)
+                .Distinct()
+                .ToListAsync();
 
-        var allIds = agentIds.Union(sakIds).Distinct().ToList();
+            var sakIds = await _db.Users
+                .Where(u => u.IsSwissArmyKnife)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            allIds = agentIds.Union(sakIds).Distinct().ToList();
+        }
+        else
+        {
+            // Leader not assigned to any team yet — show all users so the dropdown works
+            allIds = await _db.Users
+                .Select(u => u.Id)
+                .ToListAsync();
+        }
 
         var agents = await _db.Users
             .Where(u => allIds.Contains(u.Id))

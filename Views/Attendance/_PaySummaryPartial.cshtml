@@ -1,0 +1,26 @@
+@using Unified.Models.Attendance
+@using Unified.Services
+@model List<AttendanceReportRow>
+@{
+    double totalHrs = Model.Sum(r => r.BillableHours ?? 0);
+    int    days     = Model.Count;
+}
+
+<div class="row g-3">
+    <div class="col-sm-6">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-3">
+                <p class="text-muted small text-uppercase mb-1">Days Worked</p>
+                <h4 class="fw-bold mb-0">@days</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="card text-center border-0 bg-light">
+            <div class="card-body py-3">
+                <p class="text-muted small text-uppercase mb-1">Billable Hours</p>
+                <h4 class="fw-bold mb-0">@totalHrs.ToString("F1") h</h4>
+            </div>
+        </div>
+    </div>
+</div>

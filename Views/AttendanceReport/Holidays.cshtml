@@ -1,0 +1,115 @@
+@using Unified.Models.Attendance
+@model List<PublicHoliday>
+@{
+    ViewData["Title"] = "Public Holidays";
+    int year = ViewBag.Year;
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">
+        <i class="bx bx-calendar-event me-2"></i>Public Holidays — @year
+    </h1>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a asp-action="Holidays" asp-route-year="@(year - 1)" class="btn btn-outline-secondary btn-sm">
+            <i class="bx bx-chevron-left"></i> @(year - 1)
+        </a>
+        <a asp-action="Holidays" asp-route-year="@(year + 1)" class="btn btn-outline-secondary btn-sm">
+            @(year + 1) <i class="bx bx-chevron-right"></i>
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm ms-2">
+            <i class="bx bx-arrow-back me-1"></i> Reports
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible">@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+
+    @* ── Add holiday form ─────────────────────────────────────────────────── *@
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">
+                <i class="bx bx-plus me-1"></i> Add Holiday
+            </div>
+            <div class="card-body">
+                <form asp-action="AddHoliday" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Date</label>
+                        <input type="date" name="date" class="form-control"
+                               value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Holiday Name</label>
+                        <input type="text" name="name" class="form-control"
+                               placeholder="e.g. New Year's Day" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="text" name="notes" class="form-control"
+                               placeholder="Country / context" />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bx bx-calendar-plus me-1"></i> Add
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* ── Holiday list ─────────────────────────────────────────────────────── *@
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">
+                <i class="bx bx-list-ul me-1"></i> @year Holidays (@Model.Count)
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4">No holidays configured for @year.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Notes</th>
+                                <th style="width:60px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in Model)
+                            {
+                                <tr>
+                                    <td>@h.Date.ToString("ddd dd MMM yyyy")</td>
+                                    <td class="fw-semibold">@h.Name</td>
+                                    <td class="text-muted small">@(h.Notes ?? "—")</td>
+                                    <td>
+                                        <form asp-action="DeleteHoliday" method="post"
+                                              onsubmit="return confirm('Remove @h.Name?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id"   value="@h.Id" />
+                                            <input type="hidden" name="year" value="@year" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bx bx-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+</div>
