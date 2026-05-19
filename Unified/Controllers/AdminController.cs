@@ -165,6 +165,69 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Teams));
     }
 
+    // ── Account Requests ───────────────────────────────────────────────────
+
+    public async Task<IActionResult> AccountRequests()
+    {
+        var requests = await _db.AccountRequests
+            .OrderByDescending(r => r.RequestedAt)
+            .ToListAsync();
+        ViewBag.AllTeams = await _db.Teams.OrderBy(t => t.Name).ToListAsync();
+        return View("AccountRequests/Index", requests);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveRequest(int id, string role, int[] teamIds)
+    {
+        var req = await _db.AccountRequests.FindAsync(id);
+        if (req == null) return NotFound();
+
+        var user = new AppUser
+        {
+            UserName       = req.Email,
+            Email          = req.Email,
+            DisplayName    = req.FullName,
+            EmailConfirmed = true
+        };
+        var tempPassword = $"Unified@{Guid.NewGuid().ToString("N")[..8]}!";
+        var result = await _userManager.CreateAsync(user, tempPassword);
+        if (!result.Succeeded)
+        {
+            TempData["Error"] = string.Join("; ", result.Errors.Select(e => e.Description));
+            return RedirectToAction(nameof(AccountRequests));
+        }
+
+        await _userManager.AddToRoleAsync(user, role);
+        if (role == Roles.SwissArmyKnife) user.IsSwissArmyKnife = true;
+
+        foreach (var tid in teamIds)
+            _db.AgentTeams.Add(new AgentTeam { AgentId = user.Id, TeamId = tid });
+
+        req.Status      = Models.Identity.AccountRequestStatus.Approved;
+        req.ReviewedById = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        req.ReviewedAt   = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        TempData["Success"] = $"Account created for {req.FullName}. Temporary password: {tempPassword}";
+        return RedirectToAction(nameof(AccountRequests));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejectRequest(int id, string reason)
+    {
+        var req = await _db.AccountRequests.FindAsync(id);
+        if (req == null) return NotFound();
+
+        req.Status          = Models.Identity.AccountRequestStatus.Rejected;
+        req.ReviewedById    = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        req.ReviewedAt      = DateTime.UtcNow;
+        req.RejectionReason = reason;
+        await _db.SaveChangesAsync();
+
+        TempData["Info"] = $"Request from {req.FullName} has been rejected.";
+        return RedirectToAction(nameof(AccountRequests));
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────
 
     private void PopulateRolesAndTeams(int[]? selectedTeams = null)

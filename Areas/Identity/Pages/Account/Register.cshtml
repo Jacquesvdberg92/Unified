@@ -1,0 +1,104 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Request Access";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] — Unified</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link href="~/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/styles.css" rel="stylesheet">
+    <link href="~/assets/CSS/icons.css" rel="stylesheet">
+</head>
+<body class="authentication-background">
+<div class="container-xxl">
+    <div class="authentication-wrapper authentication-cover authentication-bg">
+        <div class="authentication-inner row m-0">
+            <!-- Left Branding Panel -->
+            <div class="d-none d-lg-flex col-lg-7 authentication-bg p-0">
+                <div class="authentication-cover-content">
+                    <div class="p-5 text-white">
+                        <h1 class="display-5 fw-bold mb-3">Unified</h1>
+                        <p class="lead opacity-75">Internal operations platform.<br>Submit a request to get access.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form Panel -->
+            <div class="col-12 col-lg-5 d-flex align-items-center authentication-bg py-sm-5 p-4">
+                <div class="w-100" style="max-width: 440px; margin: auto;">
+
+                    @if (Model.Submitted)
+                    {
+                        <div class="text-center py-5">
+                            <span class="avatar avatar-xl bg-success-transparent rounded-circle mb-3">
+                                <i class="ri-check-double-line fs-1 text-success"></i>
+                            </span>
+                            <h4 class="fw-semibold mb-2">Request Submitted</h4>
+                            <p class="text-muted mb-4">Your access request has been sent to a manager for review. You will be contacted once a decision has been made.</p>
+                            <a asp-page="/Account/Login" class="btn btn-primary">Back to Login</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-4">
+                            <h4 class="fw-semibold mb-1">Request Access</h4>
+                            <p class="text-muted">Fill in the form below. A manager will review your request.</p>
+                        </div>
+
+                        <form id="requestForm" asp-page="/Account/Register" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Input.FullName" class="form-label">Full Name</label>
+                                <input asp-for="Input.FullName" class="form-control" placeholder="Jane Smith" autocomplete="name" />
+                                <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Input.Email" class="form-label">Work Email</label>
+                                <input asp-for="Input.Email" class="form-control" placeholder="jane@company.com" autocomplete="email" />
+                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Input.Role" class="form-label">Requested Role</label>
+                                <select asp-for="Input.Role" class="form-select">
+                                    <option value="">— Select —</option>
+                                    <option value="CSAgent">CS Agent</option>
+                                    <option value="TeamLeader">Team Leader</option>
+                                    <option value="BrandManager">Brand Manager</option>
+                                </select>
+                                <span asp-validation-for="Input.Role" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="Input.Message" class="form-label">Message / Reason <span class="text-muted">(optional)</span></label>
+                                <textarea asp-for="Input.Message" class="form-control" rows="3" placeholder="Brief reason for access..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Submit Request</button>
+                        </form>
+
+                        <p class="text-center mt-3 mb-0 text-muted small">
+                            Already have an account? <a asp-page="/Account/Login">Sign in</a>
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

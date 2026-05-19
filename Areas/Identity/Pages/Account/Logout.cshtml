@@ -1,21 +1,56 @@
 ﻿@page
 @model LogoutModel
 @{
-    ViewData["Title"] = "Log out";
+    ViewData["Title"] = "Sign Out";
+    Layout = null;
 }
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme-mode="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] — Unified</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link href="~/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/styles.css" rel="stylesheet">
+    <link href="~/assets/CSS/icons.css" rel="stylesheet">
+    <style>
+        body { background: var(--default-body-bg-color, #f1f5f9); }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100">
 
-<header>
-    <h1>@ViewData["Title"]</h1>
-    @{
-        if (User.Identity?.IsAuthenticated ?? false)
-        {
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                <button type="submit" class="nav-link btn btn-link text-dark">Click here to Logout</button>
-            </form>
-        }
-        else
-        {
-            <p>You have successfully logged out of the application.</p>
-        }
+<div class="card shadow-sm border-0 text-center p-5" style="max-width: 420px; width: 100%;">
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <span class="avatar avatar-xl bg-warning-transparent rounded-circle mx-auto mb-4" style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+            <i class="ri-logout-box-r-line fs-1 text-warning"></i>
+        </span>
+        <h4 class="fw-semibold mb-2">Sign out of Unified?</h4>
+        <p class="text-muted mb-4">You are currently signed in. Click below to securely sign out.</p>
+
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning px-5 fw-semibold">
+                <i class="ri-logout-box-r-line me-1"></i> Sign Out
+            </button>
+        </form>
+
+        <a href="/" class="btn btn-link text-muted mt-2 d-block">Cancel — go back</a>
     }
-</header>
+    else
+    {
+        <span class="avatar avatar-xl bg-success-transparent rounded-circle mx-auto mb-4" style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+            <i class="ri-check-double-line fs-1 text-success"></i>
+        </span>
+        <h4 class="fw-semibold mb-2">You've been signed out</h4>
+        <p class="text-muted mb-4">Thank you for using Unified. You have been successfully signed out.</p>
+        <a asp-page="/Account/Login" class="btn btn-primary px-5 fw-semibold">
+            <i class="ri-login-circle-line me-1"></i> Sign In Again
+        </a>
+    }
+</div>
+
+<script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

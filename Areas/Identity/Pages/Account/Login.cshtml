@@ -1,82 +1,128 @@
 ﻿@page
 @model LoginModel
-
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Sign In";
+    Layout = null;
 }
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme-mode="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] — Unified</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link href="~/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/styles.css" rel="stylesheet">
+    <link href="~/assets/CSS/icons.css" rel="stylesheet">
+    <style>
+        body { background: var(--default-body-bg-color, #f1f5f9); }
+        .auth-card { max-width: 440px; }
+        .brand-panel {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<div class="container-xxl">
+    <div class="row min-vh-100 m-0">
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+        <!-- Left Branding Panel -->
+        <div class="d-none d-lg-flex col-lg-6 brand-panel flex-column justify-content-center align-items-start p-5">
+            <h1 class="display-4 fw-bold text-white mb-3">Unified</h1>
+            <p class="text-white opacity-75 lead">Your internal operations platform.<br>Sign in to continue.</p>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center bg-white p-4 py-sm-5">
+            <div class="auth-card w-100">
+
+                <div class="mb-4">
+                    <h4 class="fw-semibold mb-1">Welcome back</h4>
+                    <p class="text-muted mb-0">Sign in to your Unified account.</p>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
+
+                <form id="account" asp-page="/Account/Login" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label fw-medium">Email address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="ri-mail-line text-muted"></i>
+                            </span>
+                            <input asp-for="Input.Email"
+                                   class="form-control border-start-0 ps-0"
+                                   autocomplete="username"
+                                   aria-required="true"
+                                   placeholder="you@company.com" />
                         </div>
-                    </form>
-                }
-            }
-        </section>
+                        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label fw-medium">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="ri-lock-2-line text-muted"></i>
+                            </span>
+                            <input asp-for="Input.Password"
+                                   class="form-control border-start-0 ps-0"
+                                   autocomplete="current-password"
+                                   aria-required="true"
+                                   placeholder="••••••••"
+                                   id="passwordInput" />
+                            <button class="btn btn-light border" type="button" id="togglePassword" tabindex="-1">
+                                <i class="ri-eye-line" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" asp-for="Input.RememberMe" id="rememberMe" />
+                            <label class="form-check-label text-muted" for="rememberMe">Remember me</label>
+                        </div>
+                        <a asp-page="./ForgotPassword" class="text-primary small">Forgot password?</a>
+                    </div>
+
+                    <button id="login-submit" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="ri-login-circle-line me-1"></i> Sign In
+                    </button>
+                </form>
+
+                <p class="text-center mt-4 mb-0 text-muted small">
+                    Don't have an account?
+                    <a asp-page="./Register" class="text-primary fw-medium">Request access</a>
+                </p>
+
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        var input = document.getElementById('passwordInput');
+        var icon  = document.getElementById('toggleIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('ri-eye-line', 'ri-eye-off-line');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('ri-eye-off-line', 'ri-eye-line');
+        }
+    });
+</script>
+</body>
+</html>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

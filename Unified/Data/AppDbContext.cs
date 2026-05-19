@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Unified.Models.Attendance;
 using Unified.Models.EmailTemplates;
-using Unified.Models.Identity;
-using Unified.Models.Performance;
+using Unified.Models.Identity;using Unified.Models.Performance;
 using Unified.Models.ProcessTemplates;
 using Unified.Models.Reports;
 using Unified.Models.Schedule;
@@ -56,6 +55,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     // Dashboard
     public DbSet<DashboardWidget>     DashboardWidgets     => Set<DashboardWidget>();
+
+    // Account requests
+    public DbSet<AccountRequest>      AccountRequests      => Set<AccountRequest>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
