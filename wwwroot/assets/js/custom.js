@@ -4,7 +4,9 @@
   /* page loader */
   function hideLoader() {
     const loader = document.getElementById("loader");
-    loader.classList.add("d-none")
+    if (loader) {
+      loader.classList.add("d-none");
+    }
   }
 
   window.addEventListener("load", hideLoader);
@@ -27,14 +29,16 @@
   );
 
   /* breadcrumb date range picker */
-  flatpickr("#daterange", {
-    mode: "range",
-    dateFormat: "Y-m-d",
-    defaultDate: ["2024-05-01", "2024-05-30"]
-  });
+  if (typeof flatpickr !== "undefined" && document.querySelector("#daterange")) {
+    flatpickr("#daterange", {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      defaultDate: ["2024-05-01", "2024-05-30"]
+    });
+  }
   /* breadcrumb date range picker */
 
-  if (document.querySelector("#switcher-canvas")) {
+  if (document.querySelector("#switcher-canvas") && typeof Pickr !== "undefined") {
 
     //switcher color pickers
     const pickrContainerPrimary = document.querySelector(
@@ -305,7 +309,9 @@
     }
   }
   let layoutSetting = document.querySelector(".layout-setting");
-  layoutSetting.addEventListener("click", toggleTheme);
+  if (layoutSetting) {
+    layoutSetting.addEventListener("click", toggleTheme);
+  }
   /* header theme toggle */
 
   /* Choices JS */
@@ -313,22 +319,29 @@
     var genericExamples = document.querySelectorAll("[data-trigger]");
     for (let i = 0; i < genericExamples.length; ++i) {
       var element = genericExamples[i];
-      new Choices(element, {
-        allowHTML: true,
-        placeholderValue: "This is a placeholder set in the config",
-        searchPlaceholderValue: "Search",
-      });
+      if (typeof Choices !== "undefined") {
+        new Choices(element, {
+          allowHTML: true,
+          placeholderValue: "This is a placeholder set in the config",
+          searchPlaceholderValue: "Search",
+        });
+      }
     }
   });
   /* Choices JS */
 
   /* footer year */
-  document.getElementById("year").innerHTML = new Date().getFullYear();
+  const yearElement = document.getElementById("year");
+  if (yearElement) {
+    yearElement.innerHTML = new Date().getFullYear();
+  }
   /* footer year */
 
   /* node waves */
-  Waves.attach(".btn-wave", ["waves-light"]);
-  Waves.init();
+  if (typeof Waves !== "undefined") {
+    Waves.attach(".btn-wave", ["waves-light"]);
+    Waves.init();
+  }
   /* node waves */
 
   /* card with close button */
@@ -382,54 +395,65 @@
   window.onscroll = () => {
     const scrollTop = window.scrollY || window.pageYOffset;
     const clientHt = $rootElement.scrollHeight - $rootElement.clientHeight;
+    if (!scrollToTop) {
+      return;
+    }
     if (window.scrollY > 100) {
       scrollToTop.style.display = "flex";
     } else {
       scrollToTop.style.display = "none";
     }
   };
-  scrollToTop.onclick = () => {
-    window.scrollTo(0, 0);
-  };
+  if (scrollToTop) {
+    scrollToTop.onclick = () => {
+      window.scrollTo(0, 0);
+    };
+  }
   /* back to top */
 
   /* header dropdowns scroll */
   var myHeadernotification = document.getElementById("header-notification-scroll");
-  new SimpleBar(myHeadernotification, { autoHide: true });
+  if (typeof SimpleBar !== "undefined" && myHeadernotification) {
+    new SimpleBar(myHeadernotification, { autoHide: true });
+  }
 
   var myHeaderCart = document.getElementById("header-cart-items-scroll");
-  new SimpleBar(myHeaderCart, { autoHide: true });
+  if (typeof SimpleBar !== "undefined" && myHeaderCart) {
+    new SimpleBar(myHeaderCart, { autoHide: true });
+  }
   /* header dropdowns scroll */
 
-  const autoCompleteJS = new autoComplete({
-    selector: "#header-search",
-    data: {
-      src: [
-        "What is the meaning of life?",
-        "How does gravity work?",
-        "Why is the sky blue?",
-        "What is the capital of France?",
-        "Who painted the Mona Lisa?",
-        "What is the speed of light?",
-        "Why do we dream?",
-        "How do birds fly?",
-        "What is the largest mammal?",
-        "Why do leaves change color in the fall?"
-      ],
-      cache: true,
-    },
-    resultItem: {
-      highlight: true
-    },
-    events: {
-      input: {
-        selection: (event) => {
-          const selection = event.detail.selection.value;
-          autoCompleteJS.input.value = selection;
+  if (typeof autoComplete !== "undefined" && document.querySelector("#header-search")) {
+    const autoCompleteJS = new autoComplete({
+      selector: "#header-search",
+      data: {
+        src: [
+          "What is the meaning of life?",
+          "How does gravity work?",
+          "Why is the sky blue?",
+          "What is the capital of France?",
+          "Who painted the Mona Lisa?",
+          "What is the speed of light?",
+          "Why do we dream?",
+          "How do birds fly?",
+          "What is the largest mammal?",
+          "Why do leaves change color in the fall?"
+        ],
+        cache: true,
+      },
+      resultItem: {
+        highlight: true
+      },
+      events: {
+        input: {
+          selection: (event) => {
+            const selection = event.detail.selection.value;
+            autoCompleteJS.input.value = selection;
+          }
         }
       }
-    }
-  });
+    });
+  }
 })();
 
 /* full screen */
@@ -465,6 +489,9 @@ function handleFullscreenChange() {
   
   let open = document.querySelector(".full-screen-open");
   let close = document.querySelector(".full-screen-close");
+  if (!open || !close) {
+    return;
+  }
 
   if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
     // Update icon for fullscreen mode

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Unified.Models.Identity;
 using Unified.Models.Poi;
 using Unified.Services;
@@ -46,7 +48,7 @@ public class PoiSimulationController : Controller
     public async Task<IActionResult> LogPartial()
     {
         ViewBag.Brands = await _svc.GetBrandsAsync();
-        return PartialView("_LogPartial");
+        return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
     }
 
     // POST /PoiSimulation/Log
@@ -54,10 +56,19 @@ public class PoiSimulationController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Log(string clientId, int brandId, string notes)
     {
+        var isAjax = string.Equals(Request.Headers[HeaderNames.XRequestedWith], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+
         if (string.IsNullOrWhiteSpace(clientId))
         {
             ModelState.AddModelError("", "Client ID is required.");
             ViewBag.Brands = await _svc.GetBrandsAsync();
+
+            if (isAjax)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+            }
+
             return View();
         }
 
@@ -66,7 +77,7 @@ public class PoiSimulationController : Controller
 
         TempData["Success"] = $"POI simulation logged for client {clientId}.";
 
-        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        if (isAjax)
             return Json(new { success = true, message = $"POI simulation logged for client {clientId}." });
 
         return RedirectToAction(nameof(Index));

@@ -3,7 +3,7 @@
     var brands = (List<Brand>)ViewBag.Brands;
 }
 
-<form asp-controller="PoiSimulation" asp-action="Log" method="post"
+<form action="/PoiSimulation/Log" method="post"
       data-ajax-form data-widget-key="poi_simulations poi_report" data-close-modal="poiLogModal">
     @Html.AntiForgeryToken()
 

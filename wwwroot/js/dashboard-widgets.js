@@ -68,6 +68,7 @@
         e.preventDefault();
 
         const widgetKeys   = (form.dataset.widgetKey || '').split(' ').map(s => s.trim()).filter(Boolean);
+        const alwaysReload = form.dataset.alwaysReload === 'true';
         const closeModalId = form.dataset.closeModal;
 
         let result = { success: false, message: 'Something went wrong.' };
@@ -76,7 +77,10 @@
             const res = await fetch(form.action, {
                 method:  'POST',
                 body:    new FormData(form),
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json, text/html;q=0.9'
+                }
             });
 
             const contentType = (res.headers.get('content-type') || '').toLowerCase();
@@ -95,7 +99,14 @@
                         message: extractMessageFromHtml(html) || 'Please correct the highlighted fields.'
                     };
                 } else {
-                    result = { success: false, message: 'Unexpected server response.' };
+                    const redirectedToLogin = /<form[^>]*id=["']account["']/i.test(html) || /name=["']Input\.Password["']/i.test(html);
+                    result = {
+                        success: false,
+                        message: redirectedToLogin
+                            ? 'Your session may have expired. Please refresh and try again.'
+                            : 'Unexpected server response. Check browser console for details.'
+                    };
+                    console.warn('Unexpected non-JSON AJAX response for', form.action, html.slice(0, 800));
                 }
             }
         } catch (_) {
@@ -110,11 +121,12 @@
 
         showToast(result.message, result.success);
 
-        if (result.success) {
-            if (closeModalId) {
-                const modalEl = document.getElementById(closeModalId);
-                if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
-            }
+        if (result.success && closeModalId) {
+            const modalEl = document.getElementById(closeModalId);
+            if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
+        }
+
+        if (result.success || alwaysReload) {
             for (const key of widgetKeys) await reloadWidget(key);
         }
     });
