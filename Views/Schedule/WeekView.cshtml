@@ -292,46 +292,9 @@
 
 
 @section Scripts {
-<style>
-.schedule-grid td, .schedule-grid th { font-size: 0.78rem; vertical-align: middle; }
-.sched-pill {
-	display: block; padding: .2rem .4rem;
-	border-radius: .375rem; font-size: .75rem;
-	font-weight: 500; line-height: 1.3; min-height: 30px;
-}
-.sched-pill-empty { border: 1px dashed currentColor !important; background: transparent !important; opacity: .45; }
-.sched-cell:hover { opacity: .8; }
-</style>
 @if (canEdit)
 {
-	<script>
-	(function () {
-		var modal = document.getElementById('editModal');
-		modal.addEventListener('show.bs.modal', function (e) {
-			var btn = e.relatedTarget;
-			var isWe = btn.dataset.weekend === 'true';
-			document.getElementById('modal-agent-id').value           = btn.dataset.agentId;
-			document.getElementById('modal-agent-name').textContent   = btn.dataset.agentName;
-			document.getElementById('modal-date').value               = btn.dataset.date;
-			document.getElementById('modal-date-display').textContent = (function(d){
-				return new Date(d+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short',year:'numeric'});
-			})(btn.dataset.date);
-			document.getElementById('modal-entry-id').value           = btn.dataset.entryId  || '0';
-			document.getElementById('modal-type').value               = btn.dataset.entryType || '0';
-			document.getElementById('modal-shift').value              = btn.dataset.shiftId   || '';
-			document.getElementById('modal-custom-start').value       = btn.dataset.customStart || '';
-			document.getElementById('modal-custom-end').value         = btn.dataset.customEnd   || '';
-			document.getElementById('modal-note').value               = btn.dataset.note || '';
-			document.getElementById('og-weekday').style.display = isWe ? 'none' : '';
-			document.getElementById('og-weekend').style.display = isWe ? ''     : 'none';
-			schedToggle(btn.dataset.entryType || '0');
-		});
-	})();
-	function schedToggle(val) {
-		document.getElementById('shiftRow').style.display  = val === '0' ? '' : 'none';
-		document.getElementById('customRow').style.display = val === '1' ? '' : 'none';
-	}
-	</script>
+<script src="@Url.Content("~/js/schedule.js")"></script>
 }
 }
 

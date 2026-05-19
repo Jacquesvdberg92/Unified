@@ -126,39 +126,22 @@
 </div>
 
 @section Scripts {
-<script>
-function toggleScheduleFields() {
-    var type = document.getElementById('reqType').value;
-    var isScheduleChange = type === '2';
-    document.getElementById('scheduleTimeRow').style.display = isScheduleChange ? '' : 'none';
-    // For Day Off/ScheduleChange sync end=start on start change
-    if (type === '1' || type === '2') {
-        document.getElementById('endDateCol').style.display = 'none';
-        document.getElementById('startDate').addEventListener('change', function () {
-            document.getElementById('endDate').value = this.value;
-        });
-    } else {
-        document.getElementById('endDateCol').style.display = '';
-    }
-}
-toggleScheduleFields();
-
+<script src="@Url.Content("~/js/schedule.js")"></script>
 @if (newlyActioned > 0)
 {
-    <text>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Toastify === 'function') {
-            Toastify({
-                text: "@newlyActioned of your request(s) have been reviewed.",
-                duration: 5000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                style: { background: "linear-gradient(to right, #405189, #0ab39c)" }
-            }).showToast();
-        }
-    });
-    </text>
-}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Toastify === 'function') {
+        Toastify({
+            text: "@newlyActioned of your request(s) have been reviewed.",
+            duration: 5000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            style: { background: "linear-gradient(to right, #405189, #0ab39c)" }
+        }).showToast();
+    }
+});
 </script>
+}
 }

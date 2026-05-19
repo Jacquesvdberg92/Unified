@@ -70,48 +70,7 @@
 </div>
 
 @section Scripts {
-<link rel="stylesheet" href="~/assets/libs/quill/dist/quill.snow.css" />
-<style>
-    .template-blank {
-        background-color: #fff3cd;
-        border-radius: 3px;
-        padding: 0 3px;
-        font-weight: 600;
-        color: #856404;
-    }
-</style>
-<script>
-    const raw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BodyText));
-
-    function highlightBlanks(text) {
-        return text.replace(/\[BLANK\]/g, '<span class="template-blank">[BLANK]</span>');
-    }
-
-    document.getElementById('templateBody').innerHTML = highlightBlanks(raw);
-
-    // Copy to clipboard
-    document.getElementById('btnCopy').addEventListener('click', async () => {
-        await navigator.clipboard.writeText(raw);
-        const btn = document.getElementById('btnCopy');
-        btn.innerHTML = '<i class="bx bx-check me-1"></i>Copied!';
-        setTimeout(() => btn.innerHTML = '<i class="bx bx-copy me-1"></i>Copy to Clipboard', 2000);
-    });
-
-    // Download .txt
-    const dl = document.getElementById('btnDownload');
-    const blob = new Blob([raw], { type: 'text/plain' });
-    dl.href = URL.createObjectURL(blob);
-    dl.download = '@(Model.Title.Replace(" ", "_")).txt';
-
-    // Guidance chevron toggle
-    const guidanceBody = document.getElementById('guidanceBody');
-    if (guidanceBody) {
-        guidanceBody.addEventListener('show.bs.collapse', () => {
-            document.getElementById('guidanceChevron').className = 'bx bx-chevron-up';
-        });
-        guidanceBody.addEventListener('hide.bs.collapse', () => {
-            document.getElementById('guidanceChevron').className = 'bx bx-chevron-down';
-        });
-    }
-</script>
+<script type="application/json" id="templateBodyRaw">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BodyText))</script>
+<script>document.getElementById('btnDownload').dataset.filename = '@Html.Raw(Model.Title.Replace(" ", "_"))';</script>
+<script src="@Url.Content("~/js/process-templates.js")"></script>
 }

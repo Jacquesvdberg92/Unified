@@ -63,21 +63,5 @@
 
 @section Scripts {
 <script src="~/assets/libs/quill/dist/quill.min.js"></script>
-<script>
-    function insertBlank() {
-        const ta = document.getElementById('bodyText');
-        const start = ta.selectionStart, end = ta.selectionEnd;
-        ta.value = ta.value.slice(0, start) + '[BLANK]' + ta.value.slice(end);
-        ta.selectionStart = ta.selectionEnd = start + 7;
-        ta.focus();
-    }
-
-    const quill = new Quill('#guidanceEditor', { theme: 'snow' });
-    const hiddenNotes = document.getElementById('GuidanceNotes');
-    if (hiddenNotes.value) quill.root.innerHTML = hiddenNotes.value;
-
-    document.querySelector('form').addEventListener('submit', () => {
-        hiddenNotes.value = quill.root.innerHTML;
-    });
-</script>
+<script src="@Url.Content("~/js/process-templates.js")"></script>
 }

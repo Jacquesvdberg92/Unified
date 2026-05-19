@@ -82,35 +82,6 @@
 </div>
 
 @section Scripts {
-<script>
-    const agentOptions = @Html.Raw(
-        System.Text.Json.JsonSerializer.Serialize(
-            agents.Select(a => new { value = a.Id, text = a.Name })
-        ));
-
-    document.getElementById('addRow').addEventListener('click', addRow);
-
-    function addRow() {
-        const tbody = document.getElementById('agentRows');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <select name="agentId" class="form-select form-select-sm" required>
-                    <option value="">— Select —</option>
-                    ${agentOptions.map(a => `<option value="${a.value}">${a.text}</option>`).join('')}
-                </select>
-            </td>
-            <td><input type="number" name="chats"   min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
-            <td><input type="number" name="tickets" min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
-            <td><input type="number" name="calls"   min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
-            <td><input type="number" name="ftd"     min="0" value="0" class="form-control form-control-sm" style="width:75px" /></td>
-            <td><input type="text"   name="language" placeholder="EN" class="form-control form-control-sm" style="width:75px" /></td>
-            <td><button type="button" class="btn btn-outline-danger btn-sm remove-row">✕</button></td>`;
-        tr.querySelector('.remove-row').addEventListener('click', () => tr.remove());
-        tbody.appendChild(tr);
-    }
-
-    @* Auto-add one row on load *@
-    addRow();
-</script>
+<script type="application/json" id="agentOptionsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(agents.Select(a => new { value = a.Id, text = a.Name })))</script>
+<script src="@Url.Content("~/js/reports.js")"></script>
 }

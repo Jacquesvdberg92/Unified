@@ -240,14 +240,8 @@
 }
 
 @section Scripts {
-<script>
-    // Copy-to-clipboard for email addresses
-    document.querySelectorAll('.copy-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var text = this.dataset.copy;
-            navigator.clipboard.writeText(text).then(function () {
-                btn.innerHTML = '<i class="bx bx-check"></i>';
-                setTimeout(function () { btn.innerHTML = '<i class="bx bx-copy-alt"></i>'; }, 2000);
+<script src="@Url.Content("~/js/email-templates.js")"></script>
+}, 2000);
             });
         });
     });

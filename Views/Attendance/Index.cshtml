@@ -179,15 +179,5 @@
 </div>
 
 @section Scripts {
-<script>
-    function tick() {
-        var now = new Date();
-        document.getElementById('liveClock').textContent =
-            now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('liveDate').textContent =
-            now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    }
-    tick();
-    setInterval(tick, 1000);
-</script>
+<script src="@Url.Content("~/js/attendance.js")"></script>
 }

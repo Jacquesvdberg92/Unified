@@ -124,26 +124,5 @@
 </div>
 
 @section Scripts {
-<script>
-document.getElementById('actionModal').addEventListener('show.bs.modal', function (e) {
-    var btn    = e.relatedTarget;
-    var rid    = btn.dataset.requestId;
-    var agent  = btn.dataset.agent;
-    var action = btn.dataset.action;
-    var isApprove = action === 'Approve';
-
-    document.getElementById('actionRequestId').value = rid;
-    document.getElementById('actionTitle').textContent = action + ' Request';
-    document.getElementById('actionBody').textContent  =
-        action + ' request from ' + agent + '?';
-
-    var form    = document.getElementById('actionForm');
-    var baseUrl = form.getAttribute('data-base') || window.location.origin;
-    form.action = '/Schedule/' + action + 'Request';
-
-    var confirmBtn = document.getElementById('actionBtn');
-    confirmBtn.className = 'btn btn-sm ' + (isApprove ? 'btn-success' : 'btn-danger');
-    confirmBtn.textContent = action;
-});
-</script>
+<script src="@Url.Content("~/js/schedule.js")"></script>
 }

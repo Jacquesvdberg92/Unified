@@ -137,35 +137,9 @@
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script>
-    @* FTD bar chart *@
-    @if (Model.FTDLanguageStats.Any())
-    {
-        <text>
-    new ApexCharts(document.getElementById('ftdChart'), {
-        chart:  { type: 'bar', height: 250, toolbar: { show: false } },
-        series: [{ name: 'FTDs', data: @ftdData }],
-        xaxis:  { categories: @ftdLabels },
-        colors: ['#198754'],
-        plotOptions: { bar: { borderRadius: 4, distributed: true } },
-        legend: { show: false }
-    }).render();
-        </text>
-    }
-
-    @* CSV export *@
-    document.getElementById('csvBtn')?.addEventListener('click', function () {
-        const rows = [['Agent', 'Language', 'Chats', 'Tickets', 'Calls', 'FTD', 'Avg Review']];
-        document.querySelectorAll('#agentTable tbody tr').forEach(tr => {
-            rows.push([...tr.querySelectorAll('td')].slice(0, 7).map(td => td.innerText.trim()));
-        });
-        const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a    = Object.assign(document.createElement('a'), {
-            href: URL.createObjectURL(blob),
-            download: 'report.csv'
-        });
-        a.click();
-    });
-</script>
+@if (Model.FTDLanguageStats.Any())
+{
+    <script type="application/json" id="ftdChartData">{ "labels": @Html.Raw(ftdLabels), "data": @Html.Raw(ftdData) }</script>
+}
+<script src="@Url.Content("~/js/reports.js")"></script>
 }

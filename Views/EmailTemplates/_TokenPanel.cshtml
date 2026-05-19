@@ -1,23 +1,6 @@
 @* Token reference panel — rendered inside Create.cshtml and Edit.cshtml *@
 @* Each button calls insertToken(token) which is defined on the host page *@
 
-<style>
-    .token-group-label {
-        font-size: .7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: #6c757d;
-        margin: .6rem 0 .3rem;
-    }
-    .token-btn-panel {
-        font-size: .75rem;
-        padding: .2rem .45rem;
-        line-height: 1.4;
-        white-space: nowrap;
-    }
-</style>
-
 @{
     var groups = new[]
     {

@@ -67,26 +67,4 @@
     <a asp-action="Feed" class="btn btn-outline-secondary">Cancel</a>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var quill = new Quill('#quillEditor', {
-            theme: 'snow',
-            modules: { toolbar: [
-                ['bold','italic','underline','strike'],
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-            ]}
-        });
-
-        // Pre-fill existing body
-        var existing = document.getElementById('bodyInput').value;
-        if (existing) {
-            quill.root.innerHTML = existing;
-        }
-
-        document.querySelector('form').addEventListener('submit', function () {
-            document.getElementById('bodyInput').value = quill.root.innerHTML;
-        });
-    });
-</script>
+<script src="~/js/updates.js"></script>

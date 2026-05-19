@@ -223,31 +223,7 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('swapModal').addEventListener('show.bs.modal', function (e) {
-            var btn = e.relatedTarget;
-            document.getElementById('swapSlotId').value       = btn.dataset.slotId;
-            document.getElementById('swapSlotLabel').textContent = btn.dataset.slotLabel;
-            document.getElementById('swapReturnDate').value   = btn.dataset.date;
-        });
-    </script>
+    <script src="~/js/work-distribution.js"></script>
 }
 
-<style>
-    pre.work-dist-body {
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-family: inherit;
-        font-size: 0.9rem;
-        background: transparent;
-        border: none;
-        padding: 0;
-        margin: 0;
-    }
-    .text-truncate-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
+

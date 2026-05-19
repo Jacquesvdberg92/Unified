@@ -104,90 +104,9 @@
 </div>
 
 @section Scripts {
-<script>
-    var renderedHtml    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedHtml));
-    var renderedSubject = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedSubject));
-
-    (function () {
-        var frame = document.getElementById('previewFrame');
-        var doc = frame.contentDocument || frame.contentWindow.document;
-        doc.open(); doc.write(renderedHtml); doc.close();
-    })();
-
-    function flashBtn(btn, label, orig) {
-        btn.innerHTML = '<i class="ri-check-line me-1"></i>' + label;
-        setTimeout(function () { btn.innerHTML = orig; }, 2500);
-    }
-
-    var copyBodyBtn = document.getElementById('copyBodyBtn');
-    if (copyBodyBtn && !copyBodyBtn.hasAttribute('disabled')) {
-        var origBody = copyBodyBtn.innerHTML;
-        copyBodyBtn.addEventListener('click', function () {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(renderedHtml).then(function () {
-                    flashBtn(copyBodyBtn, 'Copied!', origBody);
-                });
-            } else {
-                var ta = document.createElement('textarea');
-                ta.value = renderedHtml;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                flashBtn(copyBodyBtn, 'Copied!', origBody);
-            }
-        });
-    }
-
-    var copySubjectBtn = document.getElementById('copySubjectBtn');
-    if (copySubjectBtn && !copySubjectBtn.hasAttribute('disabled')) {
-        var origSubject = copySubjectBtn.innerHTML;
-        copySubjectBtn.addEventListener('click', function () {
-            navigator.clipboard.writeText(renderedSubject).then(function () {
-                flashBtn(copySubjectBtn, 'Subject copied!', origSubject);
-            });
-        });
-    }
-
-    var copyPlainBtn = document.getElementById('copyPlainBtn');
-    if (copyPlainBtn && !copyPlainBtn.hasAttribute('disabled')) {
-        var origPlain = copyPlainBtn.innerHTML;
-        copyPlainBtn.addEventListener('click', function () {
-            // Use ClipboardItem with both text/html and text/plain so that
-            // pasting into any app (Gmail, Outlook, Google Docs) preserves
-            // hyperlinks exactly as if the user had selected & copied manually.
-            try {
-                var htmlBlob  = new Blob([renderedHtml], { type: 'text/html' });
-                // Plain-text fallback: strip tags but keep link text
-                var scratch = document.createElement('div');
-                scratch.style.cssText = 'position:absolute;left:-9999px;top:-9999px;white-space:pre-wrap;';
-                scratch.innerHTML = renderedHtml;
-                document.body.appendChild(scratch);
-                var plainText = scratch.innerText;
-                document.body.removeChild(scratch);
-                var textBlob  = new Blob([plainText], { type: 'text/plain' });
-                var item      = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
-                navigator.clipboard.write([item]).then(function () {
-                    flashBtn(copyPlainBtn, 'Copied (with links)!', origPlain);
-                }).catch(function () {
-                    // Fallback: plain-text only
-                    navigator.clipboard.writeText(plainText).then(function () {
-                        flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
-                    });
-                });
-            } catch (e) {
-                // Browser doesn't support ClipboardItem – fall back to execCommand
-                var ta = document.createElement('textarea');
-                var sc2 = document.createElement('div');
-                sc2.innerHTML = renderedHtml;
-                ta.value = sc2.innerText;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                flashBtn(copyPlainBtn, 'Plain text copied!', origPlain);
-            }
-        });
-    }
-</script>
+<div id="previewData"
+     data-html="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedHtml))"
+     data-subject="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedSubject))"
+     hidden></div>
+<script src="@Url.Content("~/js/email-templates.js")"></script>
 }

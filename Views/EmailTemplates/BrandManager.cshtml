@@ -73,15 +73,8 @@
 }
 
 @section Scripts {
-    <script>
-        // Step 2.8 — copy signature HTML
-        document.querySelectorAll('.copy-sig-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const sig = JSON.parse(this.dataset.sig);
-                navigator.clipboard.writeText(sig).then(() => {
-                    this.textContent = '✓ Copied!';
-                    const b = this;
-                    setTimeout(() => { b.innerHTML = '<i class="ri-clipboard-line me-1"></i> Copy Signature HTML'; }, 2500);
+<script src="@Url.Content("~/js/email-templates.js")"></script>
+}, 2500);
                 });
             });
         });

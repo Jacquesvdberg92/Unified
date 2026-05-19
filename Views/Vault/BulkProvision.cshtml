@@ -78,15 +78,5 @@
 </div>
 
 @section Scripts {
-<script>
-    document.getElementById('toggleBulkPwd').addEventListener('click', function () {
-        const f = document.getElementById('bulkPwd');
-        f.type = f.type === 'password' ? 'text' : 'password';
-        this.textContent = f.type === 'password' ? '👁' : '🙈';
-    });
-    document.getElementById('selectAll').addEventListener('click', () =>
-        document.querySelectorAll('.agent-cb').forEach(c => c.checked = true));
-    document.getElementById('clearAll').addEventListener('click', () =>
-        document.querySelectorAll('.agent-cb').forEach(c => c.checked = false));
-</script>
+<script src="@Url.Content("~/js/vault.js")"></script>
 }

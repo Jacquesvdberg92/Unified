@@ -123,50 +123,5 @@
 </div>
 
 @section Scripts {
-<script>
-(function () {
-    var agents = JSON.parse(document.getElementById('agentData')?.textContent || '[]');
-    var display = document.getElementById('wheelDisplay');
-    var spinBtn = document.getElementById('spinBtn');
-    var offerForm = document.getElementById('offerForm');
-    var selectedId   = document.getElementById('selectedAgentId');
-    var selectedName = document.getElementById('selectedAgentName');
-    var chosen = null;
-
-    if (!spinBtn) return;
-
-    spinBtn.addEventListener('click', function () {
-        if (!agents.length) return;
-        spinBtn.disabled = true;
-
-        var ticks = 20 + Math.floor(Math.random() * 15);
-        var idx   = 0;
-        var delay = 60;
-
-        function tick() {
-            display.textContent = agents[idx % agents.length].name;
-            idx++;
-            ticks--;
-            delay += 8;
-            if (ticks > 0) {
-                setTimeout(tick, delay);
-            } else {
-                chosen = agents[(idx - 1) % agents.length];
-                display.textContent = chosen.name;
-                selectedId.value   = chosen.id;
-                selectedName.textContent = chosen.name;
-                offerForm.style.display = '';
-            }
-        }
-        tick();
-    });
-
-    window.resetWheel = function () {
-        chosen = null;
-        display.textContent = '—';
-        offerForm.style.display = 'none';
-        spinBtn.disabled = false;
-    };
-})();
-</script>
+<script src="@Url.Content("~/js/schedule.js")"></script>
 }
