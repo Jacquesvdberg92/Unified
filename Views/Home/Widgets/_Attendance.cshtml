@@ -1,0 +1,101 @@
+@using Unified.Services
+@using Unified.Models.Attendance
+@inject AttendanceService AttendanceService
+@inject Microsoft.AspNetCore.Identity.UserManager<Unified.Models.Identity.AppUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var user    = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext!.User);
+    AttendanceLog? today = null;
+    List<AttendanceLog> history = new();
+    if (user != null)
+    {
+        today   = await AttendanceService.GetTodayLogAsync(user.Id);
+        history = await AttendanceService.GetAgentHistoryAsync(user.Id, DateTime.Today.AddDays(-7), DateTime.Today);
+    }
+
+    bool canClockIn  = today == null || today.CheckInTime == null;
+    bool canClockOut = today != null && today.CheckInTime != null && today.CheckOutTime == null;
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-time-five me-2 text-primary"></i>Attendance</h6>
+        <a asp-controller="Attendance" asp-action="Index" class="btn btn-sm btn-light">View</a>
+    </div>
+    <div class="card-body">
+
+        @* ── Today status ─────────────────────────────────────────── *@
+        @if (today != null && today.CheckInTime != null)
+        {
+            <div class="d-flex gap-3 mb-3 align-items-center">
+                <div class="text-center">
+                    <div class="small text-muted">Check In</div>
+                    <div class="fw-semibold">@today.CheckInTime.Value.ToString("HH:mm")</div>
+                </div>
+                <div class="text-center">
+                    <div class="small text-muted">Check Out</div>
+                    <div class="fw-semibold">@(today.CheckOutTime?.ToString("HH:mm") ?? "—")</div>
+                </div>
+                <div class="text-center">
+                    <div class="small text-muted">Status</div>
+                    <span class="badge @(today.Status == AttendanceStatus.Present ? "bg-success-transparent text-success" : "bg-warning-transparent text-warning")">
+                        @today.Status
+                    </span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted small mb-3">No clock-in recorded yet today.</p>
+        }
+
+        @* ── Clock In / Clock Out buttons ─────────────────────────── *@
+        <div class="d-flex gap-2 mb-3">
+            @if (canClockIn)
+            {
+                <form asp-controller="Attendance" asp-action="ClockIn" method="post" class="d-inline"
+                      data-ajax-form data-widget-key="attendance">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bx bx-log-in me-1"></i> Clock In
+                    </button>
+                </form>
+            }
+            @if (canClockOut)
+            {
+                <form asp-controller="Attendance" asp-action="ClockOut" method="post" class="d-inline"
+                      data-ajax-form data-widget-key="attendance">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bx bx-log-out me-1"></i> Clock Out
+                    </button>
+                </form>
+            }
+            @if (!canClockIn && !canClockOut)
+            {
+                <span class="badge bg-success-transparent text-success py-2 px-3">
+                    <i class="bx bx-check me-1"></i> Day Complete
+                </span>
+            }
+            <a asp-controller="Attendance" asp-action="Retrospective" class="btn btn-outline-secondary btn-sm ms-auto">
+                <i class="bx bx-history me-1"></i> Retrospective
+            </a>
+        </div>
+
+        @* ── 7-day history ────────────────────────────────────────── *@
+        @if (history.Any())
+        {
+            <div class="small text-muted fw-semibold mb-1">Last 7 days</div>
+            <ul class="list-unstyled mb-0">
+                @foreach (var log in history.OrderByDescending(l => l.WorkDate).Take(5))
+                {
+                    <li class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="small text-muted">@log.WorkDate.ToString("ddd dd MMM")</span>
+                        <span class="small text-muted">@(log.BillableHours.HasValue ? $"{log.BillableHours:F1}h" : "—")</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

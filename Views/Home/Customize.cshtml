@@ -1,0 +1,187 @@
+@using Unified.Models.Dashboard
+@using Unified.Services
+@{
+    ViewData["Title"] = "Customize Dashboard";
+    var active  = (List<DashboardWidget>)ViewBag.ActiveWidgets;
+    var catalog = (IReadOnlyList<WidgetDefinition>)ViewBag.Catalog;
+    var activeKeys = active.Select(a => a.WidgetKey).ToHashSet();
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Customize Dashboard</h1>
+    <div class="ms-md-1 ms-0">
+        <nav>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Customize</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Available Widgets -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="bx bx-grid-alt me-2"></i>Available Widgets</h6>
+                <p class="text-muted small mb-0 mt-1">Click <strong>Add</strong> to include a widget on your dashboard.</p>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="catalog-list">
+                    @foreach (var def in catalog)
+                    {
+                        <li class="list-group-item d-flex align-items-center justify-content-between px-3 py-2 @(activeKeys.Contains(def.Key) ? "opacity-50" : "")">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="@def.Icon fs-5 text-primary"></i>
+                                <div>
+                                    <div class="fw-semibold small">@def.Title</div>
+                                    <div class="text-muted" style="font-size:.75rem;">@def.Description</div>
+                                </div>
+                            </div>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary add-widget-btn"
+                                    data-key="@def.Key"
+                                    data-title="@def.Title"
+                                    data-icon="@def.Icon"
+                                    @(activeKeys.Contains(def.Key) ? "disabled" : "")>
+                                <i class="bx bx-plus"></i> Add
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Dashboard Layout -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title mb-0"><i class="bx bx-layout me-2"></i>Your Dashboard Layout</h6>
+                    <p class="text-muted small mb-0 mt-1">Drag to reorder. Set width per widget.</p>
+                </div>
+                <form asp-controller="Home" asp-action="SaveLayout" method="post" id="save-form">
+                    @Html.AntiForgeryToken()
+                    <div id="hidden-inputs"></div>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bx bx-save me-1"></i> Save Layout
+                    </button>
+                </form>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="active-list">
+                    @foreach (var w in active)
+                    {
+                        var def = catalog.FirstOrDefault(c => c.Key == w.WidgetKey);
+                        <li class="list-group-item d-flex align-items-center gap-3 px-3 py-2 active-widget-row"
+                            data-key="@w.WidgetKey"
+                            data-colspan="@w.ColSpan">
+                            <i class="bx bx-menu text-muted drag-handle" style="cursor:grab;"></i>
+                            <i class="@(def?.Icon ?? "bx bx-widget") fs-5 text-primary"></i>
+                            <span class="flex-grow-1 fw-semibold small">@(def?.Title ?? w.WidgetKey)</span>
+                            <select class="form-select form-select-sm width-select" style="width:110px;" title="Column width">
+                                @foreach (var opt in new[] { (4, "1/3 Width"), (6, "Half Width"), (8, "2/3 Width"), (12, "Full Width") })
+                                {
+                                    if (opt.Item1 == w.ColSpan)
+                                    { <option value="@opt.Item1" selected>@opt.Item2</option> }
+                                    else
+                                    { <option value="@opt.Item1">@opt.Item2</option> }
+                                }
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-widget-btn">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+                <div id="empty-hint" class="p-4 text-center text-muted @(active.Any() ? "d-none" : "")">
+                    <i class="bx bx-layout fs-1 mb-2"></i>
+                    <div>Add widgets from the left panel.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/assets/libs/sortablejs/Sortable.min.js"></script>
+<script>
+    const activeList   = document.getElementById('active-list');
+    const catalogList  = document.getElementById('catalog-list');
+    const hiddenInputs = document.getElementById('hidden-inputs');
+    const emptyHint    = document.getElementById('empty-hint');
+    const saveForm     = document.getElementById('save-form');
+
+    // Drag to reorder
+    Sortable.create(activeList, {
+        handle: '.drag-handle',
+        animation: 150
+    });
+
+    // Add widget
+    catalogList.addEventListener('click', e => {
+        const btn = e.target.closest('.add-widget-btn');
+        if (!btn || btn.disabled) return;
+
+        const key   = btn.dataset.key;
+        const title = btn.dataset.title;
+        const icon  = btn.dataset.icon;
+
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex align-items-center gap-3 px-3 py-2 active-widget-row';
+        li.dataset.key     = key;
+        li.dataset.colspan = '6';
+        li.innerHTML = `
+            <i class="bx bx-menu text-muted drag-handle" style="cursor:grab;"></i>
+            <i class="${icon} fs-5 text-primary"></i>
+            <span class="flex-grow-1 fw-semibold small">${title}</span>
+            <select class="form-select form-select-sm width-select" style="width:110px;">
+                <option value="4">1/3 Width</option>
+                <option value="6" selected>Half Width</option>
+                <option value="8">2/3 Width</option>
+                <option value="12">Full Width</option>
+            </select>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-widget-btn">
+                <i class="bx bx-trash"></i>
+            </button>`;
+        activeList.appendChild(li);
+
+        btn.disabled = true;
+        btn.closest('li').classList.add('opacity-50');
+        emptyHint.classList.add('d-none');
+    });
+
+    // Remove widget
+    activeList.addEventListener('click', e => {
+        const btn = e.target.closest('.remove-widget-btn');
+        if (!btn) return;
+        const row = btn.closest('.active-widget-row');
+        const key = row.dataset.key;
+
+        // Re-enable catalog button
+        const catBtn = catalogList.querySelector(`[data-key="${key}"]`);
+        if (catBtn) {
+            catBtn.disabled = false;
+            catBtn.closest('li').classList.remove('opacity-50');
+        }
+        row.remove();
+        if (!activeList.querySelector('.active-widget-row'))
+            emptyHint.classList.remove('d-none');
+    });
+
+    // Build hidden inputs on submit
+    saveForm.addEventListener('submit', () => {
+        hiddenInputs.innerHTML = '';
+        document.querySelectorAll('#active-list .active-widget-row').forEach((row, i) => {
+            const key     = row.dataset.key;
+            const span    = row.querySelector('.width-select')?.value ?? '6';
+            hiddenInputs.innerHTML +=
+                `<input type="hidden" name="widgetKeys" value="${key}">` +
+                `<input type="hidden" name="colSpans"   value="${span}">`;
+        });
+    });
+</script>
+}

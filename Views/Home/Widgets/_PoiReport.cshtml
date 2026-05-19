@@ -1,0 +1,54 @@
+@using Unified.Services
+@using Unified.Models.Poi
+@inject PoiSimulationService PoiService
+
+@{
+    var from    = DateTime.Today.AddDays(-30);
+    var to      = DateTime.Today;
+    var all     = await PoiService.GetReportAsync(null, from, to);
+    var received   = all.Count(s => s.Status == PoiStatus.Received);
+    var pending    = all.Count(s => s.Status == PoiStatus.Pending);
+    var restricted = all.Count(s => s.Status == PoiStatus.Restricted);
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-file-find me-2 text-primary"></i>POI Report <small class="text-muted fw-normal">(last 30 days)</small></h6>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary"
+                    data-bs-target="#poiLogModal"
+                    data-modal-src="/PoiSimulation/LogPartial">
+                <i class="bx bx-plus me-1"></i> Add
+            </button>
+            <a asp-controller="PoiSimulation" asp-action="Report" class="btn btn-sm btn-light">Full Report</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 text-center">
+            <div class="col-4">
+                <div class="rounded p-3 bg-primary-transparent">
+                    <div class="fs-4 fw-bold text-primary">@all.Count</div>
+                    <div class="small text-muted">Total</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="rounded p-3 bg-success-transparent">
+                    <div class="fs-4 fw-bold text-success">@received</div>
+                    <div class="small text-muted">Received</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="rounded p-3 bg-warning-transparent">
+                    <div class="fs-4 fw-bold text-warning">@pending</div>
+                    <div class="small text-muted">Pending</div>
+                </div>
+            </div>
+        </div>
+        @if (restricted > 0)
+        {
+            <div class="alert alert-danger mt-3 mb-0 py-2">
+                <i class="bx bx-error-circle me-1"></i> <strong>@restricted</strong> simulation(s) are <strong>Restricted</strong> — POI not received within 3 days.
+            </div>
+        }
+    </div>
+</div>

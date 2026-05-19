@@ -1,0 +1,35 @@
+@using Unified.Services
+@inject ReportService ReportService
+
+@{
+    var recent = await ReportService.GetAllReportsAsync();
+    recent = recent.Take(5).ToList();
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-line-chart me-2 text-primary"></i>Reports</h6>
+        <a asp-controller="Reports" asp-action="Dashboard" class="btn btn-sm btn-light">Dashboard</a>
+    </div>
+    <div class="card-body p-0">
+        @if (!recent.Any())
+        {
+            <div class="p-3 text-muted text-center">No reports submitted yet.</div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var r in recent)
+                {
+                    <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <a asp-controller="Reports" asp-action="Detail" asp-route-id="@r.Id" class="fw-semibold text-body">@(r.Team?.Name ?? "All Teams")</a>
+                            <div class="text-muted small">@r.PeriodStart.ToString("dd MMM yyyy") — @r.PeriodType</div>
+                        </div>
+                        <span class="badge bg-primary-transparent text-primary">FTD: @r.TotalFTD</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

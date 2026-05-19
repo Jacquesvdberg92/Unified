@@ -1,0 +1,42 @@
+@using Unified.Services
+@inject PerformanceService PerformanceService
+@inject Microsoft.AspNetCore.Identity.UserManager<Unified.Models.Identity.AppUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var user    = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext!.User);
+    var reviews = user != null
+        ? await PerformanceService.GetReviewsForAgentAsync(user.Id)
+        : new List<Unified.Models.Performance.PerformanceReview>();
+    var latest  = reviews.FirstOrDefault();
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-bar-chart-alt-2 me-2 text-primary"></i>My Performance</h6>
+        <a asp-controller="Performance" asp-action="MyReviews" class="btn btn-sm btn-light">View All</a>
+    </div>
+    <div class="card-body">
+        @if (latest == null)
+        {
+            <div class="text-muted text-center py-3">No performance reviews yet.</div>
+        }
+        else
+        {
+            <p class="text-muted small mb-2">Latest review: <strong>@latest.ReviewDate.ToString("dd MMM yyyy")</strong> — <em>@latest.PeriodLabel</em></p>
+            @if (latest.Items.Any())
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var item in latest.Items.Take(5))
+                    {
+                        <li class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="small">@item.Category — @item.ReferenceId</span>
+                            <span class="badge bg-primary-transparent text-primary">@item.Rating / 10</span>
+                        </li>
+                    }
+                </ul>
+            }
+            <a asp-controller="Performance" asp-action="Detail" asp-route-id="@latest.Id" class="btn btn-sm btn-outline-primary mt-2">View Detail</a>
+        }
+    </div>
+</div>

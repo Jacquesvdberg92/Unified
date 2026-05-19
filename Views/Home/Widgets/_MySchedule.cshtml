@@ -1,0 +1,41 @@
+@using Unified.Services
+@inject ScheduleService ScheduleService
+@inject Microsoft.AspNetCore.Identity.UserManager<Unified.Models.Identity.AppUser> UserManager
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var user     = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext!.User);
+    var weekStart = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)DayOfWeek.Monday);
+    List<Unified.Models.Schedule.AgentSchedule>? schedules = null;
+    if (user != null)
+        schedules = await ScheduleService.GetAgentScheduleAsync(user.Id, weekStart, weekStart.AddDays(6));
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-calendar-check me-2 text-primary"></i>My Schedule</h6>
+        <a asp-controller="Schedule" asp-action="AgentView" class="btn btn-sm btn-light">View</a>
+    </div>
+    <div class="card-body p-0">
+        @if (schedules == null || !schedules.Any())
+        {
+            <div class="p-3 text-muted text-center">No schedule found for this week.</div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var s in schedules.OrderBy(x => x.Date))
+                {
+                    <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">@s.Date.ToString("ddd dd MMM")</span>
+                        @{
+                            var start = s.CustomStartTime ?? s.ShiftTemplate?.StartTime;
+                            var end   = s.CustomEndTime   ?? s.ShiftTemplate?.EndTime;
+                        }
+                        <span class="text-muted small">@(start.HasValue ? start.Value.ToString(@"hh\:mm") : "—") – @(end.HasValue ? end.Value.ToString(@"hh\:mm") : "—")</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

@@ -41,6 +41,14 @@ public class PoiSimulationController : Controller
         return View();
     }
 
+    // GET /PoiSimulation/LogPartial — modal form for dashboard
+    [HttpGet]
+    public async Task<IActionResult> LogPartial()
+    {
+        ViewBag.Brands = await _svc.GetBrandsAsync();
+        return PartialView("_LogPartial");
+    }
+
     // POST /PoiSimulation/Log
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -57,6 +65,10 @@ public class PoiSimulationController : Controller
         await _svc.LogSimulationAsync(clientId, brandId, userId, notes ?? string.Empty);
 
         TempData["Success"] = $"POI simulation logged for client {clientId}.";
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = true, message = $"POI simulation logged for client {clientId}." });
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -71,6 +83,9 @@ public class PoiSimulationController : Controller
         TempData[ok ? "Success" : "Info"] = ok
             ? "POI marked as received."
             : "POI was already marked as received or not found.";
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = ok, message = ok ? "POI marked as received." : "POI was already marked or not found." });
 
         return string.IsNullOrEmpty(returnUrl)
             ? RedirectToAction(nameof(Index))

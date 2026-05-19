@@ -1,0 +1,25 @@
+@using Unified.Services
+@inject WorkDistributionService WorkDistService
+
+@{
+    var today = DateTime.Today;
+    var dist  = await WorkDistService.GetForDateAsync(today);
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-list-ul me-2 text-primary"></i>Work Distribution</h6>
+        <a asp-controller="WorkDistribution" asp-action="Index" class="btn btn-sm btn-light">View</a>
+    </div>
+    <div class="card-body">
+        @if (dist == null)
+        {
+            <div class="text-muted text-center py-3">No work distribution posted for today.</div>
+        }
+        else
+        {
+            <p class="text-muted small mb-1">@dist.Date.ToString("dd MMM yyyy") — posted by @(dist.CreatedBy?.DisplayName ?? "System")</p>
+            <pre class="bg-light rounded p-2 small mb-0 text-muted" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;">@dist.Body</pre>
+        }
+    </div>
+</div>

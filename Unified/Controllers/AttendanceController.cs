@@ -47,7 +47,11 @@ public class AttendanceController : Controller
         catch (InvalidOperationException ex)
         {
             TempData["Error"] = ex.Message;
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = false, message = ex.Message });
         }
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = true, message = "Clocked in successfully." });
         return RedirectToAction(nameof(Index));
     }
 
@@ -64,7 +68,11 @@ public class AttendanceController : Controller
         catch (InvalidOperationException ex)
         {
             TempData["Error"] = ex.Message;
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = false, message = ex.Message });
         }
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            return Json(new { success = true, message = "Clocked out successfully." });
         return RedirectToAction(nameof(Index));
     }
 

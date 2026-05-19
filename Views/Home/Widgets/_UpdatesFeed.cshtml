@@ -1,0 +1,40 @@
+@using Unified.Services
+@inject UpdateService UpdateService
+
+@{
+    var updates = await UpdateService.GetFeedAsync(null, null, null, false);
+    updates = updates.Take(5).ToList();
+}
+
+<div class="card h-100">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="card-title mb-0"><i class="bx bx-news me-2 text-primary"></i>Updates Feed</h6>
+        <a asp-controller="Updates" asp-action="Feed" class="btn btn-sm btn-light">View All</a>
+    </div>
+    <div class="card-body p-0">
+        @if (!updates.Any())
+        {
+            <div class="p-3 text-muted text-center">No recent updates.</div>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var u in updates)
+                {
+                    <li class="list-group-item px-3 py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <a asp-controller="Updates" asp-action="Detail" asp-route-id="@u.Id" class="fw-semibold text-body">@u.Title</a>
+                                <div class="text-muted small">@u.CreatedAt.ToString("dd MMM yyyy")</div>
+                            </div>
+                            @if (u.IsPinned)
+                            {
+                                <span class="badge bg-warning-transparent text-warning ms-2">Pinned</span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

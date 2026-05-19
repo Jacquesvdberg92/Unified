@@ -11,6 +11,7 @@ using Unified.Models.Updates;
 using Unified.Models.Vault;
 using Unified.Models.Poi;
 using Unified.Models.WorkDistribution;
+using Unified.Models.Dashboard;
 
 namespace Unified.Data;
 
@@ -52,6 +53,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     // POI Simulations
     public DbSet<PoiSimulation>       PoiSimulations       => Set<PoiSimulation>();
+
+    // Dashboard
+    public DbSet<DashboardWidget>     DashboardWidgets     => Set<DashboardWidget>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
