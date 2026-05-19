@@ -51,6 +51,33 @@ public class VaultService
 
     // ── Vault entries ─────────────────────────────────────────────────────
 
+    /// <summary>Returns lightweight summary rows for the vault list view — no encrypted passwords.</summary>
+    public async Task<List<VaultEntrySummary>> GetVaultSummariesAsync(string userId, int? categoryId = null)
+    {
+        var q = _db.VaultEntries
+            .Where(e => e.OwnerId == userId)
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+            q = q.Where(e => e.CategoryId == categoryId.Value);
+
+        return await q
+            .OrderBy(e => e.Category!.Name).ThenBy(e => e.Label)
+            .Select(e => new VaultEntrySummary
+            {
+                Id                   = e.Id,
+                Label                = e.Label,
+                Username             = e.Username,
+                Url                  = e.Url,
+                Notes                = e.Notes,
+                CategoryId           = e.CategoryId,
+                CategoryName         = e.Category!.Name,
+                CategoryIconCssClass = e.Category.IconCssClass,
+                ProvisionedByUserId  = e.ProvisionedByUserId,
+            })
+            .ToListAsync();
+    }
+
     /// <summary>Returns all entries for a user — passwords are NOT decrypted.</summary>
     public async Task<List<VaultEntry>> GetVaultForUserAsync(string userId)
         => await _db.VaultEntries

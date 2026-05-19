@@ -30,11 +30,8 @@ public class VaultController : Controller
     public async Task<IActionResult> MyVault(int? categoryId)
     {
         var userId  = _users.GetUserId(User)!;
-        var entries = await _svc.GetVaultForUserAsync(userId);
+        var entries = await _svc.GetVaultSummariesAsync(userId, categoryId);
         var cats    = await _svc.GetCategoriesAsync();
-
-        if (categoryId.HasValue)
-            entries = entries.Where(e => e.CategoryId == categoryId.Value).ToList();
 
         ViewBag.Categories  = cats;
         ViewBag.CategoryId  = categoryId;

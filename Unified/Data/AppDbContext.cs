@@ -310,5 +310,52 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany()
             .HasForeignKey(p => p.ReceivedById)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // ── Performance indexes ───────────────────────────────────────────
+
+        builder.Entity<Update>()
+            .HasIndex(u => new { u.IsArchived, u.IsPinned, u.CreatedAt });
+
+        builder.Entity<AgentSchedule>()
+            .HasIndex(s => new { s.AgentId, s.Date });
+
+        builder.Entity<AttendanceLog>()
+            .HasIndex(a => new { a.AgentId, a.WorkDate });
+
+        builder.Entity<PerformanceReview>()
+            .HasIndex(r => new { r.AgentId, r.ReviewDate });
+
+        builder.Entity<TeamReport>()
+            .HasIndex(r => new { r.PeriodType, r.PeriodStart });
+
+        builder.Entity<VaultEntry>()
+            .HasIndex(e => new { e.OwnerId, e.CategoryId });
+
+        builder.Entity<PoiSimulation>()
+            .HasIndex(p => new { p.LoggedById, p.SimulatedAt });
+
+        builder.Entity<CsLiveHelpSlot>()
+            .HasIndex(s => s.Date);
+
+        builder.Entity<WorkDistribution>()
+            .HasIndex(w => w.Date);
+
+        builder.Entity<DashboardWidget>()
+            .HasIndex(w => w.UserId);
+
+        // Reverse-lookup indexes for junction tables
+        builder.Entity<AgentTeam>()
+            .HasIndex(at => at.TeamId);
+
+        builder.Entity<AgentBrand>()
+            .HasIndex(ab => ab.BrandId);
+
+        // ── Global query filters (soft deletes) ──────────────────────────
+
+        builder.Entity<Update>()
+            .HasQueryFilter(u => !u.IsArchived);
+
+        builder.Entity<UpdateBrand>()
+            .HasQueryFilter(ub => !ub.Update.IsArchived);
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
@@ -157,6 +158,7 @@ public class PerformanceController : Controller
 
     [HttpGet]
     [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager}")]
+    [OutputCache(PolicyName = "LeaderBoard")]
     public async Task<IActionResult> Leaderboard(int? teamId, int? category)
     {
         var cat = category.HasValue ? (ReviewCategory?)category.Value : null;

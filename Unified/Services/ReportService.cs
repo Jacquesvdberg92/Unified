@@ -63,24 +63,22 @@ public class ReportService
 
     /// <summary>
     /// High-level KPI cards — aggregates across ALL teams for the given period.
+    /// Uses a single projected query; no full entity graph loaded.
     /// </summary>
     public async Task<ReportSummaryDto> GetReportSummaryAsync(
         PeriodType periodType, DateTime periodStart)
     {
-        var reports = await _db.TeamReports
-            .Where(r => r.PeriodType == periodType && r.PeriodStart == periodStart)
-            .Include(r => r.Team)
-            .ToListAsync();
+        var summaries = await GetAllReportSummariesAsync(periodType, periodStart);
 
         return new ReportSummaryDto
         {
             PeriodType   = periodType,
             PeriodStart  = periodStart,
-            TotalChats   = reports.Sum(r => r.TotalChats),
-            TotalTickets = reports.Sum(r => r.TotalTickets),
-            TotalCalls   = reports.Sum(r => r.TotalCalls),
-            TotalFTD     = reports.Sum(r => r.TotalFTD),
-            TeamReports  = reports
+            TotalChats   = summaries.Sum(r => r.TotalChats),
+            TotalTickets = summaries.Sum(r => r.TotalTickets),
+            TotalCalls   = summaries.Sum(r => r.TotalCalls),
+            TotalFTD     = summaries.Sum(r => r.TotalFTD),
+            TeamReports  = summaries,
         };
     }
 
@@ -98,6 +96,27 @@ public class ReportService
         return await q.OrderByDescending(r => r.PeriodStart).ToListAsync();
     }
 
+    /// <summary>Lightweight summary list for dashboard cards — no AgentStats or FTD collections loaded.</summary>
+    public async Task<List<TeamReportSummary>> GetAllReportSummariesAsync(
+        PeriodType periodType, DateTime periodStart)
+        => await _db.TeamReports
+            .Where(r => r.PeriodType == periodType && r.PeriodStart == periodStart)
+            .Select(r => new TeamReportSummary
+            {
+                Id                = r.Id,
+                TeamName          = r.Team != null ? r.Team.Name : null,
+                TotalChats        = r.TotalChats,
+                TotalTickets      = r.TotalTickets,
+                TotalCalls        = r.TotalCalls,
+                TotalFTD          = r.TotalFTD,
+                SubmittedAt       = r.SubmittedAt,
+                LeaderDisplayName = r.ReportedByLeader != null
+                    ? (r.ReportedByLeader.DisplayName ?? r.ReportedByLeader.UserName)
+                    : null,
+            })
+            .OrderByDescending(r => r.TotalFTD)
+            .ToListAsync();
+
     /// <summary>Full report with agent breakdown and FTD-by-language.</summary>
     public async Task<TeamReport?> GetTeamBreakdownAsync(int reportId)
         => await _db.TeamReports
@@ -105,6 +124,7 @@ public class ReportService
             .Include(r => r.ReportedByLeader)
             .Include(r => r.AgentStats).ThenInclude(s => s.Agent)
             .Include(r => r.FTDLanguageStats)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(r => r.Id == reportId);
 
     /// <summary>FTD grouped by language for a single report.</summary>
@@ -178,13 +198,13 @@ public class ReportService
 
 public class ReportSummaryDto
 {
-    public PeriodType       PeriodType   { get; set; }
-    public DateTime         PeriodStart  { get; set; }
-    public int              TotalChats   { get; set; }
-    public int              TotalTickets { get; set; }
-    public int              TotalCalls   { get; set; }
-    public int              TotalFTD     { get; set; }
-    public List<TeamReport> TeamReports  { get; set; } = new();
+    public PeriodType              PeriodType   { get; set; }
+    public DateTime                PeriodStart  { get; set; }
+    public int                     TotalChats   { get; set; }
+    public int                     TotalTickets { get; set; }
+    public int                     TotalCalls   { get; set; }
+    public int                     TotalFTD     { get; set; }
+    public List<TeamReportSummary> TeamReports  { get; set; } = new();
 }
 
 public class PerformanceHighlightDto

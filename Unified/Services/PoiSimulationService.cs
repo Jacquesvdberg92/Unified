@@ -51,6 +51,7 @@ public class PoiSimulationService
             .Include(p => p.Brand)
             .Include(p => p.LoggedBy)
             .Include(p => p.ReceivedBy)
+            .AsSplitQuery()
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(clientId))
@@ -68,7 +69,7 @@ public class PoiSimulationService
         if (to.HasValue)
             q = q.Where(p => p.SimulatedAt < to.Value.Date.AddDays(1));
 
-        var results = await q.OrderByDescending(p => p.SimulatedAt).ToListAsync();
+        var results = await q.OrderByDescending(p => p.SimulatedAt).Take(100).ToListAsync();
 
         // Apply computed status filter in memory (Status is not mapped)
         if (status.HasValue)
@@ -86,6 +87,7 @@ public class PoiSimulationService
             .Include(p => p.Brand)
             .Include(p => p.LoggedBy)
             .Include(p => p.ReceivedBy)
+            .AsSplitQuery()
             .Where(p => p.SimulatedAt >= from.Date && p.SimulatedAt < to.Date.AddDays(1));
 
         if (brandId.HasValue)
@@ -106,6 +108,7 @@ public class PoiSimulationService
             .Include(p => p.Brand)
             .Include(p => p.LoggedBy)
             .Include(p => p.ReceivedBy)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Id == id);
 
     public async Task<bool> ExistsForClientAndBrandAsync(string clientId, int brandId)

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
 using Unified.Models.Identity;
@@ -8,6 +9,26 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Response compression (Brotli preferred, Gzip fallback)
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<BrotliCompressionProvider>();
+    opts.Providers.Add<GzipCompressionProvider>();
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "text/html", "text/css", "application/javascript" });
+});
+
+// Output cache for read-heavy pages (reports, leaderboard)
+builder.Services.AddOutputCache(opts =>
+{
+    opts.AddPolicy("Reports",  p => p.Expire(TimeSpan.FromMinutes(5)));
+    opts.AddPolicy("LeaderBoard", p => p.Expire(TimeSpan.FromMinutes(5)));
+});
+
+// Memory cache for frequently read reference data
+builder.Services.AddMemoryCache();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -37,6 +58,7 @@ builder.Services.AddScoped<Unified.Services.WorkDistributionService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddScoped<Unified.Services.DashboardService>();
+builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -57,11 +79,19 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+app.UseResponseCompression();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Long-lived cache for versioned static assets
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
+    }
+});
 app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
 app.UseRouting();
+app.UseOutputCache();
 
 app.UseAuthentication();
 app.UseAuthorization();

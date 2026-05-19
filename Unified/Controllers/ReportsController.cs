@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
@@ -16,17 +17,20 @@ public class ReportsController : Controller
     private readonly ReportService        _svc;
     private readonly AppDbContext         _db;
     private readonly UserManager<AppUser> _users;
+    private readonly ReferenceDataService _refData;
 
-    public ReportsController(ReportService svc, AppDbContext db, UserManager<AppUser> users)
+    public ReportsController(ReportService svc, AppDbContext db, UserManager<AppUser> users, ReferenceDataService refData)
     {
-        _svc   = svc;
-        _db    = db;
-        _users = users;
+        _svc     = svc;
+        _db      = db;
+        _users   = users;
+        _refData = refData;
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────
 
     [HttpGet]
+    [OutputCache(PolicyName = "Reports")]
     public async Task<IActionResult> Dashboard(int? periodType, string? periodStart)
     {
         var pt    = (PeriodType)(periodType ?? 0);
@@ -143,12 +147,22 @@ public class ReportsController : Controller
 
     private async Task<SelectList> GetTeamSelectListAsync(string leaderId)
     {
-        IQueryable<Team> query = User.IsInRole(Roles.BrandManager)
-            ? _db.Teams
-            : _db.Teams.Where(t => _db.AgentTeams
-                .Any(at => at.TeamId == t.Id && at.AgentId == leaderId));
-
-        var teams = await query.OrderBy(t => t.Name).ToListAsync();
+        List<Team> teams;
+        if (User.IsInRole(Roles.BrandManager))
+        {
+            teams = await _refData.GetTeamsAsync();
+        }
+        else
+        {
+            var leaderTeamIds = await _db.AgentTeams
+                .Where(at => at.AgentId == leaderId)
+                .Select(at => at.TeamId)
+                .ToListAsync();
+            teams = await _db.Teams
+                .Where(t => leaderTeamIds.Contains(t.Id))
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+        }
         return new SelectList(teams, "Id", "Name");
     }
 

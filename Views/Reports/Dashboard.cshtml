@@ -93,7 +93,7 @@
                 <div class="col-12 col-md-6 col-xl-4">
                     <div class="card shadow-sm h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold">@(r.Team?.Name ?? "Team")</span>
+                            <span class="fw-semibold">@(r.TeamName ?? "Team")</span>
                             <a asp-action="Detail" asp-route-id="@r.Id"
                                class="btn btn-outline-primary btn-sm">Detail →</a>
                         </div>
@@ -119,7 +119,7 @@
                         </div>
                         <div class="card-footer text-muted small">
                             Submitted @r.SubmittedAt.ToLocalTime().ToString("dd MMM HH:mm")
-                            by @(r.ReportedByLeader?.DisplayName ?? r.ReportedByLeader?.UserName)
+                            by @(r.LeaderDisplayName ?? "—")
                         </div>
                     </div>
                 </div>

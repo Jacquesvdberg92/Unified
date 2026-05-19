@@ -1,11 +1,11 @@
 @using Unified.Models.Vault
-@model List<VaultEntry>
+@model List<VaultEntrySummary>
 
 @{
     ViewData["Title"] = "My Vault";
     var cats       = (List<VaultCategory>)ViewBag.Categories;
     var categoryId = (int?)ViewBag.CategoryId;
-    var grouped    = Model.GroupBy(e => e.Category?.Name ?? "Other");
+    var grouped    = Model.GroupBy(e => e.CategoryName ?? "Other");
 }
 
 <div class="container-fluid px-4 py-3">

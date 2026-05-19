@@ -28,43 +28,17 @@
     </div>
 }
 
-<div class="row g-3">
+<div class="row g-3" id="dashboard-widgets">
     @foreach (var w in widgets)
     {
         <div class="col-12 col-md-@w.ColSpan" data-widget-key="@w.WidgetKey">
-            @switch (w.WidgetKey)
-            {
-                case "updates_feed":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_UpdatesFeed.cshtml");
-                    break;
-                case "work_distribution":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_WorkDistribution.cshtml");
-                    break;
-                case "poi_simulations":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_PoiSimulations.cshtml");
-                    break;
-                case "poi_report":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_PoiReport.cshtml");
-                    break;
-                case "my_schedule":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_MySchedule.cshtml");
-                    break;
-                case "performance":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_Performance.cshtml");
-                    break;
-                case "attendance":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_Attendance.cshtml");
-                    break;
-                case "reports":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_Reports.cshtml");
-                    break;
-                case "cs_live_help":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_CsLiveHelp.cshtml");
-                    break;
-                case "quick_links":
-                    await Html.RenderPartialAsync("~/Views/Home/Widgets/_QuickLinks.cshtml");
-                    break;
-            }
+            <div class="card h-100 widget-shell">
+                <div class="card-body d-flex align-items-center justify-content-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading…</span>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -85,7 +59,21 @@
     }
 </div>
 
-@* ── POI Log Modal ─────────────────────────────────────────────────────── *@
+@section Scripts {
+<script defer>
+(function () {
+    document.querySelectorAll('#dashboard-widgets [data-widget-key]').forEach(function (col) {
+        var key = col.getAttribute('data-widget-key');
+        fetch('/Home/GetWidget?key=' + encodeURIComponent(key), { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+            .then(function (html) { col.innerHTML = html; })
+            .catch(function () {
+                col.innerHTML = '<div class="card"><div class="card-body text-danger text-center py-4"><i class="bx bx-error-circle fs-3"></i><p class="mt-2 mb-0">Failed to load widget.</p></div></div>';
+            });
+    });
+}());
+</script>
+}
 <div class="modal fade" id="poiLogModal" tabindex="-1" aria-labelledby="poiLogModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

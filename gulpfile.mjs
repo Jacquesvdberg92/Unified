@@ -7,6 +7,7 @@ import cleanCSS from 'gulp-clean-css';
 import rename from 'gulp-rename';
 import postcss from 'gulp-postcss';
 import postcssImport from 'postcss-import';
+import terser from 'gulp-terser';
 const sassCompiler = gulpSass(sass);
 import data from './package.json' assert { type: 'json' }
 
@@ -57,10 +58,20 @@ function copyLibsTask() {
     .pipe(gulp.dest(destPath));
 }
 
+// JS Minification Task (app scripts in wwwroot/js/)
+function jsTask() {
+  return gulp.src(['wwwroot/js/**/*.js', '!wwwroot/js/**/*.min.js'])
+    .pipe(sourcemaps.init())
+    .pipe(terser())
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('wwwroot/js'));
+}
+
 // Build Task
 const build = gulp.series(
   gulp.parallel(copyLibsTask),
-  scssTask,
+  gulp.parallel(scssTask, jsTask),
 );
 
 // Default Task
@@ -69,6 +80,7 @@ const defaults = gulp.series(build, gulp.parallel(watchTask));
 // Export tasks
 export {
   scssTask as scss,
+  jsTask as js,
   watchTask as watch,
   build,
   defaults as default

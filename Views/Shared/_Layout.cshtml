@@ -30,7 +30,7 @@
         <link rel="stylesheet" href="@Url.Content("~/css/site.css")">
 
         <!-- MAIN JS -->
-        <script src="@Url.Content("~/assets/js/main.js")"></script>
+        <script src="@Url.Content("~/assets/js/main.js")" defer></script>
 
 		@await RenderSectionAsync("Styles", required: false)
 
@@ -88,7 +88,7 @@
         <partial name="~/Views/Shared/Layouts/_scripts.cshtml">
 
         <!-- TOASTIFY JS -->
-        <script src="@Url.Content("~/assets/libs/toastify-js/src/toastify.js")"></script>
+        <script src="@Url.Content("~/assets/libs/toastify-js/src/toastify.js")" defer></script>
 
         @await RenderSectionAsync("Scripts", required: false)
 
@@ -97,16 +97,16 @@
         <partial name="~/Views/Shared/_PinnedUpdatesToast.cshtml" />
 
 		<!-- STICKY JS -->
-		<script src="@Url.Content("~/assets/js/sticky.js")"></script>
+		<script src="@Url.Content("~/assets/js/sticky.js")" defer></script>
 
 		<!-- DASHBOARD WIDGETS JS -->
-		<script src="@Url.Content("~/js/dashboard-widgets.js")"></script>
+		<script src="@Url.Content("~/js/dashboard-widgets.js")" defer></script>
 
 		<!-- CUSTOM JS -->
-		<script src="@Url.Content("~/assets/js/custom.js")"></script>
+		<script src="@Url.Content("~/assets/js/custom.js")" defer></script>
 
-        <!-- CUSTOM-SWITCHER JS -->
-        <script src="@Url.Content("~/assets/js/custom-switcher.js")"></script>
+		<!-- CUSTOM-SWITCHER JS -->
+		<script src="@Url.Content("~/assets/js/custom-switcher.js")" defer></script>
 
         <!-- END SCRIPTS -->
 
