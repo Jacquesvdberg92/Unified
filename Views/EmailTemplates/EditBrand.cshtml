@@ -9,7 +9,7 @@
 
 <div class="card">
     <div class="card-body">
-        <form asp-action="EditBrand" method="post">
+        <form asp-action="EditBrand" method="post" enctype="multipart/form-data">
             <input asp-for="Id" type="hidden" />
             @await Html.PartialAsync("_BrandForm", Model)
             <button type="submit" class="btn btn-primary mt-3">Save</button>

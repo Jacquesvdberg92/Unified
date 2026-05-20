@@ -17,7 +17,6 @@ public class EmailTemplatesController : Controller
     }
 
     // ── Templates ─────────────────────────────────────────────────────────
-
     public async Task<IActionResult> Index(int? brandId)
     {
         var templates = await _svc.GetAllTemplatesAsync(brandId);
@@ -96,62 +95,6 @@ public class EmailTemplatesController : Controller
         var clone = await _svc.CloneForBrandAsync(templateId, brandId);
         TempData["Success"] = "Template cloned for brand.";
         return RedirectToAction(nameof(Edit), new { id = clone.Id });
-    }
-
-    // ── Brand Manager ─────────────────────────────────────────────────────
-
-    [Authorize(Roles = Roles.BrandManager)]
-    public async Task<IActionResult> BrandManager()
-    {
-        var brands = await _svc.GetAllBrandsAsync();
-        return View(brands);
-    }
-
-    // Read-only brand directory — all authenticated users
-    public async Task<IActionResult> Brands()
-    {
-        var brands = await _svc.GetAllBrandsAsync();
-        return View(brands);
-    }
-
-    [Authorize(Roles = Roles.BrandManager)]
-    public IActionResult CreateBrand() => View(new Brand());
-
-    [Authorize(Roles = Roles.BrandManager)]
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateBrand(Brand model)
-    {
-        if (!ModelState.IsValid) return View(model);
-        await _svc.CreateBrandAsync(model);
-        TempData["Success"] = "Brand created.";
-        return RedirectToAction(nameof(BrandManager));
-    }
-
-    [Authorize(Roles = Roles.BrandManager)]
-    public async Task<IActionResult> EditBrand(int id)
-    {
-        var brand = await _svc.GetBrandByIdAsync(id);
-        if (brand == null) return NotFound();
-        return View(brand);
-    }
-
-    [Authorize(Roles = Roles.BrandManager)]
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditBrand(Brand model)
-    {
-        if (!ModelState.IsValid) return View(model);
-        await _svc.UpdateBrandAsync(model);
-        TempData["Success"] = "Brand updated.";
-        return RedirectToAction(nameof(BrandManager));
-    }
-
-    [Authorize(Roles = Roles.BrandManager)]
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteBrand(int id)
-    {
-        await _svc.DeleteBrandAsync(id);
-        TempData["Success"] = "Brand deleted.";
-        return RedirectToAction(nameof(BrandManager));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

@@ -59,6 +59,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     // Account requests
     public DbSet<AccountRequest>      AccountRequests      => Set<AccountRequest>();
 
+    // Brand documents
+    public DbSet<BrandDocument>       BrandDocuments       => Set<BrandDocument>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -72,6 +75,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasOne(at => at.Team)
             .WithMany(t => t.Members)
             .HasForeignKey(at => at.TeamId);
+
+        builder.Entity<BrandDocument>()
+            .HasOne(d => d.Brand)
+            .WithMany()
+            .HasForeignKey(d => d.BrandId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<AgentBrand>().HasKey(ab => new { ab.AgentId, ab.BrandId });
         builder.Entity<AgentBrand>()

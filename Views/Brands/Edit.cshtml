@@ -1,0 +1,92 @@
+@model Unified.Models.EmailTemplates.Brand
+@{
+    ViewData["Title"] = "Edit Brand";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Edit Brand — @Model.Name</h1>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <form asp-controller="Brands" asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input asp-for="Id" type="hidden" />
+            @await Html.PartialAsync("~/Views/Brands/_BrandForm.cshtml", Model)
+            <button type="submit" class="btn btn-primary mt-3">Save</button>
+            <a asp-action="Manager" class="btn btn-secondary mt-3">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@* Documents section lives outside the Edit form to avoid nested-form issues *@
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="fw-semibold mb-0"><i class="bx bx-file me-1"></i> Documents</h6>
+    </div>
+    <div class="card-body">
+        @{
+            var docs = ViewBag.Documents as List<Unified.Models.EmailTemplates.BrandDocument>
+                       ?? new List<Unified.Models.EmailTemplates.BrandDocument>();
+        }
+        @if (docs.Any())
+        {
+            <ul class="list-group mb-3">
+                @foreach (var doc in docs)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bx bx-file-blank me-2 text-primary"></i>
+                            <a asp-controller="Brands" asp-action="Download"
+                               asp-route-docId="@doc.Id" target="_blank">@doc.OriginalName</a>
+                            <small class="text-muted ms-2">@doc.UploadedAt.ToString("yyyy-MM-dd")</small>
+                        </div>
+                        <form asp-controller="Brands" asp-action="DeleteDocument" method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Remove document \'@doc.OriginalName\'?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="docId" value="@doc.Id" />
+                            <input type="hidden" name="brandId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted small mb-3">No documents attached yet.</p>
+        }
+
+        <form asp-controller="Brands" asp-action="UploadDocument" method="post"
+              enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="brandId" value="@Model.Id" />
+            <div class="flex-grow-1">
+                <label class="form-label mb-1">Upload a Document</label>
+                <input type="file" name="file" class="form-control form-control-sm"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt" required />
+                <div class="form-text">PDF, Word, Excel, images or TXT — max 30 MB.</div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary mb-4">
+                <i class="bx bx-upload me-1"></i> Upload
+            </button>
+        </form>
+    </div>
+</div>

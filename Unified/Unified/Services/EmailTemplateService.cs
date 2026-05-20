@@ -171,6 +171,84 @@ public class EmailTemplateService
         }
     }
 
+    // ── Brand Documents ───────────────────────────────────────────────────
+
+    private static readonly string[] AllowedExtensions =
+        [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg", ".gif", ".txt"];
+    private const long MaxFileSizeBytes = 30 * 1024 * 1024; // 30 MB
+
+    public async Task<List<BrandDocument>> GetDocumentsAsync(int brandId)
+    {
+        return await _db.BrandDocuments
+            .Where(d => d.BrandId == brandId)
+            .OrderBy(d => d.OriginalName)
+            .ToListAsync();
+    }
+
+    /// <summary>Saves the uploaded file to disk and records metadata in the DB.</summary>
+    public async Task<(bool success, string error, BrandDocument? doc)> UploadDocumentAsync(
+        int brandId, Microsoft.AspNetCore.Http.IFormFile file, string webRootPath)
+    {
+        if (file == null || file.Length == 0)
+            return (false, "No file selected.", null);
+
+        if (file.Length > MaxFileSizeBytes)
+            return (false, $"File exceeds the maximum allowed size of {MaxFileSizeBytes / 1024 / 1024} MB.", null);
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(ext))
+            return (false, $"File type '{ext}' is not allowed.", null);
+
+        var folder = Path.Combine(webRootPath, "uploads", "brand-docs", brandId.ToString());
+        Directory.CreateDirectory(folder);
+
+        var storedName = $"{Guid.NewGuid()}{ext}";
+        var filePath   = Path.Combine(folder, storedName);
+
+        await using (var stream = new FileStream(filePath, FileMode.Create))
+            await file.CopyToAsync(stream);
+
+        var doc = new BrandDocument
+        {
+            BrandId      = brandId,
+            StoredName   = storedName,
+            OriginalName = Path.GetFileName(file.FileName),
+            UploadedAt   = DateTime.UtcNow
+        };
+        _db.BrandDocuments.Add(doc);
+        await _db.SaveChangesAsync();
+
+        return (true, string.Empty, doc);
+    }
+
+    /// <summary>Deletes the physical file and DB record for the given document.</summary>
+    public async Task<bool> DeleteDocumentAsync(int docId, string webRootPath)
+    {
+        var doc = await _db.BrandDocuments.FindAsync(docId);
+        if (doc == null) return false;
+
+        var filePath = Path.Combine(webRootPath, "uploads", "brand-docs",
+                                    doc.BrandId.ToString(), doc.StoredName);
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+
+        _db.BrandDocuments.Remove(doc);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    /// <summary>Returns the physical file path for download, or null if not found.</summary>
+    public async Task<(BrandDocument? doc, string? filePath)> GetDocumentForDownloadAsync(
+        int docId, string webRootPath)
+    {
+        var doc = await _db.BrandDocuments.FindAsync(docId);
+        if (doc == null) return (null, null);
+
+        var filePath = Path.Combine(webRootPath, "uploads", "brand-docs",
+                                    doc.BrandId.ToString(), doc.StoredName);
+        return File.Exists(filePath) ? (doc, filePath) : (doc, null);
+    }
+
     // ── Token substitution ────────────────────────────────────────────────
 
     private static string SubstituteTokens(string input, Brand brand)

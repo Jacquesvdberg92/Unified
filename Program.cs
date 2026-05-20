@@ -10,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+// Allow large file uploads (30 MB) for brand document uploads
+builder.WebHost.ConfigureKestrel(opts =>
+    opts.Limits.MaxRequestBodySize = 31_457_280); // 30 MB
+
 // Response compression (Brotli preferred, Gzip fallback)
 // EnableForHttps is left false in development to avoid content-encoding errors;
 // in production a reverse proxy (IIS/nginx) handles HTTPS compression safely.

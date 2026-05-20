@@ -117,62 +117,7 @@
 </div>
 
 @* ── Section F — Documents ────────────────────────────────────────────── *@
-@if (Model?.Id > 0)
-{
-    <hr />
-    <h6 class="fw-semibold text-muted text-uppercase mb-3">
-        <i class="bx bx-file me-1"></i> Documents
-    </h6>
-
-    var docs = ViewBag.Documents as List<Unified.Models.EmailTemplates.BrandDocument> ?? new List<Unified.Models.EmailTemplates.BrandDocument>();
-
-    @if (docs.Any())
-    {
-        <ul class="list-group mb-3">
-            @foreach (var doc in docs)
-            {
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="bx bx-file-blank me-2 text-primary"></i>
-                        <a asp-controller="EmailTemplates" asp-action="DownloadBrandDocument"
-                           asp-route-docId="@doc.Id" target="_blank">@doc.OriginalName</a>
-                        <small class="text-muted ms-2">@doc.UploadedAt.ToString("yyyy-MM-dd")</small>
-                    </div>
-                    <form asp-controller="EmailTemplates" asp-action="DeleteBrandDocument" method="post"
-                          class="d-inline"
-                          onsubmit="return confirm('Remove document \'@doc.OriginalName\'?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="docId" value="@doc.Id" />
-                        <input type="hidden" name="brandId" value="@Model.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </form>
-                </li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p class="text-muted small mb-3">No documents attached yet.</p>
-    }
-
-    <form asp-controller="EmailTemplates" asp-action="UploadBrandDocument" method="post"
-          enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="brandId" value="@Model.Id" />
-        <div class="flex-grow-1">
-            <label class="form-label mb-1">Upload a Document</label>
-            <input type="file" name="file" class="form-control form-control-sm"
-                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt" required />
-            <div class="form-text">PDF, Word, Excel, images or TXT — max 30 MB.</div>
-        </div>
-        <button type="submit" class="btn btn-sm btn-primary mb-4">
-            <i class="bx bx-upload me-1"></i> Upload
-        </button>
-    </form>
-}
-else
+@if (Model?.Id == null || Model.Id == 0)
 {
     <p class="text-muted small mt-2">
         <i class="bx bx-info-circle me-1"></i>
