@@ -278,6 +278,72 @@ public class ScheduleController : Controller
         return RedirectToAction(nameof(ReviewRequests), new { teamId });
     }
 
+    // ── Shift Template Management ─────────────────────────────────────────
+
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
+    public async Task<IActionResult> ShiftTemplates()
+    {
+        var templates = await _db.ShiftTemplates.OrderBy(t => t.StartTime).ToListAsync();
+        return View(templates);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
+    public async Task<IActionResult> CreateShiftTemplate(ShiftTemplate model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid shift template data.";
+            return RedirectToAction(nameof(ShiftTemplates));
+        }
+
+        _db.ShiftTemplates.Add(model);
+        await _db.SaveChangesAsync();
+        TempData["Success"] = $"Shift \"{model.Name}\" created.";
+        return RedirectToAction(nameof(ShiftTemplates));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
+    public async Task<IActionResult> EditShiftTemplate(ShiftTemplate model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Invalid shift template data.";
+            return RedirectToAction(nameof(ShiftTemplates));
+        }
+
+        var existing = await _db.ShiftTemplates.FindAsync(model.Id);
+        if (existing is null)
+        {
+            TempData["Error"] = "Shift template not found.";
+            return RedirectToAction(nameof(ShiftTemplates));
+        }
+
+        existing.Name          = model.Name;
+        existing.StartTime     = model.StartTime;
+        existing.EndTime       = model.EndTime;
+        existing.IsWeekendShift = model.IsWeekendShift;
+
+        await _db.SaveChangesAsync();
+        TempData["Success"] = $"Shift \"{model.Name}\" updated.";
+        return RedirectToAction(nameof(ShiftTemplates));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.BrandManager)]
+    public async Task<IActionResult> DeleteShiftTemplate(int id)
+    {
+        var template = await _db.ShiftTemplates.FindAsync(id);
+        if (template is not null)
+        {
+            _db.ShiftTemplates.Remove(template);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = $"Shift \"{template.Name}\" deleted.";
+        }
+        return RedirectToAction(nameof(ShiftTemplates));
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private static DateTime ParseWeek(string? raw)

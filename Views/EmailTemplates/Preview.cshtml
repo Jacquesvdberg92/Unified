@@ -40,7 +40,7 @@
         <form method="get" class="d-flex align-items-center gap-3 flex-wrap">
             <input type="hidden" name="id" value="@Model.Id" />
             <i class="ri-building-4-line text-primary fs-5"></i>
-            <label class="mb-0 fw-semibold">Select Brand:</label>
+            <label class="mb-0 fw-semibold text-muted">Select Brand:</label>
             <select name="brandId" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
                 <option value="">-- No brand (raw tokens) --</option>
                 @foreach (var b in brands)

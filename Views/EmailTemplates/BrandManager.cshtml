@@ -25,9 +25,9 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-3"><strong>CRM:</strong> @(brand.CrmUrl ?? "—")</div>
-                <div class="col-md-3"><strong>Quemetrics:</strong> @(brand.QuemetricsUrl ?? "—")</div>
-                <div class="col-md-6">
+                <div class="col-md-3 text-muted"><strong>CRM:</strong> @(brand.CrmUrl ?? "—")</div>
+                <div class="col-md-3 text-muted"><strong>Quemetrics:</strong> @(brand.QuemetricsUrl ?? "—")</div>
+                <div class="col-md-6 text-muted">
                     <strong>Brand Links:</strong>
                     @{
                         var links = brand.GetBrandLinks();
@@ -73,10 +73,5 @@
 }
 
 @section Scripts {
-<script src="@Url.Content("~/js/email-templates.js")"></script>
-}, 2500);
-                });
-            });
-        });
-    </script>
+    <script src="@Url.Content("~/js/email-templates.js")"></script>
 }

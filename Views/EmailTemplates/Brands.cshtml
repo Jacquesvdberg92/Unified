@@ -240,47 +240,5 @@
 }
 
 @section Scripts {
-<script src="@Url.Content("~/js/email-templates.js")"></script>
-}, 2000);
-            });
-        });
-    });
-
-    // Copy signature HTML
-    document.querySelectorAll('.copy-sig-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var sig = JSON.parse(this.dataset.sig);
-            navigator.clipboard.writeText(sig).then(function () {
-                btn.textContent = '✓ Copied!';
-                setTimeout(function () {
-                    btn.innerHTML = '<i class="ri-clipboard-line me-1"></i> Copy Signature HTML';
-                }, 2500);
-            });
-        });
-    });
-
-    // Search bar — show/hide brand cards
-    var searchInput = document.getElementById('brandSearch');
-    var allCards = document.querySelectorAll('.brand-card');
-
-    searchInput.addEventListener('input', function () {
-        var term = this.value.toLowerCase().trim();
-        allCards.forEach(function (card) {
-            card.style.display = (!term || card.dataset.brandName.includes(term)) ? '' : 'none';
-        });
-    });
-
-    // Jump-to dropdown — scroll to brand card
-    document.getElementById('brandJump').addEventListener('change', function () {
-        var id = this.value;
-        if (!id) return;
-        var target = document.getElementById(id);
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            target.classList.add('border', 'border-primary');
-            setTimeout(function () { target.classList.remove('border', 'border-primary'); }, 2000);
-        }
-        this.value = '';
-    });
-</script>
+    <script src="@Url.Content("~/js/email-templates.js")"></script>
 }
