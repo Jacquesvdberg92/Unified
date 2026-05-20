@@ -11,9 +11,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 // Response compression (Brotli preferred, Gzip fallback)
+// EnableForHttps is left false in development to avoid content-encoding errors;
+// in production a reverse proxy (IIS/nginx) handles HTTPS compression safely.
 builder.Services.AddResponseCompression(opts =>
 {
-    opts.EnableForHttps = true;
+    opts.EnableForHttps = !builder.Environment.IsDevelopment();
     opts.Providers.Add<BrotliCompressionProvider>();
     opts.Providers.Add<GzipCompressionProvider>();
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
