@@ -199,6 +199,7 @@ public class AdminController : Controller
 
         await _userManager.AddToRoleAsync(user, role);
         if (role == Roles.SwissArmyKnife) user.IsSwissArmyKnife = true;
+        if (role == Roles.AccountManager) user.IsExternal = true;
 
         foreach (var tid in teamIds)
             _db.AgentTeams.Add(new AgentTeam { AgentId = user.Id, TeamId = tid });

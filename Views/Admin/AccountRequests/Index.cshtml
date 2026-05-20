@@ -2,7 +2,7 @@
 @using Unified.Models.Identity
 @{
     ViewData["Title"] = "Account Requests";
-    var allRoles = new[] { Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.SwissArmyKnife };
+    var allRoles = new[] { Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.AccountManager, Roles.Finance, Roles.SwissArmyKnife };
 }
 
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
@@ -17,8 +17,24 @@
 
 @if (TempData["Success"] != null)
 {
+    var successMsg = TempData["Success"]!.ToString()!;
+    var pwdIndex = successMsg.IndexOf("Temporary password: ");
+    var hasPwd = pwdIndex >= 0;
+    var beforePwd = hasPwd ? successMsg[..pwdIndex] : successMsg;
+    var pwd = hasPwd ? successMsg[(pwdIndex + "Temporary password: ".Length)..] : "";
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
+        @beforePwd
+        @if (hasPwd)
+        {
+            <br />
+            <strong>Temporary password:</strong>
+            <code id="tempPwd" class="ms-1 me-2 fs-6">@pwd</code>
+            <button type="button" class="btn btn-sm btn-outline-light"
+                    onclick="navigator.clipboard.writeText('@pwd'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy',2000)">
+                Copy
+            </button>
+            <small class="d-block mt-1 text-white-50">Share this password with the user manually (e.g. Teams, WhatsApp).</small>
+        }
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
