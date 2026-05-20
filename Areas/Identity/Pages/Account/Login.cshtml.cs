@@ -21,11 +21,13 @@ namespace Unified.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly UserManager<AppUser>   _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<AppUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager   = userManager;
             _logger = logger;
         }
 
@@ -116,6 +118,17 @@ namespace Unified.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    // Role-based landing page
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user != null)
+                    {
+                        if (await _userManager.IsInRoleAsync(user, Roles.AccountManager))
+                            return LocalRedirect("/CsLiveHelp/Requests");   // Phase 1d destination
+                        if (await _userManager.IsInRoleAsync(user, Roles.Finance))
+                            return LocalRedirect("/Reports");
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

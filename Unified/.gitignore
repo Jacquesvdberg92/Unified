@@ -1,8 +1,0 @@
-obj/
-bin/
-*.user
-node_modules/
-.vs/
-*.db
-*.db-shm
-*.db-wal

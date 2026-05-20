@@ -52,6 +52,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/Identity/Account/Logout";
 });
 
+// Internal-only policy – every role except AccountManager (external users).
+// Controllers that are AM-accessible must explicitly allow AccountManager.
+builder.Services.AddAuthorization(opts =>
+{
+    opts.AddPolicy("InternalOnly", p => p.RequireRole(
+        Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent,
+        Roles.SwissArmyKnife, Roles.Finance));
+});
+
 builder.Services.AddScoped<Unified.Services.EmailTemplateService>();
 builder.Services.AddScoped<Unified.Services.ProcessTemplateService>();
 builder.Services.AddScoped<Unified.Services.UpdateService>();
@@ -61,7 +70,7 @@ builder.Services.AddScoped<Unified.Services.VaultService>();
 builder.Services.AddScoped<Unified.Services.ReportService>();
 builder.Services.AddScoped<Unified.Services.AttendanceService>();
 builder.Services.AddScoped<Unified.Services.WorkDistributionService>();
-builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
+builder.Services.AddScoped<Unified.Services.CsLiveAllocationService>();
 builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();

@@ -4,13 +4,13 @@
     var date     = (DateTime)ViewBag.Date;
     var entry    = ViewBag.TodaysEntry as WorkDistribution;
     var recent   = (List<WorkDistribution>)ViewBag.Recent;
-    var slots    = (List<CsLiveHelpSlot>)ViewBag.Slots;
+    var slots    = (List<CsLiveAllocationSlot>)ViewBag.Slots;
     var hours    = (IEnumerable<int>)ViewBag.SlotHours;
     var eligible = (List<Unified.Models.Identity.AppUser>)ViewBag.Eligible;
     var canEdit  = User.IsInRole(Unified.Models.Identity.Roles.BrandManager) || User.IsInRole(Unified.Models.Identity.Roles.TeamLeader);
     var isToday  = date.Date == DateTime.Today;
 
-    CsLiveHelpSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
+    CsLiveAllocationSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -77,14 +77,14 @@
     @* ── CS Live Help Schedule ── *@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bx bx-headphone me-2"></i>CS Live Help Schedule</h5>
+            <h5 class="mb-0"><i class="bx bx-headphone me-2"></i>CS Live Allocation</h5>
             <div class="d-flex gap-2">
                 @if (canEdit)
                 {
-                    <a asp-controller="CsLiveHelp" asp-action="Generate" asp-route-date="@date.ToString("yyyy-MM-dd")"
+                    <a asp-controller="CsLiveAllocation" asp-action="Generate" asp-route-date="@date.ToString("yyyy-MM-dd")"
                        class="btn btn-sm btn-primary"><i class="bx bx-pencil me-1"></i>Generate / Edit</a>
                 }
-                <a asp-controller="CsLiveHelp" asp-action="SwapLog"
+                <a asp-controller="CsLiveAllocation" asp-action="SwapLog"
                    class="btn btn-sm btn-outline-info"><i class="bx bx-transfer me-1"></i>Swap Log</a>
             </div>
         </div>
@@ -182,7 +182,7 @@
     <!-- Swap Modal -->
     <div class="modal fade" id="swapModal" tabindex="-1">
         <div class="modal-dialog">
-            <form asp-controller="CsLiveHelp" asp-action="Swap" method="post">
+            <form asp-controller="CsLiveAllocation" asp-action="Swap" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnDate" id="swapReturnDate" value="@date.ToString("yyyy-MM-dd")" />
                 <input type="hidden" name="slotId" id="swapSlotId" />

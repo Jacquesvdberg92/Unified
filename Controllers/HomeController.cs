@@ -113,7 +113,7 @@ public class HomeController : Controller
             "my_schedule"      => "Widgets/_MySchedule",
             "performance"      => "Widgets/_Performance",
             "reports"          => "Widgets/_Reports",
-            "cs_live_help"     => "Widgets/_CsLiveHelp",
+            "cs_live_help"     => "Widgets/_CsLiveAllocation",
             "quick_links"      => "Widgets/_QuickLinks",
             _                  => null
         };
@@ -125,6 +125,11 @@ public class HomeController : Controller
     }
 
     public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    public IActionResult Roadmap()
     {
         return View();
     }

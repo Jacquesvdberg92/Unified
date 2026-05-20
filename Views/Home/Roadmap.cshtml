@@ -1,0 +1,210 @@
+@{
+    ViewData["Title"] = "Project Roadmap";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0">
+                        <i class="bx bx-map-alt me-2"></i>Project Roadmap
+                    </h5>
+                    <small class="text-muted">Source of truth: <code>ROADMAP.md</code> at repo root</small>
+                </div>
+                <div class="card-body">
+
+                    <!-- Legend -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <span class="badge bg-secondary px-3 py-2"><i class="bx bx-circle me-1"></i>Not Started</span>
+                        <span class="badge bg-warning text-dark px-3 py-2"><i class="bx bx-loader-circle me-1"></i>In Progress</span>
+                        <span class="badge bg-success px-3 py-2"><i class="bx bx-check-circle me-1"></i>Done</span>
+                        <span class="badge bg-info text-dark px-3 py-2"><i class="bx bx-bulb me-1"></i>Decided</span>
+                        <span class="badge bg-danger px-3 py-2"><i class="bx bx-error-circle me-1"></i>Blocked / Deferred</span>
+                    </div>
+
+                    <!-- Phase 0 -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-wrench me-1"></i>Phase 0 – Structural Fix
+                            <span class="badge bg-success ms-2">Complete</span>
+                        </h6>
+                        <p class="text-muted small mb-3">Files accidentally nested inside <code>Unified\Unified\</code> moved to the project root. Build clean.</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Audited all files under <code>Unified\Unified\</code> vs the project root</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Moved Controllers, Models, Services to correct locations (incl. <code>EmailTemplatesController</code> rebuilt)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Removed misplaced duplicates; created missing <code>ErrorViewModel.cs</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Build passes with zero errors</li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase 1 – Roles -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-shield me-1"></i>Phase 1 – New Roles
+                            <span class="badge bg-success ms-2">Complete through 1c</span>
+                            <span class="badge bg-secondary ms-1">1d not started</span>
+                        </h6>
+
+                        <p class="fw-semibold mb-2">1a – Role Constants &amp; Seeding</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Added <code>AccountManager</code> and <code>Finance</code> constants to <code>Roles.cs</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Both roles seeded in <code>SeedData.cs</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1b – Account Manager (AM) Role</p>
+                        <p class="text-muted small mb-2">External users. Sign up normally, assigned AM role. Access strictly limited to CS Live Help only.</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>InternalOnly</code> policy registered in <code>Program.cs</code> — blocks AM from all internal controllers</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>After login, AM is redirected directly to <code>/CsLiveHelp/Requests</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>IsExternal</code> flag added to <code>AppUser</code> + EF migration applied</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>AM added to Admin role dropdown (<code>PopulateRolesAndTeams</code>)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Add AM to <code>[Authorize]</code> on <code>CsLiveHelpController</code> (AM-facing actions)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Strict server-side input validation + rate-limiting on all AM POST actions</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Audit log (<code>AmAuditLog</code>) for every AM action</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1c – Finance Role</p>
+                        <p class="text-muted small mb-2">Internal. Read-only access to Schedule and Attendance. Further data requirements deferred.</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to <code>[Authorize]</code> on <code>ScheduleController</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to <code>[Authorize]</code> on <code>AttendanceReportController</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to Admin role dropdown</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Deferred</span>Define additional Finance data requirements for Phase 2 <em>(needs input from owner)</em></li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase 1d – CS Live Help Overhaul -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-support me-1"></i>Phase 1d – CS Live Help Overhaul (Kanban + AM Requests)
+                            <span class="badge bg-secondary ms-2">Not Started</span>
+                        </h6>
+                        <div class="alert alert-secondary py-2 mb-3 small">
+                            <strong>Context:</strong> Brand new feature — AMs (external) submit support requests via a Kanban board; CS agents work, respond, and escalate them.
+                            Built for high volume (hundreds–thousands/day) using <strong>SignalR push diffs</strong> + duty-cycle archiving.
+                            Which CS agents are active on the board is driven by Work Distribution — agents allocated to a CS Live Help slot are considered "on duty".
+                            The Work Distribution and duty schedule systems are <strong>not modified</strong>.
+                        </div>
+
+                        <p class="fw-semibold mb-2">Architecture Decisions</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Real-time: <strong>SignalR</strong> — push diffs only (CardAdded / CardUpdated / CardDeleted / CommentAdded)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Board columns: cursor/keyset pagination — top 50 cards, load-more via AJAX</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Duty cycle: configurable via <code>appsettings.json</code> — default: run every <strong>6 h</strong>, archive <code>Completed</code> cards older than <strong>3 days</strong></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Duplicate prevention: AMs see each other's open requests (read-only). Warning if same brand + type already open</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Security: AMs treated as untrusted; input sanitised, English-only on "Other" field, rate-limited</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-i – Data Models &amp; Migration</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequest</code> model (AM, Brand, RequestType, Status enum, CustomDescription, timestamps)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestType</code> lookup (Simulate POI, Reset Password, Other…)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestComment</code> model (thread per card, <code>IsSystemMessage</code> flag)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestArchive</code> table (mirror of CsRequest for archived completed records)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>AmAuditLog</code> table (UserId, Action, EntityId, Timestamp, IP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add DB indexes on Status, CreatedAt, BrandId, AccountManagerId</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Apply EF Core migration</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-ii – AM Request Actions (external-facing)</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/Requests</code> — AM Kanban (own cards) + read-only "Others" column (same-brand duplicate guard)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/CreateRequest</code> — Brand + RequestType dropdown (incl. "Other") + English-only text (max 500 chars)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/EditRequest/{id}</code> — AM edits own <em>Open</em> cards only</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/DeleteRequest/{id}</code> — AM deletes own <em>Open</em> cards only</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/AddComment/{id}</code> — AM adds comment to own request thread</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-iii – CS Agent Actions</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/Board</code> — CS Kanban view (all requests, all AMs, all columns)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Status transitions: Open → InProgress → OnGoing → Completed (drag-drop or button)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Comment thread on every card (CS + AM can both post)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Simulate POI:</strong> "Log Simulation" → calls existing POI simulation log</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Reset Password:</strong> "Send Reset" → auto-posts system comment <em>"Password reset to Aa123456"</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Escalated:</strong> "Mark Passed" → auto-posts system comment <em>"Passed to relevant agents"</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/Escalate/{id}</code> — move card to Escalated column</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-iv – CS Team Chat / Requests All Brands</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/RequestsAllBrands</code> — shared internal board for all CS roles (agents, TL, Manager)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Detail TBD</span>CS-internal notice board / chat: agents post directly or pass AM requests for team visibility</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>TL/Manager default view filtered to Escalated; agents see all open items across all brands</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/ResolveEscalation/{id}</code> — mark escalated card resolved</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: "Team Chat" for CS agents; "All Brands" under Management (TL/Manager)</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-v – SignalR Hub</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsLiveHelpHub</code> at <code>/hubs/cslivehelp</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Groups: <code>cs-board</code> (all CS agents), <code>am-{userId}</code> (each AM sees only own cards)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Push events: CardAdded, CardUpdated, CardStatusChanged, CardDeleted, CommentAdded</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Client JS: push events update board DOM without full reload; drag-drop triggers status transitions</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-vi – Performance &amp; Duty Cycle</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Cursor/keyset pagination for columns (no OFFSET — use Id cursor)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestArchiveService</code> (<code>IHostedService</code>) — configurable via <code>appsettings.json</code> (defaults: every 6 h, archive Completed &gt; 3 days old)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>CsLiveHelp:Archive</code> section to <code>appsettings.json</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Board columns load top 50 cards; "Load more" AJAX fetches next page</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-vii – Views</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/Requests.cshtml</code> — AM Kanban (own cards)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/Board.cshtml</code> — CS Kanban (all cards, all columns)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/RequestsAllBrands.cshtml</code> — TL/Manager escalation view</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Shared partials: <code>_CsRequestCard.cshtml</code>, <code>_CsRequestThread.cshtml</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: CS Requests for AM role; All Brands under Management section</li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase 2 -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-desktop me-1"></i>Phase 2 – AnyDesk ID &amp; Telegram Bot
+                            <span class="badge bg-secondary ms-2">Not Started</span>
+                        </h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>AnydeskId</code> to <code>AppUser</code> + EF migration</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>AnyDesk ID field in Admin Create/Edit User + agent self-service profile</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>Telegram.Bot</code> NuGet + <code>TelegramService</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Home/RequestLogin</code> endpoint (rate-limited: 1 per 5 min per user)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>"Request Google Login" dashboard button → posts to Telegram IT channel</li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase 3 -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-bell me-1"></i>Phase 3 – Notification System
+                            <span class="badge bg-secondary ms-2">Not Started</span>
+                            <span class="badge bg-danger ms-1">Needs Detail</span>
+                        </h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Real-time via SignalR (reuse hub pattern from Phase 1d)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Notification</code> model + EF migration + <code>NotificationService</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Bell icon in navbar with live unread badge</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Audio alert on notification receive</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Blocked</span>Define notification types, events, and sound levels <em>(needs owner decision)</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>User preferences page (per-type + audio toggle)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Admin broadcast to all connected clients</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info mt-4 mb-0">
+                        <i class="bx bx-info-circle me-2"></i>
+                        Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
+                        Last updated: <strong>2025-05-22</strong>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                
