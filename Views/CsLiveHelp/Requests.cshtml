@@ -1,0 +1,307 @@
+@using Unified.Models.CsLiveHelp
+@using Unified.Models.EmailTemplates
+@{
+    ViewData["Title"] = "CS Requests";
+    var own    = (List<CsRequest>)ViewBag.OwnRequests;
+    var others = (List<CsRequest>)ViewBag.OtherRequests;
+    var types  = (List<CsRequestType>)ViewBag.RequestTypes;
+    var brands = (List<Brand>)ViewBag.Brands;
+
+    var openCards      = own.Where(r => r.Status == CsRequestStatus.Open).ToList();
+    var inProgressCards = own.Where(r => r.Status == CsRequestStatus.InProgress || r.Status == CsRequestStatus.OnGoing).ToList();
+    var doneCards      = own.Where(r => r.Status == CsRequestStatus.Completed).ToList();
+}
+
+<div class="container-fluid">
+
+    @if (TempData["Error"] is string err)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Requests</h5>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="bx bx-plus me-1"></i>New Request
+        </button>
+    </div>
+
+    <!-- Kanban board -->
+    <div class="row g-3">
+
+        <!-- Open -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
+                    <span class="badge bg-secondary">Open</span>
+                    <span class="fw-semibold">Open</span>
+                    <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in openCards)
+                    {
+                        <partial name="_CsRequestCard" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "ShowActions", true } })' />
+                    }
+                    @if (!openCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">No open requests</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress / On-Going -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                    <span class="badge bg-warning text-dark">In Progress</span>
+                    <span class="fw-semibold">In Progress</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in inProgressCards)
+                    {
+                        <partial name="_CsRequestCard" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "ShowActions", false } })' />
+                    }
+                    @if (!inProgressCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">No active requests</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2 bg-success bg-opacity-10">
+                    <span class="badge bg-success">Done</span>
+                    <span class="fw-semibold">Completed</span>
+                    <span class="badge bg-success rounded-pill ms-auto">@doneCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in doneCards)
+                    {
+                        <partial name="_CsRequestCard" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "ShowActions", false } })' />
+                    }
+                    @if (!doneCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">No completed requests</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Others (read-only) -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center gap-2 bg-info bg-opacity-10">
+                    <span class="badge bg-info text-dark">Read-only</span>
+                    <span class="fw-semibold">Others' Open</span>
+                    <span class="badge bg-info text-dark rounded-pill ms-auto">@others.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @if (others.Any())
+                    {
+                        <div class="alert alert-info py-1 px-2 small mb-1">
+                            <i class="bx bx-info-circle me-1"></i>Other AMs' open requests for your brands. Submit a new request only if yours differs.
+                        </div>
+                    }
+                    @foreach (var r in others)
+                    {
+                        <partial name="_CsRequestCard" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "ShowActions", false } })' />
+                    }
+                    @if (!others.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">No other open requests</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Create Request Modal ─────────────────────────────────────────────── -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CreateRequest" asp-controller="CsLiveHelp" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h6 class="modal-title" id="createModalLabel"><i class="bx bx-plus me-2"></i>New CS Request</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Brand</label>
+                        <select name="brandId" class="form-select" required>
+                            <option value="">— select brand —</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Request Type</label>
+                        <select name="requestTypeId" class="form-select" id="createTypeSelect" required>
+                            <option value="">— select type —</option>
+                            @foreach (var t in types)
+                            {
+                                <option value="@t.Id" data-is-other="@t.IsOther.ToString().ToLower()">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3" id="createDescGroup" style="display:none">
+                        <label class="form-label fw-semibold">Description <small class="text-muted">(English only, max 500 chars)</small></label>
+                        <textarea name="customDescription" class="form-control" rows="3" maxlength="500" id="createDescInput"></textarea>
+                        <div class="form-text text-end"><span id="createDescCount">0</span>/500</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── Edit Request Modals ──────────────────────────────────────────────── -->
+@foreach (var r in openCards)
+{
+    <div class="modal fade" id="editModal-@r.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="EditRequest" asp-controller="CsLiveHelp" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@r.Id" />
+                    <div class="modal-header">
+                        <h6 class="modal-title">Edit Request #@r.Id</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Brand</label>
+                            <select name="brandId" class="form-select" required>
+                                @foreach (var b in brands)
+                                {
+                                    <option value="@b.Id" selected="@(b.Id == r.BrandId ? "selected" : null)">@b.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Request Type</label>
+                            <select name="requestTypeId" class="form-select edit-type-select" data-target="editDesc-@r.Id" required>
+                                @foreach (var t in types)
+                                {
+                                    <option value="@t.Id"
+                                            data-is-other="@t.IsOther.ToString().ToLower()"
+                                            selected="@(t.Id == r.RequestTypeId ? "selected" : null)">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3" id="editDesc-@r.Id" style="@(r.RequestType?.IsOther == true ? "" : "display:none")">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="customDescription" class="form-control" rows="3" maxlength="500">@r.CustomDescription</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── Comment Modals ───────────────────────────────────────────────────── -->
+@foreach (var r in own)
+{
+    <div class="modal fade" id="commentModal-@r.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="AddComment" asp-controller="CsLiveHelp" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@r.Id" />
+                    <div class="modal-header">
+                        <h6 class="modal-title">Add Comment — Request #@r.Id</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea name="body" class="form-control" rows="4" maxlength="1000" placeholder="Write your comment…" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── Delete Confirm Modals ────────────────────────────────────────────── -->
+@foreach (var r in openCards)
+{
+    <div class="modal fade" id="deleteModal-@r.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <form asp-action="DeleteRequest" asp-controller="CsLiveHelp" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@r.Id" />
+                    <div class="modal-header">
+                        <h6 class="modal-title text-danger"><i class="bx bx-trash me-1"></i>Delete Request</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body small">
+                        Delete request <strong>#@r.Id</strong> (@(r.Brand?.Name) – @(r.RequestType?.Name))? This cannot be undone.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    // Create modal: show/hide description field based on type selection
+    document.getElementById('createTypeSelect').addEventListener('change', function () {
+        const isOther = this.options[this.selectedIndex]?.dataset.isOther === 'true';
+        const group   = document.getElementById('createDescGroup');
+        const input   = document.getElementById('createDescInput');
+        group.style.display = isOther ? '' : 'none';
+        input.required      = isOther;
+    });
+
+    document.getElementById('createDescInput').addEventListener('input', function () {
+        document.getElementById('createDescCount').textContent = this.value.length;
+    });
+
+    // Edit modals: show/hide description field
+    document.querySelectorAll('.edit-type-select').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+            const isOther  = this.options[this.selectedIndex]?.dataset.isOther === 'true';
+            const targetId = this.dataset.target;
+            const group    = document.getElementById(targetId);
+            if (group) group.style.display = isOther ? '' : 'none';
+        });
+    });
+</script>
+}

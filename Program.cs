@@ -83,6 +83,7 @@ builder.Services.AddScoped<Unified.Services.CsLiveAllocationService>();
 builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
+builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

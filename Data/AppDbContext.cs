@@ -11,6 +11,7 @@ using Unified.Models.Vault;
 using Unified.Models.Poi;
 using Unified.Models.WorkDistribution;
 using Unified.Models.Dashboard;
+using Unified.Models.CsLiveHelp;
 
 namespace Unified.Data;
 
@@ -61,6 +62,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     // Brand documents
     public DbSet<BrandDocument>       BrandDocuments       => Set<BrandDocument>();
+
+    // CS Live Help – Kanban
+    public DbSet<CsRequestType>       CsRequestTypes       => Set<CsRequestType>();
+    public DbSet<CsRequest>           CsRequests           => Set<CsRequest>();
+    public DbSet<CsRequestComment>    CsRequestComments    => Set<CsRequestComment>();
+    public DbSet<CsRequestArchive>    CsRequestArchives    => Set<CsRequestArchive>();
+    public DbSet<AmAuditLog>          AmAuditLogs          => Set<AmAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -351,6 +359,83 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<WorkDistribution>()
             .HasIndex(w => w.Date);
+
+        // CS Live Help
+        builder.Entity<CsRequest>()
+            .Property(r => r.Status)
+            .HasConversion<string>();
+
+        builder.Entity<CsRequestArchive>()
+            .Property(r => r.Status)
+            .HasConversion<string>();
+
+        builder.Entity<CsRequest>()
+            .HasOne(r => r.AccountManager)
+            .WithMany()
+            .HasForeignKey(r => r.AccountManagerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequest>()
+            .HasOne(r => r.Brand)
+            .WithMany()
+            .HasForeignKey(r => r.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequest>()
+            .HasOne(r => r.RequestType)
+            .WithMany()
+            .HasForeignKey(r => r.RequestTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequestComment>()
+            .HasOne(c => c.Request)
+            .WithMany(r => r.Comments)
+            .HasForeignKey(c => c.RequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CsRequestComment>()
+            .HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.AuthorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequestArchive>()
+            .HasOne(r => r.AccountManager)
+            .WithMany()
+            .HasForeignKey(r => r.AccountManagerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequestArchive>()
+            .HasOne(r => r.Brand)
+            .WithMany()
+            .HasForeignKey(r => r.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsRequestArchive>()
+            .HasOne(r => r.RequestType)
+            .WithMany()
+            .HasForeignKey(r => r.RequestTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Seed default CsRequestType lookup rows
+        builder.Entity<CsRequestType>().HasData(
+            new CsRequestType { Id = 1, Name = "Simulate POI",   IsOther = false },
+            new CsRequestType { Id = 2, Name = "Reset Password", IsOther = false },
+            new CsRequestType { Id = 3, Name = "Other",          IsOther = true  }
+        );
+
+        // CS Live Help indexes
+        builder.Entity<CsRequest>()
+            .HasIndex(r => r.Status);
+        builder.Entity<CsRequest>()
+            .HasIndex(r => r.CreatedAt);
+        builder.Entity<CsRequest>()
+            .HasIndex(r => r.BrandId);
+        builder.Entity<CsRequest>()
+            .HasIndex(r => r.AccountManagerId);
+
+        builder.Entity<AmAuditLog>()
+            .HasIndex(a => new { a.UserId, a.Timestamp });
 
         builder.Entity<DashboardWidget>()
             .HasIndex(w => w.UserId);

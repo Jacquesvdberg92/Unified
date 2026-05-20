@@ -87,56 +87,71 @@
   - **Duplicate prevention:** AMs can see each other's open requests (read-only, no comments). If a request for the same brand + type is already open, a warning is shown before submit.
 - **Security:** AMs are untrusted external actors. All input sanitised, HTML-encoded, English-only enforced on "Other" field
 
-### 1d-i – Data Models & Migration
-- [ ] Create `CsRequest` model:
+### 1d-i – Data Models & Migration ✅
+- [x] Create `CsRequest` model:
   ```
   Id, AccountManagerId (FK AppUser), BrandId (FK), RequestTypeId (FK),
   CustomDescription (string?, English-only, max 500 chars),
   Status (enum: Open | InProgress | OnGoing | Completed | Escalated),
   CreatedAt, UpdatedAt, ArchivedAt?
   ```
-- [ ] Create `CsRequestType` lookup table:
+- [x] Create `CsRequestType` lookup table:
   ```
   Id, Name (e.g. "Simulate POI", "Reset Password", "Other"), IsOther (bool)
   ```
-- [ ] Create `CsRequestComment` model (thread per card):
+- [x] Create `CsRequestComment` model (thread per card):
   ```
   Id, RequestId (FK), AuthorId (FK AppUser), Body (string), CreatedAt, IsSystemMessage (bool)
   ```
-- [ ] Create `CsRequestArchive` table (identical schema to `CsRequest` – for completed/old records)
-- [ ] Create `AmAuditLog` model: `Id, UserId, Action, EntityId?, Timestamp, IpAddress`
-- [ ] Write and apply EF Core migration for all above
+- [x] Create `CsRequestArchive` table (identical schema to `CsRequest` – for completed/old records)
+- [x] Create `AmAuditLog` model: `Id, UserId, Action, EntityId?, Timestamp, IpAddress`
+- [x] Write and apply EF Core migration for all above (`Phase1d_CsLiveHelpModels`)
 
-### 1d-ii – Backend: AM Request Actions
-- [ ] `GET  /CsLiveHelp/Requests` — AM view: their own cards (Kanban) **plus a read-only "Others" column** showing other AMs' open requests for the same brand — prevents duplicate submissions
-- [ ] `POST /CsLiveHelp/CreateRequest` — AM submits a new request
+### 1d-ii – Backend: AM Request Actions ✅
+- [x] `GET  /CsLiveHelp/Requests` — AM view: their own cards (Kanban) **plus a read-only "Others" column** showing other AMs' open requests for the same brand — prevents duplicate submissions
+- [x] `POST /CsLiveHelp/CreateRequest` — AM submits a new request
   - Inputs: `brandId` (dropdown), `requestTypeId` (dropdown incl. "Other"), `customDescription` (if Other, English-only regex/language check)
   - Validation: antiforgery, model validation, rate limit, AM audit log entry
-- [ ] `POST /CsLiveHelp/EditRequest/{id}` — AM edits their own Open request only
-- [ ] `POST /CsLiveHelp/DeleteRequest/{id}` — AM deletes their own Open request only
-- [ ] `POST /CsLiveHelp/AddComment/{id}` — AM adds a comment to their own request thread
+- [x] `POST /CsLiveHelp/EditRequest/{id}` — AM edits their own Open request only
+- [x] `POST /CsLiveHelp/DeleteRequest/{id}` — AM deletes their own Open request only
+- [x] `POST /CsLiveHelp/AddComment/{id}` — AM adds a comment to their own request thread
 
-### 1d-iii – Backend: CS Agent Actions
-- [ ] `GET  /CsLiveHelp/Board` — CS agents see ALL open requests across all AMs (Kanban board)
-- [ ] `POST /CsLiveHelp/UpdateStatus/{id}` — CS moves card: Open → InProgress → OnGoing → Completed
-- [ ] `POST /CsLiveHelp/AddComment/{id}` — CS adds comment to thread (shared endpoint with AM, role-gated body)
-- [ ] **Smart action buttons per request type** (shown on card to CS only):
-  - `Simulate POI` request → button: **"Log Simulation"** → calls existing POI simulation log flow
-  - `Reset Password` request → button: **"Send Reset"** → posts system comment: *"Password reset to Aa123456"*
-  - `Escalated` card → button: **"Mark Passed"** → posts system comment: *"Passed to relevant agents"*
-- [ ] `POST /CsLiveHelp/Escalate/{id}` — CS escalates card (Status = Escalated); card moves to Escalated column
+### 1d-iii – Backend: CS Agent Actions ✅
+- [x] `GET  /CsLiveHelp/Board` — CS agents see ALL open requests across all AMs (Kanban board)
+- [x] `POST /CsLiveHelp/UpdateStatus/{id}` — CS moves card: Open → InProgress → OnGoing → Completed
+- [x] `POST /CsLiveHelp/CsAddComment/{id}` — CS adds comment to thread (role-gated, not ownership-gated)
+- [x] **Smart action buttons per request type** (shown on card to CS only):
+  - `Simulate POI` request → button: **"Log Simulation"** → redirects to existing POI simulation log (brand context)
+  - `Reset Password` request → button: **"Send Reset"** → posts system comment: *"Password reset to Aa123456"* + marks Completed
+  - `Escalated` card → button: **"Mark Passed"** → posts system comment: *"Passed to relevant agents"* + marks Completed
+- [x] `POST /CsLiveHelp/Escalate/{id}` — CS escalates card (Status = Escalated); card moves to Escalated column
 
-### 1d-iv – Backend: CS Team Leader / Manager View + CS Team Chat
-- [ ] `GET  /CsLiveHelp/RequestsAllBrands` — **CS Team Chat / All Requests board**
-  - Visible to: all CS roles (agents, TL, Manager) — this is a shared internal space, not AM-facing
-  - Shows **all open requests across all brands** — CS agents can post requests here directly (not coming from an AM), or "pass" an AM request here for team-wide visibility
-  - Think of it as a **CS-internal chat/notice board**: CS raises issues, asks questions, passes escalated items — similar in spirit to CS Live Help but team-internal rather than AM-facing
-  - TL/Manager additionally see a filtered **Escalated** view by default
-  - *(Full feature details TBD — adding more specifics later)*
-- [ ] `POST /CsLiveHelp/ResolveEscalation/{id}` — Mark escalated request as resolved/completed
-- [ ] Add "Requests – All Brands" link to Management sidebar section (TL/Manager only); add "Team Chat" link for CS agents
+### 1d-iv – Backend: CS Team Leader / Manager View + Requests All Brands (Internal Board)
+> **Context:** This is a CS-internal escalation and notice board — not AM-facing.
+> Escalated cards from CS Live Help become visible here automatically.
+> All CS roles can comment and update cards on this board.
+> Performance and pagination model mirrors the CS Live Help board (top 50, keyset cursor, same architecture).
 
-### 1d-v – Real-Time SignalR Hub
+- [ ] `GET  /CsLiveHelp/RequestsAllBrands` — **Internal CS board**
+  - **Default audience:** CS Team Leaders and Managers see all brands, all escalated items
+  - **Escalation visibility:** when any card is escalated (from CS Live Help or internal), it becomes visible to **all CS agents** on this board — not just TL/Manager
+  - **Notifications (Phase 1d-ix — deferred):** on escalation, notify agents allocated to the escalated card's brand *and* the language assigned during the escalation process; notification system not yet built — placeholder only
+  - CS agents can also **post new internal requests directly** on this board (not originating from an AM)
+  - All CS roles (agent, TL, Manager) can post comments and update card status on this board
+  - TL/Manager default filter view: Escalated; agents default: all open
+- [ ] `POST /CsLiveHelp/ResolveEscalation/{id}` — TL/Manager marks escalated card resolved/completed
+- [ ] **Image attachments on CS Live Help board (AM-facing)** — AMs can attach images to requests and comments; stored as blobs or file references; max size TBD; rendered inline on the card thread
+- [ ] **File attachments on Requests All Brands (internal board)** — CS agents/TL/Manager can attach files (images, docs, etc.) to internal board posts and comments; same storage pattern as AM image attachments
+- [ ] Add "Requests – All Brands" link to Management sidebar section (TL/Manager only); add "Team Board" link for CS agents (visible when an escalated card exists for their brands)
+
+### 1d-v – UX / Polish (discovered during testing)
+- [ ] **Comment visibility** — CS Board cards have no way to read existing comments; add a "View Thread" button/modal that shows the full comment thread (author, timestamp, body, system-message flag) before posting a reply
+- [ ] **Drag-and-drop column transitions** — replace the "Move" button modal with SortableJS (or native HTML5 drag) so agents can drag cards between status columns; drop fires `POST /CsLiveHelp/UpdateStatus/{id}` via fetch
+- [ ] **Auto-assign on move** — when a CS agent moves a card (status transition), record `AssignedToId` on the `CsRequest` and show the assigned agent's name on the card; add `AssignedToId` FK + EF migration
+- [ ] **Real-time board updates** — board currently requires a page refresh to show changes; addressed by SignalR hub in 1d-vi (push diffs on card add/update/delete/comment)
+- [ ] **POI Simulation smart action — modal instead of redirect** — "Log Simulation" button on a CS board card should open the existing POI log modal (same as the home dashboard widget) pre-populated with the card's brand, instead of navigating away to `/PoiSimulation/Log`
+
+### 1d-vi – Real-Time SignalR Hub
 - [ ] Create `CsLiveHelpHub` (SignalR hub)
   - Groups: `cs-board` (all CS agents), `am-{userId}` (each AM sees only their own cards)
   - Events pushed: `CardAdded`, `CardUpdated`, `CardStatusChanged`, `CardDeleted`, `CommentAdded`
@@ -224,4 +239,4 @@
 
 ---
 
-*Last updated: 2025-05-22 | Owner: @Jacquesvdberg92*
+*Last updated: 2025-05-22 — Phase 1d-i complete | Owner: @Jacquesvdberg92*

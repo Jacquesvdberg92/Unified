@@ -1,0 +1,20 @@
+using Unified.Models.Identity;
+
+namespace Unified.Models.CsLiveHelp;
+
+public class CsRequestComment
+{
+    public int    Id               { get; set; }
+
+    public int    RequestId        { get; set; }
+    public CsRequest? Request      { get; set; }
+
+    public string AuthorId         { get; set; } = string.Empty;
+    public AppUser? Author         { get; set; }
+
+    public string Body             { get; set; } = string.Empty;
+    public DateTime CreatedAt      { get; set; } = DateTime.UtcNow;
+
+    /// <summary>True for auto-posted system messages (e.g. "Password reset to Aa123456").</summary>
+    public bool   IsSystemMessage  { get; set; }
+}

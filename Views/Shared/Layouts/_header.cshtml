@@ -226,9 +226,17 @@
                                         {
                                             <span class="badge bg-warning text-dark ms-1 fs-10">⚔️ SwissArmyKnife</span>
                                         }
+                                        else if (User.IsInRole("AccountManager"))
+                                        {
+                                            <span class="badge bg-info text-dark ms-1 fs-10">Account Manager</span>
+                                        }
+                                        else if (User.IsInRole("Finance"))
+                                        {
+                                            <span class="badge bg-success ms-1 fs-10">Finance</span>
+                                        }
                                         else
                                         {
-                                            <span class="badge bg-secondary ms-1 fs-10">CSAgent</span>
+                                            <span class="badge bg-secondary ms-1 fs-10">CS Agent</span>
                                         }
                                     </div>
                                 </div>
@@ -251,9 +259,17 @@
                                             {
                                                 <span class="badge bg-warning text-dark">⚔️ SwissArmyKnife</span>
                                             }
+                                            else if (User.IsInRole("AccountManager"))
+                                            {
+                                                <span class="badge bg-info text-dark">Account Manager</span>
+                                            }
+                                            else if (User.IsInRole("Finance"))
+                                            {
+                                                <span class="badge bg-success">Finance</span>
+                                            }
                                             else
                                             {
-                                                <span class="badge bg-secondary">CSAgent</span>
+                                                <span class="badge bg-secondary">CS Agent</span>
                                             }
                                         </span>
                                     </div>

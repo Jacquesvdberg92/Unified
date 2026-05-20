@@ -43,7 +43,7 @@
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-shield me-1"></i>Phase 1 – New Roles
                             <span class="badge bg-success ms-2">Complete through 1c</span>
-                            <span class="badge bg-secondary ms-1">1d not started</span>
+                            <span class="badge bg-warning text-dark ms-1">1d in progress</span>
                         </h6>
 
                         <p class="fw-semibold mb-2">1a – Role Constants &amp; Seeding</p>
@@ -59,9 +59,9 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>After login, AM is redirected directly to <code>/CsLiveHelp/Requests</code></li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>IsExternal</code> flag added to <code>AppUser</code> + EF migration applied</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>AM added to Admin role dropdown (<code>PopulateRolesAndTeams</code>)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Add AM to <code>[Authorize]</code> on <code>CsLiveHelpController</code> (AM-facing actions)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Strict server-side input validation + rate-limiting on all AM POST actions</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Phase 1d</span>Audit log (<code>AmAuditLog</code>) for every AM action</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Add AM to <code>[Authorize]</code> on <code>CsLiveHelpController</code> (AM-facing actions)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Strict server-side input validation + rate-limiting on all AM POST actions</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Audit log (<code>AmAuditLog</code>) for every AM action</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">1c – Finance Role</p>
@@ -78,7 +78,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-support me-1"></i>Phase 1d – CS Live Help Overhaul (Kanban + AM Requests)
-                            <span class="badge bg-secondary ms-2">Not Started</span>
+                            <span class="badge bg-warning text-dark ms-2">In Progress</span>
                         </h6>
                         <div class="alert alert-secondary py-2 mb-3 small">
                             <strong>Context:</strong> Brand new feature — AMs (external) submit support requests via a Kanban board; CS agents work, respond, and escalate them.
@@ -98,22 +98,22 @@
 
                         <p class="fw-semibold mb-2">1d-i – Data Models &amp; Migration</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequest</code> model (AM, Brand, RequestType, Status enum, CustomDescription, timestamps)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestType</code> lookup (Simulate POI, Reset Password, Other…)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestComment</code> model (thread per card, <code>IsSystemMessage</code> flag)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestArchive</code> table (mirror of CsRequest for archived completed records)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>AmAuditLog</code> table (UserId, Action, EntityId, Timestamp, IP)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add DB indexes on Status, CreatedAt, BrandId, AccountManagerId</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Apply EF Core migration</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Create <code>CsRequest</code> model (AM, Brand, RequestType, Status enum, CustomDescription, timestamps)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Create <code>CsRequestType</code> lookup (Simulate POI, Reset Password, Other…)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Create <code>CsRequestComment</code> model (thread per card, <code>IsSystemMessage</code> flag)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Create <code>CsRequestArchive</code> table (mirror of CsRequest for archived completed records)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Create <code>AmAuditLog</code> table (UserId, Action, EntityId, Timestamp, IP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Add DB indexes on Status, CreatedAt, BrandId, AccountManagerId</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>EF Core migration <code>Phase1d_CsLiveHelpModels</code> applied</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">1d-ii – AM Request Actions (external-facing)</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/Requests</code> — AM Kanban (own cards) + read-only "Others" column (same-brand duplicate guard)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/CreateRequest</code> — Brand + RequestType dropdown (incl. "Other") + English-only text (max 500 chars)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/EditRequest/{id}</code> — AM edits own <em>Open</em> cards only</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/DeleteRequest/{id}</code> — AM deletes own <em>Open</em> cards only</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/AddComment/{id}</code> — AM adds comment to own request thread</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /CsLiveHelp/Requests</code> — AM Kanban (own cards) + read-only "Others" column (same-brand duplicate guard)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/CreateRequest</code> — Brand + RequestType dropdown (incl. "Other") + English-only text (max 500 chars)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/EditRequest/{id}</code> — AM edits own <em>Open</em> cards only</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/DeleteRequest/{id}</code> — AM deletes own <em>Open</em> cards only</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/AddComment/{id}</code> — AM adds comment to own request thread</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">1d-iii – CS Agent Actions</p>
@@ -136,7 +136,16 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: "Team Chat" for CS agents; "All Brands" under Management (TL/Manager)</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-v – SignalR Hub</p>
+                        <p class="fw-semibold mb-2">1d-v – UX / Polish <span class="badge bg-warning text-dark ms-1">Backlog</span></p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Comment visibility</strong> — CS board cards show no way to read existing comments; add "View Thread" button/modal showing full thread (author, time, body, system flag) before posting a reply</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Drag-and-drop column transitions</strong> — replace "Move" button modal with SortableJS (or native HTML5 drag) so agents drag cards between status columns; drop fires <code>POST /CsLiveHelp/UpdateStatus/{id}</code> via fetch</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Auto-assign on move</strong> — when a CS agent moves a card, record <code>AssignedToId</code> on <code>CsRequest</code> and display assigned agent name on the card; requires <code>AssignedToId</code> FK + EF migration</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Real-time board updates</strong> — board currently requires page refresh to reflect changes; addressed by SignalR hub (1d-vi) with push diffs on card add / update / delete / comment</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>POI Simulation smart action — modal</strong> — "Log Simulation" button on CS board card should open the existing POI log modal (same as home dashboard widget) pre-populated with the card's brand, instead of navigating away to <code>/PoiSimulation/Log</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">1d-vi – SignalR Hub</p>
                         <ul class="list-group list-group-flush mb-4">
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsLiveHelpHub</code> at <code>/hubs/cslivehelp</code></li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Groups: <code>cs-board</code> (all CS agents), <code>am-{userId}</code> (each AM sees only own cards)</li>
@@ -144,7 +153,7 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Client JS: push events update board DOM without full reload; drag-drop triggers status transitions</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-vi – Performance &amp; Duty Cycle</p>
+                        <p class="fw-semibold mb-2">1d-vii – Performance &amp; Duty Cycle</p>
                         <ul class="list-group list-group-flush mb-4">
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Cursor/keyset pagination for columns (no OFFSET — use Id cursor)</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestArchiveService</code> (<code>IHostedService</code>) — configurable via <code>appsettings.json</code> (defaults: every 6 h, archive Completed &gt; 3 days old)</li>
@@ -152,13 +161,13 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Board columns load top 50 cards; "Load more" AJAX fetches next page</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-vii – Views</p>
+                        <p class="fw-semibold mb-2">1d-viii – Views</p>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/Requests.cshtml</code> — AM Kanban (own cards)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/Board.cshtml</code> — CS Kanban (all cards, all columns)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Views/CsLiveHelp/Requests.cshtml</code> — AM Kanban (own cards)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Views/CsLiveHelp/Board.cshtml</code> — CS Kanban (all cards, all columns)</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/RequestsAllBrands.cshtml</code> — TL/Manager escalation view</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Shared partials: <code>_CsRequestCard.cshtml</code>, <code>_CsRequestThread.cshtml</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: CS Requests for AM role; All Brands under Management section</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Shared partials: <code>_CsRequestCard.cshtml</code>, <code>_CsBoardCard.cshtml</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Sidebar: CS Requests for AM role; CS Board for CS roles</li>
                         </ul>
                     </div>
 
@@ -198,7 +207,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-05-22</strong>
+                        Last updated: <strong>2025-05-22 — Phase 1d-i complete</strong>
                     </div>
 
                 </div>

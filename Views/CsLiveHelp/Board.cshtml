@@ -1,0 +1,273 @@
+@using Unified.Models.CsLiveHelp
+@{
+    ViewData["Title"] = "CS Live Help Board";
+    var requests = (List<CsRequest>)ViewBag.Requests;
+
+    var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open).ToList();
+    var inProgressCards = requests.Where(r => r.Status == CsRequestStatus.InProgress).ToList();
+    var onGoingCards    = requests.Where(r => r.Status == CsRequestStatus.OnGoing).ToList();
+    var escalatedCards  = requests.Where(r => r.Status == CsRequestStatus.Escalated).ToList();
+    var completedCards  = requests.Where(r => r.Status == CsRequestStatus.Completed).ToList();
+}
+
+<div class="container-fluid">
+
+    @if (TempData["Error"] is string err)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex align-items-center mb-3">
+        <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Live Help Board</h5>
+        <span class="badge bg-primary ms-3">@requests.Count total</span>
+    </div>
+
+    <!-- Kanban board – 5 columns -->
+    <div class="row g-3">
+
+        @* ── Open ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
+                    <span class="badge bg-secondary">Open</span>
+                    <span class="fw-semibold">Open</span>
+                    <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in openCards)
+                    {
+                        @await Html.PartialAsync("_CsBoardCard", r)
+                    }
+                    @if (!openCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">No open requests</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ── In Progress ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                    <span class="badge bg-warning text-dark">InProgress</span>
+                    <span class="fw-semibold">In Progress</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in inProgressCards)
+                    {
+                        @await Html.PartialAsync("_CsBoardCard", r)
+                    }
+                    @if (!inProgressCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">None</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ── On Going ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                    <span class="badge bg-warning text-dark">OnGoing</span>
+                    <span class="fw-semibold">On Going</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in onGoingCards)
+                    {
+                        @await Html.PartialAsync("_CsBoardCard", r)
+                    }
+                    @if (!onGoingCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">None</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ── Escalated ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-danger bg-opacity-10">
+                    <span class="badge bg-danger">Escalated</span>
+                    <span class="fw-semibold">Escalated</span>
+                    <span class="badge bg-danger rounded-pill ms-auto">@escalatedCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in escalatedCards)
+                    {
+                        @await Html.PartialAsync("_CsBoardCard", r)
+                    }
+                    @if (!escalatedCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">None</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ── Completed ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-success bg-opacity-10">
+                    <span class="badge bg-success">Done</span>
+                    <span class="fw-semibold">Completed</span>
+                    <span class="badge bg-success rounded-pill ms-auto">@completedCards.Count</span>
+                </div>
+                <div class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in completedCards)
+                    {
+                        @await Html.PartialAsync("_CsBoardCard", r)
+                    }
+                    @if (!completedCards.Any())
+                    {
+                        <p class="text-muted small text-center mt-3">None</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
+</div><!-- /container -->
+
+@* ──────────────────────────────────────────────────────────────────────────
+   Per-card modals (status, comment, escalate, smart actions)
+   ─────────────────────────────────────────────────────────────────────── *@
+@foreach (var r in requests)
+{
+    @* Status modal *@
+    <div class="modal fade" id="statusModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Move card #@r.Id</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-grid gap-2">
+                    @foreach (var s in Enum.GetValues<CsRequestStatus>())
+                    {
+                        if (s == r.Status) continue;
+                        <form asp-action="UpdateStatus" asp-route-id="@r.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="status" value="@s" />
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">→ @s</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Comment modal *@
+    <div class="modal fade" id="csCommentModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Add comment — #@r.Id</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="CsAddComment" asp-route-id="@r.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        @if (r.Comments.Any())
+                        {
+                            <div class="mb-3 border rounded p-2 small" style="max-height:180px;overflow-y:auto">
+                                @foreach (var c in r.Comments)
+                                {
+                                    <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
+                                        <span class="fw-semibold">@c.CreatedAt.ToString("HH:mm"):</span> @c.Body
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <textarea name="body" class="form-control form-control-sm" rows="3"
+                                  placeholder="Your comment…" maxlength="1000" required></textarea>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* Escalate modal *@
+    <div class="modal fade" id="escalateModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Escalate card #@r.Id?</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body small">This will move the card to the Escalated column.</div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-action="Escalate" asp-route-id="@r.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm">Escalate</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (r.RequestType?.Name == "Reset Password")
+    {
+        @* Send Reset modal *@
+        <div class="modal fade" id="resetModal-@r.Id" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">Send reset — #@r.Id?</h6>
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body small">Posts <em>"Password reset to Aa123456"</em> and marks card Completed.</div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-action="SendReset" asp-route-id="@r.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning btn-sm">Send Reset</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (r.Status == CsRequestStatus.Escalated)
+    {
+        @* Mark Passed modal *@
+        <div class="modal fade" id="passedModal-@r.Id" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">Mark passed — #@r.Id?</h6>
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body small">Posts <em>"Passed to relevant agents"</em> and marks card Completed.</div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-action="MarkPassed" asp-route-id="@r.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm">Mark Passed</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

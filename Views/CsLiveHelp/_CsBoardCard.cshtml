@@ -1,0 +1,97 @@
+@using Unified.Models.CsLiveHelp
+@model CsRequest
+@{
+    var statusBadge = Model.Status switch
+    {
+        CsRequestStatus.Open       => "bg-secondary",
+        CsRequestStatus.InProgress => "bg-warning text-dark",
+        CsRequestStatus.OnGoing    => "bg-warning text-dark",
+        CsRequestStatus.Completed  => "bg-success",
+        CsRequestStatus.Escalated  => "bg-danger",
+        _                          => "bg-secondary"
+    };
+    var isResetPassword = Model.RequestType?.Name == "Reset Password";
+    var isSimulatePoi   = Model.RequestType?.Name == "Simulate POI";
+    var isEscalated     = Model.Status == CsRequestStatus.Escalated;
+}
+
+<div class="card border shadow-sm p-2 small">
+    <div class="d-flex justify-content-between align-items-start mb-1">
+        <span class="badge @statusBadge">@Model.Status</span>
+        <span class="text-muted" style="font-size:.75rem">#@Model.Id</span>
+    </div>
+    <div class="fw-semibold">@(Model.Brand?.Name ?? "—")</div>
+    <div class="text-muted">@(Model.RequestType?.Name ?? "—")</div>
+    @if (!string.IsNullOrWhiteSpace(Model.CustomDescription))
+    {
+        <div class="text-muted mt-1" style="font-size:.75rem; white-space:pre-wrap">@Model.CustomDescription</div>
+    }
+    @if (Model.Comments.Any())
+    {
+        <div class="text-muted mt-1" style="font-size:.72rem">
+            <i class="bx bx-comment me-1"></i>@Model.Comments.Count comment(s)
+        </div>
+    }
+    <div class="text-muted mt-1" style="font-size:.72rem">@Model.CreatedAt.ToString("MMM dd, HH:mm") UTC</div>
+
+    <div class="d-flex gap-1 mt-2 flex-wrap">
+        @* Move status *@
+        <button class="btn btn-outline-secondary btn-sm py-0 px-2"
+                data-bs-toggle="modal"
+                data-bs-target="#statusModal-@Model.Id"
+                title="Move">
+            <i class="bx bx-transfer-alt"></i>
+        </button>
+
+        @* Comment *@
+        <button class="btn btn-outline-primary btn-sm py-0 px-2"
+                data-bs-toggle="modal"
+                data-bs-target="#csCommentModal-@Model.Id"
+                title="Comment">
+            <i class="bx bx-comment-add"></i>
+        </button>
+
+        @* Escalate (only when not already escalated or completed) *@
+        @if (Model.Status != CsRequestStatus.Escalated && Model.Status != CsRequestStatus.Completed)
+        {
+            <button class="btn btn-outline-danger btn-sm py-0 px-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#escalateModal-@Model.Id"
+                    title="Escalate">
+                <i class="bx bx-error-circle"></i>
+            </button>
+        }
+
+        @* Smart: Log Simulation (redirect to POI Log with brand pre-selected) *@
+        @if (isSimulatePoi)
+        {
+            <a asp-controller="PoiSimulation" asp-action="Log"
+               class="btn btn-outline-info btn-sm py-0 px-2"
+               title="Log Simulation">
+                <i class="bx bx-log-in-circle"></i>
+            </a>
+        }
+
+        @* Smart: Send Reset *@
+        @if (isResetPassword && Model.Status != CsRequestStatus.Completed)
+        {
+            <button class="btn btn-outline-warning btn-sm py-0 px-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#resetModal-@Model.Id"
+                    title="Send Reset">
+                <i class="bx bx-key"></i>
+            </button>
+        }
+
+        @* Smart: Mark Passed (only on escalated cards) *@
+        @if (isEscalated)
+        {
+            <button class="btn btn-outline-success btn-sm py-0 px-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#passedModal-@Model.Id"
+                    title="Mark Passed">
+                <i class="bx bx-check-double"></i>
+            </button>
+        }
+    </div>
+</div>

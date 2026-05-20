@@ -14,6 +14,8 @@
                     <!-- Start::nav -->
                     <nav class="main-menu-container nav nav-pills flex-column sub-open">
                         <ul class="main-menu">
+                            @if (!User.IsInRole("AccountManager"))
+                            {
                             <li class="slide__category"><span class="category-name">Main</span></li>
 
                             <li class="slide">
@@ -107,6 +109,8 @@
                                 </a>
                             </li>
 
+                            } @* end !AccountManager *@
+
                             @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
                             {
                                 <li class="slide__category"><span class="category-name">Management</span></li>
@@ -189,7 +193,29 @@
                                 </li>
                             }
 
-                                <li class="slide__category"><span class="category-name">System</span></li>
+                                @if (User.IsInRole("AccountManager"))
+                                {
+                                    <li class="slide__category"><span class="category-name">CS Support</span></li>
+                                    <li class="slide">
+                                        <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item">
+                                            <i class="bx bx-support side-menu__icon"></i>
+                                            <span class="side-menu__label">CS Requests</span>
+                                        </a>
+                                    </li>
+                                }
+
+                                @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                {
+                                    <li class="slide__category"><span class="category-name">CS Support</span></li>
+                                    <li class="slide">
+                                        <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item">
+                                            <i class="bx bx-support side-menu__icon"></i>
+                                            <span class="side-menu__label">CS Board</span>
+                                        </a>
+                                    </li>
+                                }
+
+                                    <li class="slide__category"><span class="category-name">System</span></li>
                                 <li class="slide">
                                     <a asp-controller="Home" asp-action="Roadmap" class="side-menu__item">
                                         <i class="bx bx-map-alt side-menu__icon"></i>
