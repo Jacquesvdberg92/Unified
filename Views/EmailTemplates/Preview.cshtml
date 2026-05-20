@@ -99,14 +99,14 @@
         }
     </div>
     <div class="card-body p-0">
-        <iframe id="previewFrame" style="width:100%;min-height:520px;border:0;" srcdoc=""></iframe>
+        <iframe id="previewFrame" style="width:100%;min-height:520px;border:0;" srcdoc="@renderedHtml"></iframe>
     </div>
 </div>
 
 @section Scripts {
-<div id="previewData"
-     data-html="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedHtml))"
-     data-subject="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedSubject))"
-     hidden></div>
+<script>
+    window._previewHtml    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedHtml));
+    window._previewSubject = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(renderedSubject));
+</script>
 <script src="@Url.Content("~/js/email-templates.js")"></script>
 }

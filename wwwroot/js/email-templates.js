@@ -129,17 +129,15 @@ document.querySelectorAll('.copy-btn').forEach(function (btn) {
 
 // Preview page: copy buttons
 (function () {
-    var previewDataEl = document.getElementById('previewData');
-    if (!previewDataEl) return;
-    var renderedHtml    = previewDataEl.dataset.html    || '';
-    var renderedSubject = previewDataEl.dataset.subject || '';
+    var renderedHtml    = window._previewHtml    || '';
+    var renderedSubject = window._previewSubject || '';
+    if (!renderedHtml && !renderedSubject) return;
 
     // Render preview frame on load
     (function () {
         var frame = document.getElementById('previewFrame');
         if (!frame) return;
-        var doc = frame.contentDocument || frame.contentWindow.document;
-        doc.open(); doc.write(renderedHtml); doc.close();
+        frame.srcdoc = renderedHtml || '';
     })();
 
     // Render subject
