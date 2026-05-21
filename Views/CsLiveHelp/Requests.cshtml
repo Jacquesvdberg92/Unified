@@ -8,7 +8,7 @@
     var brands = (List<Brand>)ViewBag.Brands;
 
     var openCards      = own.Where(r => r.Status == CsRequestStatus.Open).ToList();
-    var inProgressCards = own.Where(r => r.Status == CsRequestStatus.InProgress || r.Status == CsRequestStatus.OnGoing).ToList();
+    var inProgressCards = own.Where(r => r.Status == CsRequestStatus.InProgress || r.Status == CsRequestStatus.OnGoing || r.Status == CsRequestStatus.Escalated).ToList();
     var doneCards      = own.Where(r => r.Status == CsRequestStatus.Completed).ToList();
 }
 
@@ -65,7 +65,7 @@
             <div class="card h-100">
                 <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
                     <span class="badge bg-warning text-dark">In Progress</span>
-                    <span class="fw-semibold">In Progress</span>
+                    <span class="fw-semibold">In Progress / Escalated</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
                 </div>
                 <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2">
@@ -260,7 +260,7 @@
                     {
                         <div class="thread-body mb-3 border rounded p-2" style="max-height:260px;overflow-y:auto"
                              id="threadBody-@r.Id">
-                            @foreach (var c in r.Comments.OrderBy(c => c.CreatedAt))
+                            @foreach (var c in r.Comments.Where(c => !c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
                             {
                                 <div class="mb-2 p-2 rounded @(c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light")">
                                     <div class="d-flex justify-content-between mb-1">

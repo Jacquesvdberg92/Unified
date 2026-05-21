@@ -10,12 +10,17 @@
         CsRequestStatus.Escalated  => "bg-danger",
         _                          => "bg-secondary"
     };
+    var statusText = Model.Status switch
+    {
+        CsRequestStatus.Escalated => "Passed to CS",
+        _                         => Model.Status.ToString()
+    };
     var isTlManager = User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife");
 }
 
 <div class="card border shadow-sm p-2 small @(Model.Status == CsRequestStatus.Escalated ? "border-danger" : "")" data-card-id="@Model.Id">
     <div class="d-flex justify-content-between align-items-start mb-1">
-        <span class="badge @statusBadge">@Model.Status</span>
+        <span class="badge @statusBadge">@statusText</span>
         <div class="d-flex gap-1 align-items-center">
             @if (Model.IsInternal)
             {
@@ -30,16 +35,39 @@
     {
         <div class="text-muted mt-1" style="font-size:.75rem; white-space:pre-wrap">@Model.CustomDescription</div>
     }
-    @if (!Model.IsInternal && Model.AccountManager != null)
+    @if (Model.AssignedTo != null)
     {
         <div class="text-muted mt-1" style="font-size:.72rem">
-            <i class="bx bx-user me-1"></i>@(Model.AccountManager.DisplayName ?? Model.AccountManager.UserName)
+            <i class="bx bx-user me-1"></i>@(Model.AssignedTo.DisplayName ?? Model.AssignedTo.UserName)
         </div>
     }
-    @if (Model.Comments.Any())
+    @if (!string.IsNullOrWhiteSpace(Model.ClientId))
     {
-        <div class="text-muted mt-1" style="font-size:.72rem">
-            <i class="bx bx-comment me-1"></i>@Model.Comments.Count comment(s)
+        <div class="text-muted mt-1 d-flex align-items-center gap-1" style="font-size:.72rem">
+            <i class="bx bx-id-card"></i>
+            <span class="fw-semibold">@Model.ClientId</span>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-1 copy-client-id-btn"
+                    data-client-id="@Model.ClientId"
+                    title="Copy Client ID"
+                    aria-label="Copy Client ID">
+                <i class="bx bx-copy"></i>
+            </button>
+        </div>
+    }
+    @{
+        var internalCommentCount = Model.Comments.Count(c => c.IsCsInternalOnly);
+    }
+    @if (internalCommentCount > 0)
+    {
+        <div class="mt-1">
+            <button class="btn btn-link btn-sm p-0 text-muted"
+                    style="font-size:.72rem"
+                    data-bs-toggle="modal"
+                    data-bs-target="#intCommentModal-@Model.Id"
+                    title="View thread">
+                <i class="bx bx-comment-detail me-1"></i><span class="int-comment-count">@internalCommentCount</span> comment(s) — View thread
+            </button>
         </div>
     }
     <div class="text-muted mt-1" style="font-size:.72rem">@Model.CreatedAt.ToString("MMM dd, HH:mm") UTC</div>

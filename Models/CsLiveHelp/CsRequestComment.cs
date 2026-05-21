@@ -17,4 +17,7 @@ public class CsRequestComment
 
     /// <summary>True for auto-posted system messages (e.g. "Password reset to Aa123456").</summary>
     public bool   IsSystemMessage  { get; set; }
+
+    /// <summary>True when the comment should be visible to CS roles only (hidden from Account Managers).</summary>
+    public bool   IsCsInternalOnly { get; set; }
 }

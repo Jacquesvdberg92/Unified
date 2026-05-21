@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include=".github\copilot-instructions.md" />
     <None Include="tools\CsLiveHelpStress\CsLiveHelpStress.csproj" />
   </ItemGroup>
 

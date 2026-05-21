@@ -5,13 +5,12 @@
     var requests      = (List<CsRequest>)ViewBag.Requests;
     var types         = (List<CsRequestType>)ViewBag.RequestTypes;
     var brands        = (List<Brand>)ViewBag.Brands;
-    var escalatedOnly = (bool)ViewBag.EscalatedOnly;
     var isTlManager   = (bool)ViewBag.IsTlManager;
 
-    var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open).ToList();
+    var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open || r.Status == CsRequestStatus.Escalated).ToList();
     var inProgressCards = requests.Where(r => r.Status == CsRequestStatus.InProgress).ToList();
     var onGoingCards    = requests.Where(r => r.Status == CsRequestStatus.OnGoing).ToList();
-    var escalatedCards  = requests.Where(r => r.Status == CsRequestStatus.Escalated).ToList();
+    var completedCards  = requests.Where(r => r.Status == CsRequestStatus.Completed).ToList();
 }
 
 <div class="container-fluid">
@@ -37,86 +36,71 @@
             <span class="badge bg-primary">@requests.Count shown</span>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="RequestsAllBrands" asp-route-escalatedOnly="false"
-               class="btn btn-sm @(escalatedOnly ? "btn-outline-secondary" : "btn-secondary")">
-                All Open
-            </a>
-            <a asp-action="RequestsAllBrands" asp-route-escalatedOnly="true"
-               class="btn btn-sm @(escalatedOnly ? "btn-danger" : "btn-outline-danger")">
-                <i class="bx bx-error-circle me-1"></i>Escalated Only
-                @if (escalatedCards.Any())
-                {
-                    <span class="badge bg-light text-danger ms-1">@escalatedCards.Count</span>
-                }
-            </a>
             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newInternalRequestModal">
                 <i class="bx bx-plus me-1"></i>New Request
             </button>
         </div>
     </div>
 
-    <!-- Kanban board – 4 columns (no Completed on this view) -->
+    <!-- Kanban board -->
     <div class="row g-3">
 
         @* ── Open ── *@
-        @if (!escalatedOnly)
-        {
-            <div class="col">
-                <div class="card h-100" style="min-width:220px">
-                    <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
-                        <span class="badge bg-secondary">Open</span>
-                        <span class="fw-semibold">Open</span>
-                        <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
-                    </div>
-                    <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2">
-                        @foreach (var r in openCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                        @if (!openCards.Any()) { <p class="text-muted small text-center mt-3">No open requests</p> }
-                    </div>
-                </div>
-            </div>
-
-            @* ── In Progress ── *@
-            <div class="col">
-                <div class="card h-100" style="min-width:220px">
-                    <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
-                        <span class="badge bg-warning text-dark">InProgress</span>
-                        <span class="fw-semibold">In Progress</span>
-                        <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
-                    </div>
-                    <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2">
-                        @foreach (var r in inProgressCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                        @if (!inProgressCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
-                    </div>
-                </div>
-            </div>
-
-            @* ── On Going ── *@
-            <div class="col">
-                <div class="card h-100" style="min-width:220px">
-                    <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
-                        <span class="badge bg-warning text-dark">OnGoing</span>
-                        <span class="fw-semibold">On Going</span>
-                        <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
-                    </div>
-                    <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2">
-                        @foreach (var r in onGoingCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                        @if (!onGoingCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
-                    </div>
-                </div>
-            </div>
-        }
-
-        @* ── Escalated ── *@
         <div class="col">
-            <div class="card h-100 border-danger" style="min-width:220px">
-                <div class="card-header d-flex align-items-center gap-2 bg-danger bg-opacity-10">
-                    <span class="badge bg-danger">Escalated</span>
-                    <span class="fw-semibold">Escalated</span>
-                    <span class="badge bg-danger rounded-pill ms-auto">@escalatedCards.Count</span>
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
+                    <span class="badge bg-secondary">Open</span>
+                    <span class="fw-semibold">Open</span>
+                    <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
                 </div>
-                <div id="col-Escalated" class="card-body p-2 d-flex flex-column gap-2">
-                    @foreach (var r in escalatedCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                    @if (!escalatedCards.Any()) { <p class="text-muted small text-center mt-3">No escalated cards 🎉</p> }
+                <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in openCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                    @if (!openCards.Any()) { <p class="text-muted small text-center mt-3">No open requests</p> }
+                </div>
+            </div>
+        </div>
+
+        @* ── In Progress ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                    <span class="badge bg-warning text-dark">InProgress</span>
+                    <span class="fw-semibold">In Progress</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
+                </div>
+                <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in inProgressCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                    @if (!inProgressCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                </div>
+            </div>
+        </div>
+
+        @* ── On Going ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                    <span class="badge bg-warning text-dark">OnGoing</span>
+                    <span class="fw-semibold">On Going</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
+                </div>
+                <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in onGoingCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                    @if (!onGoingCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                </div>
+            </div>
+        </div>
+
+        @* ── Completed ── *@
+        <div class="col">
+            <div class="card h-100" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-success bg-opacity-10">
+                    <span class="badge bg-success">Done</span>
+                    <span class="fw-semibold">Completed</span>
+                    <span class="badge bg-success rounded-pill ms-auto">@completedCards.Count</span>
+                </div>
+                <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in completedCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                    @if (!completedCards.Any()) { <p class="text-muted small text-center mt-3">No completed requests</p> }
                 </div>
             </div>
         </div>
@@ -207,10 +191,10 @@
                 <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post">
                     @Html.AntiForgeryToken()
                     <div class="modal-body">
-                        @if (r.Comments.Any())
+                        @if (r.Comments.Any(c => c.IsCsInternalOnly))
                         {
                             <div class="mb-3 border rounded p-2 small" style="max-height:200px;overflow-y:auto">
-                                @foreach (var c in r.Comments)
+                                @foreach (var c in r.Comments.Where(c => c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
                                 {
                                     <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
                                         <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body

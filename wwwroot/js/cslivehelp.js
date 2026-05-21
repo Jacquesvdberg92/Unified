@@ -52,6 +52,10 @@
         console[success ? 'info' : 'warn']('[CsLiveHelp]', msg);
     }
 
+    function statusLabel(status) {
+        return status === 'Escalated' ? 'Passed to CS' : status;
+    }
+
     function escHtml(s) {
         return String(s)
             .replace(/&/g, '&amp;')
@@ -85,6 +89,15 @@
     }
 
     const hasAnyBoardColumn = !!document.querySelector('[id^="col-"]');
+    const hasEscalatedColumn = !!document.getElementById('col-Escalated');
+
+    function statusColumn(status) {
+        if (status === 'Escalated' && !hasEscalatedColumn && document.getElementById('col-InProgress')) {
+            return 'InProgress';
+        }
+
+        return status;
+    }
 
     // ── SignalR connection ───────────────────────────────────────────────────
 
@@ -100,7 +113,7 @@
         if (!card) return;
 
         const newStatus = data.newStatus;
-        const targetCol = colEl(newStatus);
+        const targetCol = colEl(statusColumn(newStatus));
         const sourceCol = card.closest('.kanban-col');
 
         if (targetCol && sourceCol !== targetCol) {
@@ -112,7 +125,7 @@
         const badge = card.querySelector('.badge');
         if (badge && badgeClass[newStatus]) {
             badge.className = 'badge ' + badgeClass[newStatus];
-            badge.textContent = newStatus;
+            badge.textContent = statusLabel(newStatus);
         }
 
         if (data.assignedTo) {
@@ -124,7 +137,7 @@
     // ── Event: CardAdded ─────────────────────────────────────────────────────
 
     connection.on('CardAdded', function (data) {
-        const col = colEl(data.status ?? 'Open');
+        const col = colEl(statusColumn(data.status ?? 'Open'));
         if (!col) return;
 
         removeEmptyHint(col);
@@ -157,7 +170,7 @@
                     '<span class="small fw-semibold">#' + data.id + ' &mdash; ' + escHtml(data.brandName ?? '') +
                     ' &middot; ' + escHtml(data.requestType ?? '') +
                     (data.isInternal ? ' <span class="badge bg-info text-dark ms-1">Internal</span>' : '') + '</span>' +
-                    '<span class="badge ' + (badgeClass[data.status] ?? 'bg-secondary') + '">' + escHtml(data.status ?? 'Open') + '</span>' +
+                    '<span class="badge ' + (badgeClass[data.status] ?? 'bg-secondary') + '">' + escHtml(statusLabel(data.status ?? 'Open')) + '</span>' +
                 '</div>' +
                 '<div class="card-footer py-1 px-3 text-muted small">New card &mdash; ' +
                 '<a href="" onclick="location.reload();return false;">refresh</a> for full actions</div>';
@@ -242,6 +255,106 @@
 
     connection.start()
         .catch(err => console.warn('[CsLiveHelp] SignalR connection failed:', err));
+
+    // Copy client ID helper for CS/internal cards
+    document.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.copy-client-id-btn');
+        if (!btn) return;
+
+        const clientId = btn.dataset.clientId;
+        if (!clientId) return;
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(clientId);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = clientId;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            }
+
+            showToastMsg('Client ID copied.', true);
+        } catch (_) {
+            showToastMsg('Failed to copy Client ID.', false);
+        }
+    });
+
+    // ── AM Requests page: AJAX form submissions ──────────────────────────────
+    //
+    // Intercept form submissions for: createModal, editModal-*, deleteModal-*,
+    // commentModal-* (reply form). On success the SignalR events update the DOM;
+    // we just close the modal and show a toast.
+
+    function ajaxFormSetup(formEl, modalEl) {
+        formEl.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const fd   = new FormData(formEl);
+            const url  = formEl.action || formEl.getAttribute('action');
+            const btn  = formEl.querySelector('[type="submit"]');
+            if (btn) { btn.disabled = true; }
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (_) { /* non-JSON body */ }
+
+                if (res.ok && data.success !== false) {
+                    // Close the modal
+                    if (modalEl) {
+                        const bsModal = bootstrap.Modal.getInstance(modalEl);
+                        if (bsModal) bsModal.hide();
+                    }
+                    formEl.reset();
+                    showToastMsg(data.message ?? 'Done.', true);
+                } else {
+                    showToastMsg(data.error ?? 'An error occurred. Please try again.', false);
+                }
+            } catch (_) {
+                showToastMsg('Network error. Please try again.', false);
+            } finally {
+                if (btn) { btn.disabled = false; }
+            }
+        });
+    }
+
+    function wireAmForms() {
+        // Create modal
+        const createModal = document.getElementById('createModal');
+        const createForm  = createModal?.querySelector('form');
+        if (createForm && createModal) ajaxFormSetup(createForm, createModal);
+
+        // Edit modals  (editModal-*)
+        document.querySelectorAll('[id^="editModal-"]').forEach(function (modal) {
+            const form = modal.querySelector('form');
+            if (form) ajaxFormSetup(form, modal);
+        });
+
+        // Delete confirm modals (deleteModal-*)
+        document.querySelectorAll('[id^="deleteModal-"]').forEach(function (modal) {
+            const form = modal.querySelector('form');
+            if (form) ajaxFormSetup(form, modal);
+        });
+
+        // Comment reply forms inside commentModal-*
+        document.querySelectorAll('[id^="commentModal-"]').forEach(function (modal) {
+            const form = modal.querySelector('form[id^="commentForm-"]');
+            if (form) ajaxFormSetup(form, modal);
+        });
+    }
+
+    wireAmForms();
 
     if (!hasAnyBoardColumn) return;
 

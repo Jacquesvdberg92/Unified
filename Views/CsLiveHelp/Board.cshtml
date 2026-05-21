@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "CS Live Help Board";
     var requests = (List<CsRequest>)ViewBag.Requests;
+    var teamAllocationTeams = (List<Unified.Models.Identity.Team>)ViewBag.TeamAllocationTeams;
 
     var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open).ToList();
     var inProgressCards = requests.Where(r => r.Status == CsRequestStatus.InProgress).ToList();
@@ -224,10 +225,10 @@
                 <form asp-action="CsAddComment" asp-route-id="@r.Id" method="post">
                     @Html.AntiForgeryToken()
                     <div class="modal-body">
-                        @if (r.Comments.Any())
+                        @if (r.Comments.Any(c => !c.IsCsInternalOnly))
                         {
                             <div class="thread-body mb-3 border rounded p-2 small" style="max-height:220px;overflow-y:auto">
-                                @foreach (var c in r.Comments)
+                                @foreach (var c in r.Comments.Where(c => !c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
                                 {
                                     <div class="mb-2 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
                                         <div class="d-flex gap-1 align-items-center mb-1" style="font-size:.7rem">
@@ -252,6 +253,12 @@
                                 <p class="mb-0">No comments yet.</p>
                             </div>
                         }
+                        @if (r.Comments.Any(c => c.IsCsInternalOnly))
+                        {
+                            <div class="alert alert-secondary py-1 px-2 small mb-2">
+                                <i class="bx bx-lock me-1"></i>This card has <strong>@r.Comments.Count(c => c.IsCsInternalOnly)</strong> CS-internal note(s) not shown here.
+                            </div>
+                        }
                         <textarea name="body" class="form-control form-control-sm" rows="3"
                                   placeholder="Write a reply…" maxlength="1000" required></textarea>
                     </div>
@@ -268,18 +275,28 @@
     <div class="modal fade" id="escalateModal-@r.Id" tabindex="-1">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h6 class="modal-title">Escalate card #@r.Id?</h6>
-                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body small">This will move the card to the Escalated column.</div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <form asp-action="Escalate" asp-route-id="@r.Id" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
+                <form asp-action="Escalate" asp-route-id="@r.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">Escalate card #@r.Id?</h6>
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small mb-2">This will move the card to the Escalated column.</p>
+                        <label class="form-label form-label-sm">Team allocation <span class="text-danger">*</span></label>
+                        <select name="assignedTeamId" class="form-select form-select-sm" required>
+                            <option value="">— select team —</option>
+                            @foreach (var t in teamAllocationTeams)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger btn-sm">Escalate</button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -122,7 +122,8 @@ public class CsLiveHelpService
             AuthorId   = amId,
             Body       = body.Trim(),
             CreatedAt  = DateTime.UtcNow,
-            IsSystemMessage = false
+            IsSystemMessage = false,
+            IsCsInternalOnly = false
         });
         req.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -180,7 +181,7 @@ public class CsLiveHelpService
         if (escalatedOnly)
             query = query.Where(r => r.Status == CsRequestStatus.Escalated);
         else
-            query = query.Where(r => r.Status != CsRequestStatus.Completed);
+            query = query.Where(r => r.Status != CsRequestStatus.Completed || r.Status == CsRequestStatus.Escalated);
 
         return await query
             .Include(r => r.Brand)
@@ -288,7 +289,7 @@ public class CsLiveHelpService
     // ── CS Agent: comments ─────────────────────────────────────────────────
 
     /// <summary>CS agents can comment on any request (not ownership-gated).</summary>
-    public async Task<bool> CsAddCommentAsync(int requestId, string authorId, string body, bool isSystem = false)
+    public async Task<bool> CsAddCommentAsync(int requestId, string authorId, string body, bool isSystem = false, bool isCsInternalOnly = false)
     {
         var req = await _db.CsRequests.FindAsync(requestId);
         if (req is null) return false;
@@ -299,7 +300,8 @@ public class CsLiveHelpService
             AuthorId        = authorId,
             Body            = body.Trim(),
             CreatedAt       = DateTime.UtcNow,
-            IsSystemMessage = isSystem
+            IsSystemMessage = isSystem,
+            IsCsInternalOnly = isCsInternalOnly
         });
         req.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();

@@ -23,6 +23,20 @@
     </div>
     <div class="fw-semibold">@(Model.Brand?.Name ?? "—")</div>
     <div class="text-muted">@(Model.RequestType?.Name ?? "—")</div>
+    @if (!string.IsNullOrWhiteSpace(Model.ClientId))
+    {
+        <div class="text-muted mt-1 d-flex align-items-center gap-1" style="font-size:.72rem">
+            <i class="bx bx-id-card"></i>
+            <span class="fw-semibold">@Model.ClientId</span>
+            <button type="button"
+                    class="btn btn-outline-secondary btn-sm py-0 px-1 copy-client-id-btn"
+                    data-client-id="@Model.ClientId"
+                    title="Copy Client ID"
+                    aria-label="Copy Client ID">
+                <i class="bx bx-copy"></i>
+            </button>
+        </div>
+    }
     @if (!string.IsNullOrWhiteSpace(Model.CustomDescription))
     {
         <div class="text-muted mt-1" style="font-size:.75rem; white-space:pre-wrap">@Model.CustomDescription</div>
@@ -30,16 +44,19 @@
     @if (assignedName is not null)
     {
         <div class="text-muted mt-1" style="font-size:.72rem">
-            <i class="bx bx-user-check me-1"></i><span class="cs-assigned-name">@assignedName</span>
+            <i class="bx bx-user-check me-1"></i>Picked by: <span class="cs-assigned-name fw-semibold">@assignedName</span>
         </div>
+    }
+    @{
+        var visibleCount = Model.Comments.Count(c => !c.IsCsInternalOnly);
     }
     <div class="mt-1">
         <button class="btn btn-link btn-sm p-0 text-muted comment-count-btn"
-                style="font-size:.72rem;@(Model.Comments.Any() ? "" : "display:none")"
+                style="font-size:.72rem;@(visibleCount > 0 ? "" : "display:none")"
                 data-bs-toggle="modal"
                 data-bs-target="#csCommentModal-@Model.Id"
                 title="View thread">
-            <i class="bx bx-comment me-1"></i><span class="comment-count">@Model.Comments.Count</span> comment(s) — View thread
+            <i class="bx bx-comment me-1"></i><span class="comment-count">@visibleCount</span> comment(s) — View thread
         </button>
     </div>
     <div class="text-muted mt-1" style="font-size:.72rem">@Model.CreatedAt.ToString("MMM dd, HH:mm") UTC</div>

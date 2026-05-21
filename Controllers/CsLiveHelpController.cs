@@ -65,17 +65,19 @@ public class CsLiveHelpController : Controller
 
         if (await _svc.IsRateLimitedAsync(amId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Too many requests. Please wait a moment and try again." });
             TempData["Error"] = "Too many requests. Please wait a moment and try again.";
             return RedirectToAction(nameof(Requests));
         }
 
         if (string.IsNullOrWhiteSpace(clientId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Client ID is required." });
             TempData["Error"] = "Client ID is required.";
             return RedirectToAction(nameof(Requests));
         }
-
-        // Validate the brand exists (AMs are external – not in AgentBrands)
         var brandExists = await _db.Brands.AnyAsync(b => b.Id == brandId);
         if (!brandExists) return BadRequest();
 
@@ -86,17 +88,23 @@ public class CsLiveHelpController : Controller
         {
             if (string.IsNullOrWhiteSpace(customDescription))
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "A description is required for 'Other' request type." });
                 TempData["Error"] = "A description is required for 'Other' request type.";
                 return RedirectToAction(nameof(Requests));
             }
             if (customDescription.Length > 500)
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Description must be 500 characters or fewer." });
                 TempData["Error"] = "Description must be 500 characters or fewer.";
                 return RedirectToAction(nameof(Requests));
             }
             // English-only check: reject if any non-Latin characters found
             if (Regex.IsMatch(customDescription, @"[^\u0000-\u007F]"))
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Description must be written in English only." });
                 TempData["Error"] = "Description must be written in English only.";
                 return RedirectToAction(nameof(Requests));
             }
@@ -111,6 +119,9 @@ public class CsLiveHelpController : Controller
         var payload = new { id = req.Id, brandName = brand?.Name, requestType = rtype?.Name, status = req.Status.ToString(), isInternal = false };
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardAdded", payload);
         await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Request submitted." });
 
         TempData["Success"] = "Request submitted.";
         return RedirectToAction(nameof(Requests));
@@ -127,12 +138,16 @@ public class CsLiveHelpController : Controller
 
         if (await _svc.IsRateLimitedAsync(amId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Too many requests. Please wait a moment and try again." });
             TempData["Error"] = "Too many requests. Please wait a moment and try again.";
             return RedirectToAction(nameof(Requests));
         }
 
         if (string.IsNullOrWhiteSpace(clientId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Client ID is required." });
             TempData["Error"] = "Client ID is required.";
             return RedirectToAction(nameof(Requests));
         }
@@ -147,16 +162,22 @@ public class CsLiveHelpController : Controller
         {
             if (string.IsNullOrWhiteSpace(customDescription))
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "A description is required for 'Other' request type." });
                 TempData["Error"] = "A description is required for 'Other' request type.";
                 return RedirectToAction(nameof(Requests));
             }
             if (customDescription.Length > 500)
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Description must be 500 characters or fewer." });
                 TempData["Error"] = "Description must be 500 characters or fewer.";
                 return RedirectToAction(nameof(Requests));
             }
             if (Regex.IsMatch(customDescription, @"[^\u0000-\u007F]"))
             {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Description must be written in English only." });
                 TempData["Error"] = "Description must be written in English only.";
                 return RedirectToAction(nameof(Requests));
             }
@@ -173,6 +194,9 @@ public class CsLiveHelpController : Controller
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardUpdated", payload);
         await _hub.Clients.Group("cs-board").SendAsync("CardUpdated", payload);
 
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Request updated." });
+
         TempData["Success"] = "Request updated.";
         return RedirectToAction(nameof(Requests));
     }
@@ -188,6 +212,8 @@ public class CsLiveHelpController : Controller
 
         if (await _svc.IsRateLimitedAsync(amId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Too many requests. Please wait a moment and try again." });
             TempData["Error"] = "Too many requests. Please wait a moment and try again.";
             return RedirectToAction(nameof(Requests));
         }
@@ -199,6 +225,9 @@ public class CsLiveHelpController : Controller
 
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardDeleted", new { id });
         await _hub.Clients.Group("cs-board").SendAsync("CardDeleted", new { id });
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Request deleted." });
 
         TempData["Success"] = "Request deleted.";
         return RedirectToAction(nameof(Requests));
@@ -215,12 +244,16 @@ public class CsLiveHelpController : Controller
 
         if (await _svc.IsRateLimitedAsync(amId))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Too many requests. Please wait a moment and try again." });
             TempData["Error"] = "Too many requests. Please wait a moment and try again.";
             return RedirectToAction(nameof(Requests));
         }
 
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Comment must be between 1 and 1000 characters." });
             TempData["Error"] = "Comment must be between 1 and 1000 characters.";
             return RedirectToAction(nameof(Requests));
         }
@@ -233,6 +266,9 @@ public class CsLiveHelpController : Controller
         var author = await _users.GetUserAsync(User);
         await _hub.Clients.Group($"am-{amId}").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, createdAt = DateTime.UtcNow });
         await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, createdAt = DateTime.UtcNow });
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Comment added." });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(Requests));
@@ -258,7 +294,12 @@ public class CsLiveHelpController : Controller
     public async Task<IActionResult> Board()
     {
         var requests = await _svc.GetBoardRequestsAsync();
+        var teamAllocationTeams = await _db.Teams
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+
         ViewBag.Requests = requests;
+        ViewBag.TeamAllocationTeams = teamAllocationTeams;
         return View();
     }
 
@@ -302,21 +343,34 @@ public class CsLiveHelpController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> Escalate(int id)
+    public async Task<IActionResult> Escalate(int id, int assignedTeamId)
     {
         var csId = _users.GetUserId(User)!;
+
+        if (assignedTeamId <= 0)
+        {
+            TempData["Error"] = "Please select a team allocation before passing to CS.";
+            return RedirectToAction(nameof(Board));
+        }
+
+        var assignedTeam = await _db.Teams.FindAsync(assignedTeamId);
+        if (assignedTeam is null)
+        {
+            TempData["Error"] = "Selected team allocation is invalid.";
+            return RedirectToAction(nameof(Board));
+        }
+
         var ok = await _svc.UpdateStatusAsync(id, CsRequestStatus.Escalated, csId);
         if (!ok) return NotFound();
 
-        await _svc.CsAddCommentAsync(id, csId, "Card escalated.", isSystem: true);
+        await _svc.CsAddCommentAsync(id, csId, $"Card escalated. Team allocation: {assignedTeam.Name}.", isSystem: true);
         await _svc.AuditAsync(csId, "Escalate", id, GetClientIp());
 
-        var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = agent?.DisplayName });
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = assignedTeam.Name });
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
-            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = agent?.DisplayName });
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = assignedTeam.Name });
 
         TempData["Success"] = "Card escalated.";
         return RedirectToAction(nameof(Board));
@@ -359,7 +413,7 @@ public class CsLiveHelpController : Controller
         }
 
         var csId = _users.GetUserId(User)!;
-        var ok   = await _svc.CsAddCommentAsync(id, csId, body);
+        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: false);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "CsAddComment", id, GetClientIp());
@@ -389,7 +443,7 @@ public class CsLiveHelpController : Controller
 
         var agent = await _users.GetUserAsync(User);
         await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = "Completed", assignedTo = agent?.DisplayName });
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body = "Password reset to Aa123456", isSystem = true, createdAt = DateTime.UtcNow });
+        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body = "Password reset to Aa123456. <- please note the fullstop is part of the password", isSystem = true, createdAt = DateTime.UtcNow });
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
@@ -443,14 +497,9 @@ public class CsLiveHelpController : Controller
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> RequestsAllBrands(bool escalatedOnly = false)
     {
-        // TL/Manager default: show Escalated; agents default: all open
         var isTlManager = User.IsInRole(Roles.TeamLeader)
                        || User.IsInRole(Roles.BrandManager)
                        || User.IsInRole(Roles.SwissArmyKnife);
-
-        // If the query param wasn't explicitly supplied, apply the role default
-        if (!HttpContext.Request.Query.ContainsKey("escalatedOnly"))
-            escalatedOnly = isTlManager;
 
         var requests = await _svc.GetAllBrandsRequestsAsync(escalatedOnly);
         var types    = await _svc.GetRequestTypesAsync();
@@ -532,7 +581,7 @@ public class CsLiveHelpController : Controller
         }
 
         var csId = _users.GetUserId(User)!;
-        var ok   = await _svc.CsAddCommentAsync(id, csId, body);
+        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: true);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "InternalAddComment", id, GetClientIp());
@@ -585,6 +634,11 @@ public class CsLiveHelpController : Controller
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
         var req = await _svc.GetRequestAsync(id);
         if (req is null) return NotFound();
+
+        ViewBag.TeamAllocationTeams = await _db.Teams
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+
         return PartialView("_CsBoardCardModals", req);
     }
 }
