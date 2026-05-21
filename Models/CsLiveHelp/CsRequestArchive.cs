@@ -9,8 +9,10 @@ public class CsRequestArchive
     public int    Id                  { get; set; }
     public int    OriginalRequestId   { get; set; }
 
-    public string AccountManagerId    { get; set; } = string.Empty;
+    public string? AccountManagerId   { get; set; }
     public AppUser? AccountManager    { get; set; }
+
+    public bool IsInternal             { get; set; }
 
     public int    BrandId             { get; set; }
     public Brand? Brand               { get; set; }
@@ -19,6 +21,9 @@ public class CsRequestArchive
     public CsRequestType? RequestType { get; set; }
 
     public string? CustomDescription  { get; set; }
+    public string? AssignedToId        { get; set; }
+    public AppUser? AssignedTo         { get; set; }
+
     public CsRequestStatus Status     { get; set; }
 
     public DateTime CreatedAt         { get; set; }

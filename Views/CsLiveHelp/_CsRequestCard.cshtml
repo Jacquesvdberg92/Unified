@@ -13,16 +13,34 @@
     };
 }
 
-<div class="card border shadow-sm p-2 small">
+<div class="card border shadow-sm p-2 small" data-card-id="@Model.Id">
     <div class="d-flex justify-content-between align-items-start mb-1">
         <span class="badge @statusBadge">@Model.Status</span>
         <span class="text-muted" style="font-size:.75rem">#@Model.Id</span>
     </div>
     <div class="fw-semibold">@(Model.Brand?.Name ?? "—")</div>
     <div class="text-muted">@(Model.RequestType?.Name ?? "—")</div>
+    @if (!string.IsNullOrWhiteSpace(Model.ClientId))
+    {
+        <div class="text-muted mt-1" style="font-size:.75rem">
+            <i class="bx bx-user me-1"></i>Client: <span class="fw-semibold">@Model.ClientId</span>
+        </div>
+    }
     @if (!string.IsNullOrWhiteSpace(Model.CustomDescription))
     {
         <div class="text-muted mt-1" style="font-size:.75rem; white-space:pre-wrap">@Model.CustomDescription</div>
+    }
+    @if (Model.Comments.Any())
+    {
+        <div class="mt-1">
+            <button class="btn btn-link btn-sm p-0 text-muted comment-count-btn"
+                    style="font-size:.72rem"
+                    data-bs-toggle="modal"
+                    data-bs-target="#commentModal-@Model.Id"
+                    title="View thread">
+                <i class="bx bx-comment me-1"></i><span class="comment-count">@Model.Comments.Count</span> comment(s) — View thread
+            </button>
+        </div>
     }
     <div class="text-muted mt-1" style="font-size:.72rem">@Model.CreatedAt.ToString("MMM dd, HH:mm") UTC</div>
 

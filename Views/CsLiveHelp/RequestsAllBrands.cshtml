@@ -1,0 +1,273 @@
+@using Unified.Models.CsLiveHelp
+@using Unified.Models.EmailTemplates
+@{
+    ViewData["Title"] = "CS Requests – All Brands";
+    var requests      = (List<CsRequest>)ViewBag.Requests;
+    var types         = (List<CsRequestType>)ViewBag.RequestTypes;
+    var brands        = (List<Brand>)ViewBag.Brands;
+    var escalatedOnly = (bool)ViewBag.EscalatedOnly;
+    var isTlManager   = (bool)ViewBag.IsTlManager;
+
+    var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open).ToList();
+    var inProgressCards = requests.Where(r => r.Status == CsRequestStatus.InProgress).ToList();
+    var onGoingCards    = requests.Where(r => r.Status == CsRequestStatus.OnGoing).ToList();
+    var escalatedCards  = requests.Where(r => r.Status == CsRequestStatus.Escalated).ToList();
+}
+
+<div class="container-fluid">
+
+    @if (TempData["Error"] is string err)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="mb-0"><i class="bx bx-globe me-2"></i>CS Requests – All Brands</h5>
+            <span class="badge bg-primary">@requests.Count shown</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="RequestsAllBrands" asp-route-escalatedOnly="false"
+               class="btn btn-sm @(escalatedOnly ? "btn-outline-secondary" : "btn-secondary")">
+                All Open
+            </a>
+            <a asp-action="RequestsAllBrands" asp-route-escalatedOnly="true"
+               class="btn btn-sm @(escalatedOnly ? "btn-danger" : "btn-outline-danger")">
+                <i class="bx bx-error-circle me-1"></i>Escalated Only
+                @if (escalatedCards.Any())
+                {
+                    <span class="badge bg-light text-danger ms-1">@escalatedCards.Count</span>
+                }
+            </a>
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newInternalRequestModal">
+                <i class="bx bx-plus me-1"></i>New Request
+            </button>
+        </div>
+    </div>
+
+    <!-- Kanban board – 4 columns (no Completed on this view) -->
+    <div class="row g-3">
+
+        @* ── Open ── *@
+        @if (!escalatedOnly)
+        {
+            <div class="col">
+                <div class="card h-100" style="min-width:220px">
+                    <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
+                        <span class="badge bg-secondary">Open</span>
+                        <span class="fw-semibold">Open</span>
+                        <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
+                    </div>
+                    <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2">
+                        @foreach (var r in openCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                        @if (!openCards.Any()) { <p class="text-muted small text-center mt-3">No open requests</p> }
+                    </div>
+                </div>
+            </div>
+
+            @* ── In Progress ── *@
+            <div class="col">
+                <div class="card h-100" style="min-width:220px">
+                    <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                        <span class="badge bg-warning text-dark">InProgress</span>
+                        <span class="fw-semibold">In Progress</span>
+                        <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
+                    </div>
+                    <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2">
+                        @foreach (var r in inProgressCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                        @if (!inProgressCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                    </div>
+                </div>
+            </div>
+
+            @* ── On Going ── *@
+            <div class="col">
+                <div class="card h-100" style="min-width:220px">
+                    <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
+                        <span class="badge bg-warning text-dark">OnGoing</span>
+                        <span class="fw-semibold">On Going</span>
+                        <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
+                    </div>
+                    <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2">
+                        @foreach (var r in onGoingCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                        @if (!onGoingCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* ── Escalated ── *@
+        <div class="col">
+            <div class="card h-100 border-danger" style="min-width:220px">
+                <div class="card-header d-flex align-items-center gap-2 bg-danger bg-opacity-10">
+                    <span class="badge bg-danger">Escalated</span>
+                    <span class="fw-semibold">Escalated</span>
+                    <span class="badge bg-danger rounded-pill ms-auto">@escalatedCards.Count</span>
+                </div>
+                <div id="col-Escalated" class="card-body p-2 d-flex flex-column gap-2">
+                    @foreach (var r in escalatedCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
+                    @if (!escalatedCards.Any()) { <p class="text-muted small text-center mt-3">No escalated cards 🎉</p> }
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
+</div><!-- /container -->
+
+@* ── New Internal Request Modal ─────────────────────────────────────────── *@
+<div class="modal fade" id="newInternalRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bx bx-plus-circle me-2"></i>New Internal Request</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateInternalRequest" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm">Brand</label>
+                        <select name="brandId" class="form-select form-select-sm" required>
+                            <option value="">— select brand —</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm">Request Type</label>
+                        <select name="requestTypeId" id="intReqType" class="form-select form-select-sm" required>
+                            <option value="">— select type —</option>
+                            @foreach (var t in types)
+                            {
+                                <option value="@t.Id" data-isother="@t.IsOther.ToString().ToLower()">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3" id="intDescRow" style="display:none">
+                        <label class="form-label form-label-sm">Description <span class="text-muted">(max 500 chars)</span></label>
+                        <textarea name="customDescription" class="form-control form-control-sm" rows="3" maxlength="500"
+                                  placeholder="Describe the issue…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ── Per-card modals ─────────────────────────────────────────────────────── *@
+@foreach (var r in requests)
+{
+    @* Status move modal *@
+    <div class="modal fade" id="intStatusModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Move card #@r.Id</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-grid gap-2">
+                    @foreach (var s in Enum.GetValues<CsRequestStatus>())
+                    {
+                        if (s == r.Status || s == CsRequestStatus.Completed) continue;
+                        <form asp-action="InternalUpdateStatus" asp-route-id="@r.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="status" value="@s" />
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">→ @s</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Comment modal *@
+    <div class="modal fade" id="intCommentModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Thread — #@r.Id @(r.IsInternal ? "(Internal)" : "")</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        @if (r.Comments.Any())
+                        {
+                            <div class="mb-3 border rounded p-2 small" style="max-height:200px;overflow-y:auto">
+                                @foreach (var c in r.Comments)
+                                {
+                                    <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
+                                        <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <textarea name="body" class="form-control form-control-sm" rows="3"
+                                  placeholder="Your comment…" maxlength="1000" required></textarea>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @* Resolve Escalation modal — TL/Manager only *@
+    @if (isTlManager && r.Status == CsRequestStatus.Escalated)
+    {
+        <div class="modal fade" id="intResolveModal-@r.Id" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header py-2">
+                        <h6 class="modal-title">Resolve escalation #@r.Id?</h6>
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body small">Marks the card Completed and posts a system comment.</div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <form asp-action="ResolveEscalation" asp-route-id="@r.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm">Resolve</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        // Show/hide description textarea based on request type selection
+        document.getElementById('intReqType')?.addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            const isOther = opt.dataset.isother === 'true';
+            const row = document.getElementById('intDescRow');
+            if (row) {
+                row.style.display = isOther ? '' : 'none';
+                const ta = row.querySelector('textarea');
+                if (ta) ta.required = isOther;
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script src="~/js/cslivehelp.js"></script>
+}

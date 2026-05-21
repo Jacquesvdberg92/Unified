@@ -23,6 +23,8 @@ public class CsLiveHelpService
             .Where(r => r.AccountManagerId == amId && r.Id > afterId)
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
+                .ThenInclude(c => c.Author)
             .OrderByDescending(r => r.CreatedAt)
             .Take(50)
             .ToListAsync();
@@ -30,10 +32,15 @@ public class CsLiveHelpService
     /// <summary>Returns other AMs' open requests for the same brands as this AM (read-only duplicate guard).</summary>
     public async Task<List<CsRequest>> GetOtherAmOpenRequestsAsync(string amId, int afterId = 0)
     {
-        var amBrandIds = await _db.AgentBrands
-            .Where(ab => ab.AgentId == amId)
-            .Select(ab => ab.BrandId)
+        // AMs are external users — they are not in AgentBrands, so derive brand IDs from their own requests
+        var amBrandIds = await _db.CsRequests
+            .Where(r => r.AccountManagerId == amId)
+            .Select(r => r.BrandId)
+            .Distinct()
             .ToListAsync();
+
+        if (amBrandIds.Count == 0)
+            return new List<CsRequest>();
 
         return await _db.CsRequests
             .Where(r => r.AccountManagerId != amId
@@ -50,7 +57,7 @@ public class CsLiveHelpService
     // ── AM: CRUD ──────────────────────────────────────────────────────────
 
     public async Task<CsRequest> CreateRequestAsync(
-        string amId, int brandId, int requestTypeId, string? customDescription)
+        string amId, int brandId, int requestTypeId, string? customDescription, string? clientId)
     {
         var req = new CsRequest
         {
@@ -58,6 +65,7 @@ public class CsLiveHelpService
             BrandId           = brandId,
             RequestTypeId     = requestTypeId,
             CustomDescription = customDescription?.Trim(),
+            ClientId          = clientId?.Trim(),
             Status            = CsRequestStatus.Open,
             CreatedAt         = DateTime.UtcNow,
             UpdatedAt         = DateTime.UtcNow
@@ -75,7 +83,7 @@ public class CsLiveHelpService
             .FirstOrDefaultAsync(r => r.Id == id && r.AccountManagerId == amId && r.Status == CsRequestStatus.Open);
 
     public async Task<bool> EditRequestAsync(
-        int id, string amId, int brandId, int requestTypeId, string? customDescription)
+        int id, string amId, int brandId, int requestTypeId, string? customDescription, string? clientId)
     {
         var req = await GetOwnOpenRequestAsync(id, amId);
         if (req is null) return false;
@@ -83,6 +91,7 @@ public class CsLiveHelpService
         req.BrandId           = brandId;
         req.RequestTypeId     = requestTypeId;
         req.CustomDescription = customDescription?.Trim();
+        req.ClientId          = clientId?.Trim();
         req.UpdatedAt         = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return true;
@@ -156,36 +165,122 @@ public class CsLiveHelpService
             r.RequestTypeId == requestTypeId &&
             r.Status == CsRequestStatus.Open);
 
-    // ── CS Agent: board ───────────────────────────────────────────────────
+    // ── CS Agent: All-Brands internal board ──────────────────────────────
 
-    /// <summary>Returns all non-archived requests for the CS board, newest first, paginated (top 50).</summary>
-    public async Task<List<CsRequest>> GetBoardRequestsAsync(int afterId = 0)
-        => await _db.CsRequests
-            .Where(r => r.Id > afterId)
+    /// <summary>
+    /// Returns requests for the internal "All Brands" board.
+    /// TL/Manager default view = Escalated only; agents get all open items.
+    /// <paramref name="escalatedOnly"/> controls the filter.
+    /// </summary>
+    public async Task<List<CsRequest>> GetAllBrandsRequestsAsync(bool escalatedOnly = false, int afterId = 0)
+    {
+        var query = _db.CsRequests
+            .Where(r => r.Id > afterId);
+
+        if (escalatedOnly)
+            query = query.Where(r => r.Status == CsRequestStatus.Escalated);
+        else
+            query = query.Where(r => r.Status != CsRequestStatus.Completed);
+
+        return await query
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AccountManager)
+            .Include(r => r.AssignedTo)
             .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
+                .ThenInclude(c => c.Author)
             .OrderByDescending(r => r.CreatedAt)
             .Take(50)
             .ToListAsync();
+    }
+
+    /// <summary>Returns how many cards are currently in Escalated status (used for sidebar badge).</summary>
+    public async Task<int> GetEscalatedCountAsync()
+        => await _db.CsRequests.CountAsync(r => r.Status == CsRequestStatus.Escalated);
+
+    /// <summary>Creates a CS-internal request (not originating from an AM).</summary>
+    public async Task<CsRequest> CreateInternalRequestAsync(
+        string authorId, int brandId, int requestTypeId, string? customDescription)
+    {
+        var req = new CsRequest
+        {
+            AccountManagerId  = null,
+            IsInternal        = true,
+            BrandId           = brandId,
+            RequestTypeId     = requestTypeId,
+            CustomDescription = customDescription?.Trim(),
+            Status            = CsRequestStatus.Open,
+            CreatedAt         = DateTime.UtcNow,
+            UpdatedAt         = DateTime.UtcNow
+        };
+        _db.CsRequests.Add(req);
+        await _db.SaveChangesAsync();
+        return req;
+    }
+
+    /// <summary>Resolves an escalated card — sets Status to Completed and posts a system comment.</summary>
+    public async Task<bool> ResolveEscalationAsync(int id, string authorId)
+    {
+        var req = await _db.CsRequests.FindAsync(id);
+        if (req is null || req.Status != CsRequestStatus.Escalated) return false;
+
+        req.Status    = CsRequestStatus.Completed;
+        req.UpdatedAt = DateTime.UtcNow;
+        _db.CsRequestComments.Add(new CsRequestComment
+        {
+            RequestId       = id,
+            AuthorId        = authorId,
+            Body            = "Escalation resolved.",
+            CreatedAt       = DateTime.UtcNow,
+            IsSystemMessage = true
+        });
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    // ── CS Agent: board ───────────────────────────────────────────────────
+
+    /// <summary>Returns all non-archived requests for the CS board, newest first, paginated (top 50).</summary>
+    public async Task<List<CsRequest>> GetBoardRequestsAsync(int afterId = 0, CsRequestStatus? status = null)
+    {
+        var q = _db.CsRequests.Where(r => r.Id > afterId);
+        if (status.HasValue) q = q.Where(r => r.Status == status.Value);
+        return await q
+            .Include(r => r.Brand)
+            .Include(r => r.RequestType)
+            .Include(r => r.AssignedTo)
+            .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
+                .ThenInclude(c => c.Author)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(50)
+            .ToListAsync();
+    }
 
     /// <summary>Returns the request regardless of owner — used by CS agents who may act on any card.</summary>
     public async Task<CsRequest?> GetRequestAsync(int id)
         => await _db.CsRequests
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AssignedTo)
             .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
+                .ThenInclude(c => c.Author)
             .FirstOrDefaultAsync(r => r.Id == id);
 
     // ── CS Agent: status transition ────────────────────────────────────────
 
-    public async Task<bool> UpdateStatusAsync(int id, CsRequestStatus newStatus)
+    /// <summary>
+    /// Updates the card status and optionally assigns the card to the agent who moved it.
+    /// Pass <paramref name="assignedToId"/> to record the mover; null leaves existing assignment unchanged.
+    /// </summary>
+    public async Task<bool> UpdateStatusAsync(int id, CsRequestStatus newStatus, string? assignedToId = null)
     {
         var req = await _db.CsRequests.FindAsync(id);
         if (req is null) return false;
 
         req.Status    = newStatus;
         req.UpdatedAt = DateTime.UtcNow;
+        if (assignedToId is not null)
+            req.AssignedToId = assignedToId;
         await _db.SaveChangesAsync();
         return true;
     }

@@ -33,6 +33,8 @@
     </div>
 
     <!-- Kanban board – 5 columns -->
+    @* Hidden antiforgery token used by drag-drop fetch *@
+    @Html.AntiForgeryToken()
     <div class="row g-3">
 
         @* ── Open ── *@
@@ -43,14 +45,22 @@
                     <span class="fw-semibold">Open</span>
                     <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
                 </div>
-                <div class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Open" style="min-height:80px">
                     @foreach (var r in openCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
                     }
                     @if (!openCards.Any())
                     {
-                        <p class="text-muted small text-center mt-3">No open requests</p>
+                        <p class="text-muted small text-center mt-3 empty-col-hint">No open requests</p>
+                    }
+                    @if (openCards.Count == 50)
+                    {
+                        <div class="load-more-row mt-auto pt-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100 load-more-btn"
+                                    data-status="Open"
+                                    data-after-id="@openCards.Last().Id">Load more</button>
+                        </div>
                     }
                 </div>
             </div>
@@ -64,14 +74,22 @@
                     <span class="fw-semibold">In Progress</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
                 </div>
-                <div class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="InProgress" style="min-height:80px">
                     @foreach (var r in inProgressCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
                     }
                     @if (!inProgressCards.Any())
                     {
-                        <p class="text-muted small text-center mt-3">None</p>
+                        <p class="text-muted small text-center mt-3 empty-col-hint">None</p>
+                    }
+                    @if (inProgressCards.Count == 50)
+                    {
+                        <div class="load-more-row mt-auto pt-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100 load-more-btn"
+                                    data-status="InProgress"
+                                    data-after-id="@inProgressCards.Last().Id">Load more</button>
+                        </div>
                     }
                 </div>
             </div>
@@ -85,14 +103,22 @@
                     <span class="fw-semibold">On Going</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
                 </div>
-                <div class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="OnGoing" style="min-height:80px">
                     @foreach (var r in onGoingCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
                     }
                     @if (!onGoingCards.Any())
                     {
-                        <p class="text-muted small text-center mt-3">None</p>
+                        <p class="text-muted small text-center mt-3 empty-col-hint">None</p>
+                    }
+                    @if (onGoingCards.Count == 50)
+                    {
+                        <div class="load-more-row mt-auto pt-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100 load-more-btn"
+                                    data-status="OnGoing"
+                                    data-after-id="@onGoingCards.Last().Id">Load more</button>
+                        </div>
                     }
                 </div>
             </div>
@@ -106,14 +132,22 @@
                     <span class="fw-semibold">Escalated</span>
                     <span class="badge bg-danger rounded-pill ms-auto">@escalatedCards.Count</span>
                 </div>
-                <div class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-Escalated" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Escalated" style="min-height:80px">
                     @foreach (var r in escalatedCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
                     }
                     @if (!escalatedCards.Any())
                     {
-                        <p class="text-muted small text-center mt-3">None</p>
+                        <p class="text-muted small text-center mt-3 empty-col-hint">None</p>
+                    }
+                    @if (escalatedCards.Count == 50)
+                    {
+                        <div class="load-more-row mt-auto pt-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100 load-more-btn"
+                                    data-status="Escalated"
+                                    data-after-id="@escalatedCards.Last().Id">Load more</button>
+                        </div>
                     }
                 </div>
             </div>
@@ -127,14 +161,22 @@
                     <span class="fw-semibold">Completed</span>
                     <span class="badge bg-success rounded-pill ms-auto">@completedCards.Count</span>
                 </div>
-                <div class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Completed" style="min-height:80px">
                     @foreach (var r in completedCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
                     }
                     @if (!completedCards.Any())
                     {
-                        <p class="text-muted small text-center mt-3">None</p>
+                        <p class="text-muted small text-center mt-3 empty-col-hint">None</p>
+                    }
+                    @if (completedCards.Count == 50)
+                    {
+                        <div class="load-more-row mt-auto pt-2">
+                            <button class="btn btn-outline-secondary btn-sm w-100 load-more-btn"
+                                    data-status="Completed"
+                                    data-after-id="@completedCards.Last().Id">Load more</button>
+                        </div>
                     }
                 </div>
             </div>
@@ -176,7 +218,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header py-2">
-                    <h6 class="modal-title">Add comment — #@r.Id</h6>
+                    <h6 class="modal-title"><i class="bx bx-message-square-detail me-1"></i>Thread — #@r.Id · @(r.Brand?.Name ?? "—")</h6>
                     <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
                 </div>
                 <form asp-action="CsAddComment" asp-route-id="@r.Id" method="post">
@@ -184,21 +226,38 @@
                     <div class="modal-body">
                         @if (r.Comments.Any())
                         {
-                            <div class="mb-3 border rounded p-2 small" style="max-height:180px;overflow-y:auto">
+                            <div class="thread-body mb-3 border rounded p-2 small" style="max-height:220px;overflow-y:auto">
                                 @foreach (var c in r.Comments)
                                 {
-                                    <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
-                                        <span class="fw-semibold">@c.CreatedAt.ToString("HH:mm"):</span> @c.Body
+                                    <div class="mb-2 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
+                                        <div class="d-flex gap-1 align-items-center mb-1" style="font-size:.7rem">
+                                            @if (c.IsSystemMessage)
+                                            {
+                                                <span class="badge bg-secondary" style="font-size:.65rem">System</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-semibold">@(c.Author?.DisplayName ?? c.Author?.UserName ?? "—")</span>
+                                            }
+                                            <span class="text-muted">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
+                                        </div>
+                                        <div>@c.Body</div>
                                     </div>
                                 }
                             </div>
                         }
+                        else
+                        {
+                            <div class="thread-body mb-3 border rounded p-2 small text-muted" style="max-height:220px;overflow-y:auto">
+                                <p class="mb-0">No comments yet.</p>
+                            </div>
+                        }
                         <textarea name="body" class="form-control form-control-sm" rows="3"
-                                  placeholder="Your comment…" maxlength="1000" required></textarea>
+                                  placeholder="Write a reply…" maxlength="1000" required></textarea>
                     </div>
                     <div class="modal-footer py-2">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-send me-1"></i>Post reply</button>
                     </div>
                 </form>
             </div>
@@ -270,4 +329,150 @@
             </div>
         </div>
     }
+}
+
+@* ── Shared POI Log modal (opened by data-modal-src on Simulate POI cards) ── *@
+<div class="modal fade" id="poiLogModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bx bx-id-card me-2"></i>Log POI Simulation</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    // Antiforgery token injected by @Html.AntiForgeryToken() in the board
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    function showToastMsg(msg, success) {
+        // reuse dashboard-widgets toast if available, otherwise alert
+        if (typeof showToast === 'function') { showToast(msg, success); return; }
+        if (!success) console.error(msg);
+    }
+
+    // Initialise SortableJS on every kanban column
+    document.querySelectorAll('.kanban-col').forEach(function (col) {
+        Sortable.create(col, {
+            group:     'kanban',          // cards can move between all columns
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            dragClass:  'sortable-drag',
+            filter:    'button, a, input, textarea, .modal', // don't drag when clicking buttons
+            preventOnFilter: false,
+            onEnd: async function (evt) {
+                const card       = evt.item;
+                const cardId     = card.dataset.cardId;
+                const newStatus  = evt.to.dataset.status;
+                const oldStatus  = evt.from.dataset.status;
+
+                if (!cardId || !newStatus || newStatus === oldStatus) return;
+
+                // Remove empty-column hint from target col
+                evt.to.querySelectorAll('.empty-col-hint').forEach(el => el.remove());
+
+                try {
+                    const fd = new FormData();
+                    fd.append('status', newStatus);
+                    fd.append('__RequestVerificationToken', token);
+
+                    const res = await fetch(`/CsLiveHelp/UpdateStatusJson/${cardId}`, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    if (res.ok) {
+                        // Update the badge inside the moved card
+                        const badge = card.querySelector('.badge');
+                        if (badge) {
+                            const cls = {
+                                Open:       'bg-secondary',
+                                InProgress: 'bg-warning text-dark',
+                                OnGoing:    'bg-warning text-dark',
+                                Escalated:  'bg-danger',
+                                Completed:  'bg-success'
+                            }[newStatus] ?? 'bg-secondary';
+                            badge.className = 'badge ' + cls;
+                            badge.textContent = newStatus;
+                        }
+                        showToastMsg('Card moved to ' + newStatus, true);
+                    } else {
+                        // Revert the DOM move on failure
+                        evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
+                        showToastMsg('Failed to update card status.', false);
+                    }
+                } catch (_) {
+                    evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
+                    showToastMsg('Network error — card move reverted.', false);
+                }
+            }
+        });
+    });
+
+    // Highlight drop target column while dragging
+    document.addEventListener('dragover', function (e) {
+        const col = e.target.closest('.kanban-col');
+        document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        if (col) col.classList.add('drag-over');
+    });
+    document.addEventListener('dragleave', function (e) {
+        if (!e.relatedTarget?.closest('.kanban-col')) {
+            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        }
+    });
+    document.addEventListener('drop', function () {
+        document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+    });
+
+    // POI modal loader — triggered by buttons with data-modal-src targeting #poiLogModal
+    const poiModal = document.getElementById('poiLogModal');
+    if (poiModal) {
+        poiModal.addEventListener('show.bs.modal', async function (e) {
+            const btn = e.relatedTarget;
+            const src = btn?.dataset?.modalSrc;
+            if (!src) return;
+            const body = poiModal.querySelector('.modal-body');
+            body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            try {
+                const res = await fetch(src, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (res.ok) body.innerHTML = await res.text();
+                else body.innerHTML = '<p class="text-danger">Failed to load form.</p>';
+            } catch (_) {
+                body.innerHTML = '<p class="text-danger">Network error.</p>';
+            }
+        });
+
+        // Clear modal body on close so next open re-fetches
+        poiModal.addEventListener('hidden.bs.modal', function () {
+            const body = poiModal.querySelector('.modal-body');
+            body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        });
+    }
+})();
+</script>
+<style>
+    .sortable-ghost  { opacity: .4; background: #e8f4ff; border: 2px dashed #0d6efd !important; }
+    .sortable-drag   { box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+    .kanban-col      { transition: background .15s; cursor: default; }
+    .kanban-col .card { cursor: grab; }
+    .kanban-col .card:active { cursor: grabbing; }
+    .drag-over       { background: rgba(13,110,253,.06) !important; border: 2px dashed #0d6efd; border-radius: .375rem; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+<script src="~/js/cslivehelp.js"></script>
 }

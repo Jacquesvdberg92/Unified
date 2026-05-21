@@ -1,6 +1,7 @@
 @using Unified.Models.EmailTemplates
 @{
-    var brands = (List<Brand>)ViewBag.Brands;
+    var brands             = (List<Brand>)ViewBag.Brands;
+    var preselectedBrandId = ViewBag.PreselectedBrandId as int?;
 }
 
 <form action="/PoiSimulation/Log" method="post"
@@ -30,7 +31,14 @@
             <option value="">— Select brand —</option>
             @foreach (var b in brands)
             {
-                <option value="@b.Id">@b.Name</option>
+                if (preselectedBrandId == b.Id)
+                {
+                    <option value="@b.Id" selected="selected">@b.Name</option>
+                }
+                else
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
             }
         </select>
     </div>

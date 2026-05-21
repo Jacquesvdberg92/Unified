@@ -213,6 +213,21 @@
                                             <span class="side-menu__label">CS Board</span>
                                         </a>
                                     </li>
+                                    <li class="slide">
+                                        <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
+                                            <i class="bx bx-globe side-menu__icon"></i>
+                                            <span class="side-menu__label">
+                                                @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                                {
+                                                    <text>All Brands</text>
+                                                }
+                                                else
+                                                {
+                                                    <text>Team Board</text>
+                                                }
+                                            </span>
+                                        </a>
+                                    </li>
                                 }
 
                                     <li class="slide__category"><span class="category-name">System</span></li>

@@ -126,55 +126,55 @@
   - `Escalated` card → button: **"Mark Passed"** → posts system comment: *"Passed to relevant agents"* + marks Completed
 - [x] `POST /CsLiveHelp/Escalate/{id}` — CS escalates card (Status = Escalated); card moves to Escalated column
 
-### 1d-iv – Backend: CS Team Leader / Manager View + Requests All Brands (Internal Board)
+### 1d-iv – Backend: CS Team Leader / Manager View + Requests All Brands (Internal Board) ✅
 > **Context:** This is a CS-internal escalation and notice board — not AM-facing.
 > Escalated cards from CS Live Help become visible here automatically.
 > All CS roles can comment and update cards on this board.
 > Performance and pagination model mirrors the CS Live Help board (top 50, keyset cursor, same architecture).
 
-- [ ] `GET  /CsLiveHelp/RequestsAllBrands` — **Internal CS board**
+- [x] `GET  /CsLiveHelp/RequestsAllBrands` — **Internal CS board**
   - **Default audience:** CS Team Leaders and Managers see all brands, all escalated items
   - **Escalation visibility:** when any card is escalated (from CS Live Help or internal), it becomes visible to **all CS agents** on this board — not just TL/Manager
   - **Notifications (Phase 1d-ix — deferred):** on escalation, notify agents allocated to the escalated card's brand *and* the language assigned during the escalation process; notification system not yet built — placeholder only
   - CS agents can also **post new internal requests directly** on this board (not originating from an AM)
   - All CS roles (agent, TL, Manager) can post comments and update card status on this board
   - TL/Manager default filter view: Escalated; agents default: all open
-- [ ] `POST /CsLiveHelp/ResolveEscalation/{id}` — TL/Manager marks escalated card resolved/completed
+- [x] `POST /CsLiveHelp/ResolveEscalation/{id}` — TL/Manager marks escalated card resolved/completed
 - [ ] **Image attachments on CS Live Help board (AM-facing)** — AMs can attach images to requests and comments; stored as blobs or file references; max size TBD; rendered inline on the card thread
 - [ ] **File attachments on Requests All Brands (internal board)** — CS agents/TL/Manager can attach files (images, docs, etc.) to internal board posts and comments; same storage pattern as AM image attachments
-- [ ] Add "Requests – All Brands" link to Management sidebar section (TL/Manager only); add "Team Board" link for CS agents (visible when an escalated card exists for their brands)
+- [x] Add "Requests – All Brands" link to Management sidebar section (TL/Manager only); add "Team Board" link for CS agents
 
 ### 1d-v – UX / Polish (discovered during testing)
-- [ ] **Comment visibility** — CS Board cards have no way to read existing comments; add a "View Thread" button/modal that shows the full comment thread (author, timestamp, body, system-message flag) before posting a reply
-- [ ] **Drag-and-drop column transitions** — replace the "Move" button modal with SortableJS (or native HTML5 drag) so agents can drag cards between status columns; drop fires `POST /CsLiveHelp/UpdateStatus/{id}` via fetch
-- [ ] **Auto-assign on move** — when a CS agent moves a card (status transition), record `AssignedToId` on the `CsRequest` and show the assigned agent's name on the card; add `AssignedToId` FK + EF migration
-- [ ] **Real-time board updates** — board currently requires a page refresh to show changes; addressed by SignalR hub in 1d-vi (push diffs on card add/update/delete/comment)
-- [ ] **POI Simulation smart action — modal instead of redirect** — "Log Simulation" button on a CS board card should open the existing POI log modal (same as the home dashboard widget) pre-populated with the card's brand, instead of navigating away to `/PoiSimulation/Log`
+- [x] **Comment visibility** — CS Board cards have no way to read existing comments; add a "View Thread" button/modal that shows the full comment thread (author, timestamp, body, system-message flag) before posting a reply
+- [x] **Drag-and-drop column transitions** — replace the "Move" button modal with SortableJS so agents can drag cards between status columns; drop fires `POST /CsLiveHelp/UpdateStatusJson/{id}` via fetch
+- [x] **Auto-assign on move** — when a CS agent moves a card (status transition), record `AssignedToId` on the `CsRequest` and show the assigned agent's name on the card; `AssignedToId` FK + EF migration `Phase1dv_AssignedTo` applied
+- [x] **Real-time board updates** — SignalR hub (1d-vi) pushes `CardAdded`, `CardUpdated`, `CardDeleted`, `CardStatusChanged`, `CommentAdded`; board DOM updated without page refresh
+- [x] **POI Simulation smart action — modal instead of redirect** — "Log Simulation" button on a CS board card opens the POI log modal pre-populated with the card's brand via `/PoiSimulation/LogPartialWithBrand?brandId={id}`
 
 ### 1d-vi – Real-Time SignalR Hub
-- [ ] Create `CsLiveHelpHub` (SignalR hub)
+- [x] Create `CsLiveHelpHub` (SignalR hub)
   - Groups: `cs-board` (all CS agents), `am-{userId}` (each AM sees only their own cards)
   - Events pushed: `CardAdded`, `CardUpdated`, `CardStatusChanged`, `CardDeleted`, `CommentAdded`
-- [ ] Register hub in `Program.cs` at `/hubs/cslivehelp`
-- [ ] Client JS (`wwwroot/js/cslivehelp.js`): connect to hub, handle push events to update board DOM without full reload
-- [ ] CS Board JS: drag-and-drop columns map to status transitions (call `UpdateStatus` on drop)
+- [x] Register hub in `Program.cs` at `/hubs/cslivehelp`
+- [x] Client JS (`wwwroot/js/cslivehelp.js`): connect to hub, handle push events to update board DOM without full reload
+- [x] CS Board JS: drag-and-drop columns already wired; SignalR events (`CardStatusChanged`) move cards across columns in real time
 
 ### 1d-vi – Performance & Duty Cycle
-- [ ] Add DB indexes: `CsRequest(Status)`, `CsRequest(CreatedAt)`, `CsRequest(BrandId)`, `CsRequest(AccountManagerId)`
-- [ ] Implement cursor/keyset pagination for board columns (no OFFSET – use `Id` cursor)
-- [ ] Create `CsRequestArchiveService` (background `IHostedService`):
+- [x] Add DB indexes: `CsRequest(Status)`, `CsRequest(CreatedAt)`, `CsRequest(BrandId)`, `CsRequest(AccountManagerId)` — already present in `AppDbContext.cs`
+- [x] Implement cursor/keyset pagination for board columns (no OFFSET – use `Id` cursor) — `GetBoardRequestsAsync(afterId)` already uses `Where(r => r.Id > afterId).Take(50)`
+- [x] Create `CsRequestArchiveService` (background `IHostedService`)
   - Interval and age threshold read from `appsettings.json` section `CsLiveHelp:Archive` — defaults: `RunEveryHours = 6`, `CompleteAgeThresholdDays = 3`
   - Moves `Completed` requests older than threshold to `CsRequestArchive`
   - Logs archive run (interval, count moved) to application log
-- [ ] Add `CsLiveHelp:Archive` config section to `appsettings.json`
-- [ ] Register archive service in `Program.cs`
-- [ ] Board columns load top 50 cards; "Load more" button fetches next page via AJAX
+- [x] Add `CsLiveHelp:Archive` config section to `appsettings.json`
+- [x] Register archive service in `Program.cs`
+- [x] Board columns load top 50 cards; "Load more" button fetches next page via `GET /CsLiveHelp/BoardPage?status=X&afterId=Y`
 
 ### 1d-vii – Views
-- [ ] `Views/CsLiveHelp/Requests.cshtml` — AM Kanban view (own cards only: Open, InProgress, Completed)
-- [ ] `Views/CsLiveHelp/Board.cshtml` — CS Kanban view (all cards: Open, InProgress, OnGoing, Escalated, Completed)
-- [ ] `Views/CsLiveHelp/RequestsAllBrands.cshtml` — TL/Manager escalation view
-- [ ] Shared partial `_CsRequestCard.cshtml` — single card component (used in all 3 views)
+- [x] `Views/CsLiveHelp/Requests.cshtml` — AM Kanban view (own cards only: Open, InProgress, Completed)
+- [x] `Views/CsLiveHelp/Board.cshtml` — CS Kanban view (all cards: Open, InProgress, OnGoing, Escalated, Completed)
+- [x] `Views/CsLiveHelp/RequestsAllBrands.cshtml` — TL/Manager escalation view
+- [x] Shared partial `_CsRequestCard.cshtml` — single card component (used in all 3 views)
 - [ ] Shared partial `_CsRequestThread.cshtml` — comment thread modal/drawer per card
 - [ ] Update sidebar: add "CS Requests" link for AM role; add "All Brands" under Management section
 
@@ -239,4 +239,4 @@
 
 ---
 
-*Last updated: 2025-05-22 — Phase 1d-i complete | Owner: @Jacquesvdberg92*
+*Last updated: 2025-05-23 — Phase 1d-vi complete | Owner: @Jacquesvdberg92*

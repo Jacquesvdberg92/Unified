@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
+using Unified.Hubs;
 using Unified.Models.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 
 // Allow large file uploads (30 MB) for brand document uploads
 builder.WebHost.ConfigureKestrel(opts =>
@@ -84,6 +86,7 @@ builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
+builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -128,6 +131,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
+app.MapHub<CsLiveHelpHub>("/hubs/cslivehelp");
 
 // Seed database
 using (var scope = app.Services.CreateScope())

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unified.Data;
 
@@ -11,9 +12,11 @@ using Unified.Data;
 namespace Unified.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260521143431_Phase1div_IsInternal")]
+    partial class Phase1div_IsInternal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,14 +278,8 @@ namespace Unified.Migrations
                     b.Property<DateTime?>("ArchivedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("AssignedToId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("BrandId")
                         .HasColumnType("int");
-
-                    b.Property<string>("ClientId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -306,8 +303,6 @@ namespace Unified.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountManagerId");
-
-                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("BrandId");
 
@@ -333,9 +328,6 @@ namespace Unified.Migrations
 
                     b.Property<DateTime>("ArchivedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("AssignedToId")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("BrandId")
                         .HasColumnType("int");
@@ -365,8 +357,6 @@ namespace Unified.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountManagerId");
-
-                    b.HasIndex("AssignedToId");
 
                     b.HasIndex("BrandId");
 
@@ -1671,10 +1661,6 @@ namespace Unified.Migrations
                         .HasForeignKey("AccountManagerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Unified.Models.Identity.AppUser", "AssignedTo")
-                        .WithMany()
-                        .HasForeignKey("AssignedToId");
-
                     b.HasOne("Unified.Models.EmailTemplates.Brand", "Brand")
                         .WithMany()
                         .HasForeignKey("BrandId")
@@ -1688,8 +1674,6 @@ namespace Unified.Migrations
                         .IsRequired();
 
                     b.Navigation("AccountManager");
-
-                    b.Navigation("AssignedTo");
 
                     b.Navigation("Brand");
 
@@ -1703,10 +1687,6 @@ namespace Unified.Migrations
                         .HasForeignKey("AccountManagerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Unified.Models.Identity.AppUser", "AssignedTo")
-                        .WithMany()
-                        .HasForeignKey("AssignedToId");
-
                     b.HasOne("Unified.Models.EmailTemplates.Brand", "Brand")
                         .WithMany()
                         .HasForeignKey("BrandId")
@@ -1720,8 +1700,6 @@ namespace Unified.Migrations
                         .IsRequired();
 
                     b.Navigation("AccountManager");
-
-                    b.Navigation("AssignedTo");
 
                     b.Navigation("Brand");
 

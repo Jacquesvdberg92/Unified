@@ -48,7 +48,17 @@ public class PoiSimulationController : Controller
     [HttpGet]
     public async Task<IActionResult> LogPartial()
     {
-        ViewBag.Brands = await _svc.GetBrandsAsync();
+        ViewBag.Brands         = await _svc.GetBrandsAsync();
+        ViewBag.PreselectedBrandId = (int?)null;
+        return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+    }
+
+    // GET /PoiSimulation/LogPartialWithBrand?brandId=N — modal form pre-populated with brand (CS board smart action)
+    [HttpGet]
+    public async Task<IActionResult> LogPartialWithBrand(int brandId)
+    {
+        ViewBag.Brands             = await _svc.GetBrandsAsync();
+        ViewBag.PreselectedBrandId = brandId;
         return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
     }
 

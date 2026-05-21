@@ -127,38 +127,40 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/Escalate/{id}</code> — move card to Escalated column</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-iv – CS Team Chat / Requests All Brands</p>
+                        <p class="fw-semibold mb-2">1d-iv – CS Team Leader / Manager View + Requests All Brands <span class="badge bg-success ms-1">Complete</span></p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/RequestsAllBrands</code> — shared internal board for all CS roles (agents, TL, Manager)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Detail TBD</span>CS-internal notice board / chat: agents post directly or pass AM requests for team visibility</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>TL/Manager default view filtered to Escalated; agents see all open items across all brands</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/ResolveEscalation/{id}</code> — mark escalated card resolved</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: "Team Chat" for CS agents; "All Brands" under Management (TL/Manager)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /CsLiveHelp/RequestsAllBrands</code> — shared internal board for all CS roles (agents, TL, Manager)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>TL/Manager default view filtered to Escalated; agents see all open items across all brands</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>CS agents can post new internal requests directly on this board</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>All CS roles can post comments and update card status on this board</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/ResolveEscalation/{id}</code> — TL/Manager marks escalated card resolved/completed</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Sidebar: "Team Board" for CS agents; "All Brands" under CS Support (TL/Manager)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Deferred</span>Image/file attachments on boards <em>(details TBD)</em></li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-v – UX / Polish <span class="badge bg-warning text-dark ms-1">Backlog</span></p>
+                        <p class="fw-semibold mb-2">1d-v – UX / Polish <span class="badge bg-success ms-1">Complete</span></p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Comment visibility</strong> — CS board cards show no way to read existing comments; add "View Thread" button/modal showing full thread (author, time, body, system flag) before posting a reply</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Drag-and-drop column transitions</strong> — replace "Move" button modal with SortableJS (or native HTML5 drag) so agents drag cards between status columns; drop fires <code>POST /CsLiveHelp/UpdateStatus/{id}</code> via fetch</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Auto-assign on move</strong> — when a CS agent moves a card, record <code>AssignedToId</code> on <code>CsRequest</code> and display assigned agent name on the card; requires <code>AssignedToId</code> FK + EF migration</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Real-time board updates</strong> — board currently requires page refresh to reflect changes; addressed by SignalR hub (1d-vi) with push diffs on card add / update / delete / comment</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>POI Simulation smart action — modal</strong> — "Log Simulation" button on CS board card should open the existing POI log modal (same as home dashboard widget) pre-populated with the card's brand, instead of navigating away to <code>/PoiSimulation/Log</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Comment visibility</strong> — "View Thread" button/modal on every CS board card shows full comment thread with author, timestamp, body, and system-message badge</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Drag-and-drop column transitions</strong> — SortableJS integration on all 5 columns; drop fires <code>POST /CsLiveHelp/UpdateStatusJson/{id}</code> via fetch with antiforgery token; DOM badge updated inline</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Auto-assign on move</strong> — moving a card records <code>AssignedToId</code> on <code>CsRequest</code>; assigned agent name shown on card; migration <code>Phase1dv_AssignedTo</code> applied</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Real-time board updates</strong> — SignalR hub pushes <code>CardAdded</code>, <code>CardUpdated</code>, <code>CardDeleted</code>, <code>CardStatusChanged</code>, <code>CommentAdded</code>; board DOM updated live via <code>cslivehelp.js</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>POI Simulation smart action — modal</strong> — "Log Simulation" button on CS board card opens POI log modal pre-populated with card's brand via <code>/PoiSimulation/LogPartialWithBrand?brandId={id}</code></li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-vi – SignalR Hub</p>
+                        <p class="fw-semibold mb-2">1d-vi – SignalR Hub <span class="badge bg-success ms-1">Complete</span></p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsLiveHelpHub</code> at <code>/hubs/cslivehelp</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Groups: <code>cs-board</code> (all CS agents), <code>am-{userId}</code> (each AM sees only own cards)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Push events: CardAdded, CardUpdated, CardStatusChanged, CardDeleted, CommentAdded</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Client JS: push events update board DOM without full reload; drag-drop triggers status transitions</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created <code>CsLiveHelpHub</code> at <code>/hubs/cslivehelp</code>; registered <code>AddSignalR()</code> in <code>Program.cs</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Groups: <code>cs-board</code> (all CS roles), <code>am-{userId}</code> (each AM sees only own cards)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Events pushed from all 12 controller mutation actions: <code>CardAdded</code>, <code>CardUpdated</code>, <code>CardStatusChanged</code>, <code>CardDeleted</code>, <code>CommentAdded</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>wwwroot/js/cslivehelp.js</code>: connects to hub, handles all push events, updates board columns and comment thread modals live</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-vii – Performance &amp; Duty Cycle</p>
+                        <p class="fw-semibold mb-2">1d-vi – Performance &amp; Duty Cycle <span class="badge bg-success ms-1">Complete</span></p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Cursor/keyset pagination for columns (no OFFSET — use Id cursor)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsRequestArchiveService</code> (<code>IHostedService</code>) — configurable via <code>appsettings.json</code> (defaults: every 6 h, archive Completed &gt; 3 days old)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>CsLiveHelp:Archive</code> section to <code>appsettings.json</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Board columns load top 50 cards; "Load more" AJAX fetches next page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>DB indexes on <code>CsRequest(Status)</code>, <code>(CreatedAt)</code>, <code>(BrandId)</code>, <code>(AccountManagerId)</code> — already present in <code>AppDbContext</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Cursor/keyset pagination — <code>GetBoardRequestsAsync(afterId)</code> uses <code>Where(r =&gt; r.Id &gt; afterId).Take(50)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created <code>CsRequestArchiveService</code> (<code>IHostedService</code>) — configurable via <code>CsLiveHelp:Archive</code> in <code>appsettings.json</code> (defaults: every 6 h, Completed &gt; 3 days old)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Board columns load top 50 cards; "Load more" button fetches next page via <code>GET /CsLiveHelp/BoardPage?status=X&amp;afterId=Y</code></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">1d-viii – Views</p>
@@ -207,7 +209,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-05-22 — Phase 1d-i complete</strong>
+                        Last updated: <strong>2025-05-23 — Phase 1d-vi complete</strong>
                     </div>
 
                 </div>

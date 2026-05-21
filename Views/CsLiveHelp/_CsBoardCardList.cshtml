@@ -1,0 +1,6 @@
+@using Unified.Models.CsLiveHelp
+@model IEnumerable<CsRequest>
+@foreach (var card in Model)
+{
+    @await Html.PartialAsync("_CsBoardCard", card)
+}
