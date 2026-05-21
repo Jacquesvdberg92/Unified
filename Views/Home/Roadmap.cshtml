@@ -78,7 +78,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-support me-1"></i>Phase 1d – CS Live Help Overhaul (Kanban + AM Requests)
-                            <span class="badge bg-warning text-dark ms-2">In Progress</span>
+                                <span class="badge bg-warning text-dark ms-2">Bug Fixing &amp; Refinement</span>
                         </h6>
                         <div class="alert alert-secondary py-2 mb-3 small">
                             <strong>Context:</strong> Brand new feature — AMs (external) submit support requests via a Kanban board; CS agents work, respond, and escalate them.
@@ -116,15 +116,15 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/AddComment/{id}</code> — AM adds comment to own request thread</li>
                         </ul>
 
-                        <p class="fw-semibold mb-2">1d-iii – CS Agent Actions</p>
+                        <p class="fw-semibold mb-2">1d-iii – CS Agent Actions <span class="badge bg-success ms-1">Complete</span></p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsLiveHelp/Board</code> — CS Kanban view (all requests, all AMs, all columns)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Status transitions: Open → InProgress → OnGoing → Completed (drag-drop or button)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Comment thread on every card (CS + AM can both post)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Simulate POI:</strong> "Log Simulation" → calls existing POI simulation log</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Reset Password:</strong> "Send Reset" → auto-posts system comment <em>"Password reset to Aa123456"</em></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><strong>Smart action — Escalated:</strong> "Mark Passed" → auto-posts system comment <em>"Passed to relevant agents"</em></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsLiveHelp/Escalate/{id}</code> — move card to Escalated column</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /CsLiveHelp/Board</code> — CS Kanban view (all requests, all AMs, all columns)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Status transitions: Open → InProgress → OnGoing → Completed (drag-drop or button)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Comment thread on every card (CS + AM can both post)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Smart action — Simulate POI:</strong> "Log Simulation" → opens POI log modal pre-populated with card's brand</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Smart action — Reset Password:</strong> "Send Reset" → auto-posts system comment <em>"Password reset to Aa123456"</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><strong>Smart action — Escalated:</strong> "Mark Passed" → auto-posts system comment <em>"Passed to relevant agents"</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /CsLiveHelp/Escalate/{id}</code> — move card to Escalated column with team allocation</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">1d-iv – CS Team Leader / Manager View + Requests All Brands <span class="badge bg-success ms-1">Complete</span></p>
@@ -167,9 +167,28 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Views/CsLiveHelp/Requests.cshtml</code> — AM Kanban (own cards)</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Views/CsLiveHelp/Board.cshtml</code> — CS Kanban (all cards, all columns)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsLiveHelp/RequestsAllBrands.cshtml</code> — TL/Manager escalation view</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Shared partials: <code>_CsRequestCard.cshtml</code>, <code>_CsBoardCard.cshtml</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Sidebar: CS Requests for AM role; CS Board for CS roles</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Views/CsLiveHelp/RequestsAllBrands.cshtml</code> — TL/Manager &amp; CS escalation board</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Shared partials: <code>_CsRequestCard.cshtml</code>, <code>_CsBoardCard.cshtml</code>, <code>_InternalBoardCard.cshtml</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Sidebar: CS Requests for AM role; CS Board for CS roles; All Brands for TL/Manager</li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase 1d – Bug Fixes & Refinement -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-bug me-1"></i>Phase 1d – Bug Fixes &amp; Refinement
+                            <span class="badge bg-warning text-dark ms-2">Active</span>
+                        </h6>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>CS-internal comments (<code>RequestsAllBrands</code>) fully isolated — invisible to AMs (no count, no hint)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Comment thread on <code>Board.cshtml</code> shows only AM↔CS comments (<code>IsCsInternalOnly = false</code>)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>CS Board: locked badge shows CS-internal note count without revealing content</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>AM <code>Requests.cshtml</code>: Escalated cards correctly land in <em>In Progress / Escalated</em> column (no stale state on refresh)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>AM forms (Create, Edit, Delete, Comment) submit via AJAX — no full-page refresh; DOM driven by SignalR</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>_InternalBoardCard</code>: shows escalating agent name (<code>AssignedTo</code>), not the AM name</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>CS Board cards: comment count only reflects AM↔CS thread; <em>Picked by</em> agent label added</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-warning text-dark">Planned</span><strong>AM image sharing in comments</strong> — AMs can attach a single image per comment (common for strange/edge cases); stored as file reference; rendered inline in the comment thread on both <code>Requests.cshtml</code> and <code>Board.cshtml</code>; max size and allowed types TBD; CS agents can view but not modify</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Final UI polish pass (spacing, labels, responsive tweaks)</li>
                         </ul>
                     </div>
 
@@ -209,7 +228,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-05-23 — Phase 1d-vi complete</strong>
+                        Last updated: <strong>2025-06 — Phase 1d bug fixing &amp; refinement | image sharing planned</strong>
                     </div>
 
                 </div>

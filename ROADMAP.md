@@ -68,7 +68,7 @@
 
 ---
 
-## Phase 1d – CS Live Help Overhaul (Kanban + AM Requests) `[ NOT STARTED ]`
+## Phase 1d – CS Live Help Overhaul (Kanban + AM Requests) `[~ BUG FIXING & REFINEMENT]`
 
 > **Context:** This is a **brand new feature**, entirely separate from the existing CS Live Help duty schedule.  
 > It introduces a Kanban-style live board where Account Managers (external) submit support requests  
@@ -121,7 +121,7 @@
 - [x] `POST /CsLiveHelp/UpdateStatus/{id}` — CS moves card: Open → InProgress → OnGoing → Completed
 - [x] `POST /CsLiveHelp/CsAddComment/{id}` — CS adds comment to thread (role-gated, not ownership-gated)
 - [x] **Smart action buttons per request type** (shown on card to CS only):
-  - `Simulate POI` request → button: **"Log Simulation"** → redirects to existing POI simulation log (brand context)
+  - `Simulate POI` request → button: **"Log Simulation"** → opens POI log modal pre-populated with card's brand
   - `Reset Password` request → button: **"Send Reset"** → posts system comment: *"Password reset to Aa123456"* + marks Completed
   - `Escalated` card → button: **"Mark Passed"** → posts system comment: *"Passed to relevant agents"* + marks Completed
 - [x] `POST /CsLiveHelp/Escalate/{id}` — CS escalates card (Status = Escalated); card moves to Escalated column
@@ -173,10 +173,22 @@
 ### 1d-vii – Views
 - [x] `Views/CsLiveHelp/Requests.cshtml` — AM Kanban view (own cards only: Open, InProgress, Completed)
 - [x] `Views/CsLiveHelp/Board.cshtml` — CS Kanban view (all cards: Open, InProgress, OnGoing, Escalated, Completed)
-- [x] `Views/CsLiveHelp/RequestsAllBrands.cshtml` — TL/Manager escalation view
-- [x] Shared partial `_CsRequestCard.cshtml` — single card component (used in all 3 views)
-- [ ] Shared partial `_CsRequestThread.cshtml` — comment thread modal/drawer per card
-- [ ] Update sidebar: add "CS Requests" link for AM role; add "All Brands" under Management section
+- [x] `Views/CsLiveHelp/RequestsAllBrands.cshtml` — TL/Manager & CS escalation board
+- [x] Shared partials: `_CsRequestCard.cshtml`, `_CsBoardCard.cshtml`, `_InternalBoardCard.cshtml`
+- [x] Sidebar: CS Requests for AM; CS Board for CS roles; All Brands for TL/Manager
+
+---
+
+### 1d-viii – Bug Fixes & Refinement `[~ ACTIVE]`
+
+- [x] CS-internal comments (`RequestsAllBrands`) fully isolated — invisible to AMs (no count, no hint, nothing)
+- [x] `Board.cshtml` comment thread shows only AM↔CS comments (`IsCsInternalOnly = false`); locked badge shows CS-internal note count without revealing content
+- [x] AM `Requests.cshtml`: Escalated cards land in *In Progress / Escalated* column; no stale state on page refresh
+- [x] AM forms (Create, Edit, Delete, AddComment) submit via AJAX — no full-page refresh; DOM driven by SignalR
+- [x] `_InternalBoardCard`: shows escalating/assigned CS agent name (`AssignedTo`), not the AM name
+- [x] CS Board cards: comment count only reflects AM↔CS thread; *Picked by* agent label added
+- [~] **AM image sharing in comments** — AMs can attach a single image per comment (for strange/edge-case evidence); stored as a file reference; rendered inline in the comment thread on both `Requests.cshtml` and `Board.cshtml`; max 5 MB, image types only (jpg/png/gif/webp); CS agents can view but not modify or delete AM attachments
+- [ ] Final UI polish pass (spacing, labels, responsive tweaks)
 
 ---
 
@@ -239,4 +251,4 @@
 
 ---
 
-*Last updated: 2025-05-23 — Phase 1d-vi complete | Owner: @Jacquesvdberg92*
+*Last updated: 2025-06 — Phase 1d bug fixing & refinement active | AM image sharing planned | Owner: @Jacquesvdberg92*
