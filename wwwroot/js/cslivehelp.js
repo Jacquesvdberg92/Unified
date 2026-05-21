@@ -245,7 +245,38 @@
 
     if (!hasAnyBoardColumn) return;
 
+    function cleanupStaleModalState() {
+        const openModals = document.querySelectorAll('.modal.show').length;
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+
+        if (openModals === 0) {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            backdrops.forEach(function (b) { b.remove(); });
+            return;
+        }
+
+        if (backdrops.length > openModals) {
+            backdrops.forEach(function (b, i) {
+                if (i < backdrops.length - openModals) b.remove();
+            });
+        }
+    }
+
     // Stabilize repeated open/close for comment modals (prevents stuck overlay/loading state)
+    document.addEventListener('show.bs.modal', function (e) {
+        const modal = e.target;
+        if (!modal?.id) return;
+
+        const isCommentModal = modal.id.startsWith('commentModal-')
+            || modal.id.startsWith('csCommentModal-')
+            || modal.id.startsWith('intCommentModal-');
+
+        if (!isCommentModal) return;
+
+        cleanupStaleModalState();
+    });
+
     document.addEventListener('hidden.bs.modal', function (e) {
         const modal = e.target;
         if (!modal?.id) return;
@@ -256,12 +287,7 @@
 
         if (!isCommentModal) return;
 
-        // If no modal is currently open, force-clean any stale backdrop/body state.
-        if (!document.querySelector('.modal.show')) {
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
-        }
+        cleanupStaleModalState();
     });
 
     // ── Load-more ────────────────────────────────────────────────────────────

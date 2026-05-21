@@ -1,16 +1,33 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tools\**;tools/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Unified.Tests\**" />
+    <Compile Remove="tools\**" />
+    <Compile Remove="tools/**" />
     <Content Remove="Unified.Tests\**" />
+    <Content Remove="tools\**" />
+    <Content Remove="tools/**" />
     <EmbeddedResource Remove="Unified.Tests\**" />
+    <EmbeddedResource Remove="tools\**" />
+    <EmbeddedResource Remove="tools/**" />
     <None Remove="Unified.Tests\**" />
+    <None Remove="tools\**" />
+    <None Remove="tools/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="tools\CsLiveHelpStress\Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="tools\CsLiveHelpStress\CsLiveHelpStress.csproj" />
   </ItemGroup>
 
   <ItemGroup>

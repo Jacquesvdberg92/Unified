@@ -50,7 +50,7 @@ public class PoiSimulationController : Controller
     {
         ViewBag.Brands         = await _svc.GetBrandsAsync();
         ViewBag.PreselectedBrandId = (int?)null;
-        return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+        return PartialView("_LogPartial");
     }
 
     // GET /PoiSimulation/LogPartialWithBrand?brandId=N — modal form pre-populated with brand (CS board smart action)
@@ -59,7 +59,7 @@ public class PoiSimulationController : Controller
     {
         ViewBag.Brands             = await _svc.GetBrandsAsync();
         ViewBag.PreselectedBrandId = brandId;
-        return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+        return PartialView("_LogPartial");
     }
 
     // POST /PoiSimulation/Log
@@ -77,7 +77,7 @@ public class PoiSimulationController : Controller
             if (isAjax)
             {
                 Response.StatusCode = StatusCodes.Status400BadRequest;
-                return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+                return PartialView("_LogPartial");
             }
 
             return View();
@@ -91,7 +91,7 @@ public class PoiSimulationController : Controller
             if (isAjax)
             {
                 Response.StatusCode = StatusCodes.Status400BadRequest;
-                return PartialView("~/Unified/Views/PoiSimulation/_LogPartial.cshtml");
+                return PartialView("_LogPartial");
             }
 
             return View();
