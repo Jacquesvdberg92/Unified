@@ -245,6 +245,25 @@
 
     if (!hasAnyBoardColumn) return;
 
+    // Stabilize repeated open/close for comment modals (prevents stuck overlay/loading state)
+    document.addEventListener('hidden.bs.modal', function (e) {
+        const modal = e.target;
+        if (!modal?.id) return;
+
+        const isCommentModal = modal.id.startsWith('commentModal-')
+            || modal.id.startsWith('csCommentModal-')
+            || modal.id.startsWith('intCommentModal-');
+
+        if (!isCommentModal) return;
+
+        // If no modal is currently open, force-clean any stale backdrop/body state.
+        if (!document.querySelector('.modal.show')) {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
+        }
+    });
+
     // ── Load-more ────────────────────────────────────────────────────────────
 
     document.querySelectorAll('.load-more-btn').forEach(function (btn) {
