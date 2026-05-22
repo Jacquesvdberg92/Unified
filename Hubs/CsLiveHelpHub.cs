@@ -17,6 +17,7 @@ namespace Unified.Hubs;
 ///   CardStatusChanged  { id, newStatus, assignedTo }
 ///   CardDeleted        { id }
 ///   CommentAdded       { requestId, author, body, isSystem, createdAt }
+///   SimulationStep     { message }  — demo simulation progress (cs-board group only)
 /// </summary>
 [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
 public class CsLiveHelpHub : Hub

@@ -31,7 +31,53 @@
     <div class="d-flex align-items-center mb-3">
         <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Live Help Board</h5>
         <span class="badge bg-primary ms-3">@requests.Count total</span>
+        @* ── SIMULATION DEMO TOGGLE (TeamLeader / BrandManager / SwissArmyKnife only) ── *@
+        @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
+             User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
+             User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
+        {
+            <button type="button" class="btn btn-outline-secondary btn-sm ms-auto"
+                    id="simPanelToggle" title="Toggle simulation panel">
+                <i class="bx bx-joystick me-1"></i>Demo
+            </button>
+        }
     </div>
+
+    @* ── SIMULATION PANEL (hidden by default, toggled by button above) ── *@
+    @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
+         User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
+         User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
+    {
+        <div id="simPanel" class="card border-info mb-3" style="display:none">
+            <div class="card-header d-flex align-items-center gap-2 bg-info bg-opacity-10 py-2">
+                <i class="bx bx-joystick text-info"></i>
+                <span class="fw-semibold small">Workflow Simulation</span>
+                <span id="simStatusBadge" class="badge bg-secondary ms-1">Stopped</span>
+                <button type="button" class="btn-close btn-sm ms-auto" id="simPanelClose" title="Hide panel"></button>
+            </div>
+            <div class="card-body p-2">
+                <div class="d-flex flex-wrap gap-2 mb-2 align-items-center">
+                    <button type="button" class="btn btn-success btn-sm" id="simStartBtn">
+                        <i class="bx bx-play me-1"></i>Start
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm" id="simStopBtn" disabled>
+                        <i class="bx bx-stop me-1"></i>Stop
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" id="simCleanBtn">
+                        <i class="bx bx-trash me-1"></i>Cleanup
+                    </button>
+                    <span class="text-muted small ms-auto fst-italic">
+                        Cards are tagged <code>DEMO-SIM-*</code>
+                    </span>
+                </div>
+                <div id="simLog"
+                     class="bg-dark text-success rounded p-2 small font-monospace"
+                     style="height:140px;overflow-y:auto;white-space:pre-wrap;font-size:.75rem">
+                    <span class="text-muted">Simulation log will appear here…</span>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Kanban board – 5 columns -->
     @* Hidden antiforgery token used by drag-drop fetch *@
@@ -366,6 +412,128 @@
         </div>
     </div>
 </div>
+
+@* ── SIMULATION JS ── *@
+@if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
+     User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
+     User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
+{
+    <script>
+    (function () {
+        'use strict';
+
+        const token      = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+        const panel      = document.getElementById('simPanel');
+        const toggleBtn  = document.getElementById('simPanelToggle');
+        const closeBtn   = document.getElementById('simPanelClose');
+        const startBtn   = document.getElementById('simStartBtn');
+        const stopBtn    = document.getElementById('simStopBtn');
+        const cleanBtn   = document.getElementById('simCleanBtn');
+        const statusBadge = document.getElementById('simStatusBadge');
+        const log        = document.getElementById('simLog');
+
+        if (!panel) return;
+
+        // ── Panel show/hide ───────────────────────────────────────────────
+        toggleBtn?.addEventListener('click', () => {
+            const visible = panel.style.display !== 'none';
+            panel.style.display = visible ? 'none' : '';
+            if (!visible) pollStatus();
+        });
+        closeBtn?.addEventListener('click', () => { panel.style.display = 'none'; });
+
+        // ── Log helper ────────────────────────────────────────────────────
+        function appendLog(msg) {
+            const wasAtBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+            log.textContent += (log.textContent.trim() === 'Simulation log will appear here…' ? '' : '') + msg + '\n';
+            if (wasAtBottom) log.scrollTop = log.scrollHeight;
+        }
+
+        // Wipe "will appear here" placeholder on first real message
+        let logInitialised = false;
+        function writeLog(msg) {
+            if (!logInitialised) { log.textContent = ''; logInitialised = true; }
+            appendLog(msg);
+        }
+
+        // ── UI state sync ─────────────────────────────────────────────────
+        function setRunning(running) {
+            startBtn.disabled = running;
+            stopBtn.disabled  = !running;
+            statusBadge.textContent = running ? 'Running' : 'Stopped';
+            statusBadge.className   = running
+                ? 'badge bg-success ms-1'
+                : 'badge bg-secondary ms-1';
+            toggleBtn.classList.toggle('btn-outline-success', running);
+            toggleBtn.classList.toggle('btn-outline-secondary', !running);
+        }
+
+        // ── Poll status every 3 s while panel is open ─────────────────────
+        async function pollStatus() {
+            try {
+                const r = await fetch('/CsLiveHelp/SimulationStatus', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (r.ok) { const d = await r.json(); setRunning(d.running); }
+            } catch (_) {}
+        }
+        pollStatus();
+        setInterval(() => { if (panel.style.display !== 'none') pollStatus(); }, 3000);
+
+        // ── Fetch helper ──────────────────────────────────────────────────
+        async function postAction(url) {
+            const fd = new FormData();
+            fd.append('__RequestVerificationToken', token);
+            const r = await fetch(url, {
+                method: 'POST', body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            return r.ok ? await r.json() : null;
+        }
+
+        // ── Start ─────────────────────────────────────────────────────────
+        startBtn?.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Starting…';
+            const d = await postAction('/CsLiveHelp/StartSimulation');
+            startBtn.innerHTML = '<i class="bx bx-play me-1"></i>Start';
+            if (d) { setRunning(d.running); writeLog('▶ ' + d.message); }
+        });
+
+        // ── Stop ──────────────────────────────────────────────────────────
+        stopBtn?.addEventListener('click', async () => {
+            stopBtn.disabled = true;
+            const d = await postAction('/CsLiveHelp/StopSimulation');
+            if (d) { setRunning(d.running); writeLog('⏹ ' + d.message); }
+        });
+
+        // ── Cleanup ───────────────────────────────────────────────────────
+        cleanBtn?.addEventListener('click', async () => {
+            if (!confirm('Remove all DEMO-SIM cards from the board?')) return;
+            cleanBtn.disabled = true;
+            cleanBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cleaning…';
+            const d = await postAction('/CsLiveHelp/CleanupSimulation');
+            cleanBtn.disabled = false;
+            cleanBtn.innerHTML = '<i class="bx bx-trash me-1"></i>Cleanup';
+            if (d) { setRunning(false); writeLog('🗑 ' + d.message); }
+        });
+
+        // ── SignalR: listen for SimulationStep events ─────────────────────
+        // The cslivehelp.js SignalR connection is created after this script,
+        // so we register the handler on the shared `window.csHub` once it is ready.
+        function hookSignalR() {
+            if (window.csHub) {
+                window.csHub.on('SimulationStep', function (payload) {
+                    writeLog(payload.message ?? payload);
+                });
+            } else {
+                setTimeout(hookSignalR, 300);
+            }
+        }
+        hookSignalR();
+    })();
+    </script>
+}
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>

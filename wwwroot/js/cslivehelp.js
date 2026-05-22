@@ -106,6 +106,9 @@
         .withAutomaticReconnect()
         .build();
 
+    // Expose so simulation panel JS (Board.cshtml) can register SimulationStep
+    window.csHub = connection;
+
     // ── Event: CardStatusChanged ─────────────────────────────────────────────
 
     connection.on('CardStatusChanged', function (data) {

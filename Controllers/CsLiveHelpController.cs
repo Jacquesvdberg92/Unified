@@ -15,19 +15,22 @@ namespace Unified.Controllers;
 [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
 public class CsLiveHelpController : Controller
 {
-    private readonly CsLiveHelpService       _svc;
-    private readonly AppDbContext            _db;
-    private readonly UserManager<AppUser>    _users;
+    private readonly CsLiveHelpService          _svc;
+    private readonly AppDbContext               _db;
+    private readonly UserManager<AppUser>       _users;
     private readonly IHubContext<CsLiveHelpHub> _hub;
+    private readonly IServiceScopeFactory       _scopeFactory;
 
     public CsLiveHelpController(
         CsLiveHelpService svc,
         AppDbContext db,
         UserManager<AppUser> users,
-        IHubContext<CsLiveHelpHub> hub)
+        IHubContext<CsLiveHelpHub> hub,
+        IServiceScopeFactory scopeFactory)
     {
-        _svc   = svc;
-        _db    = db;
+        _svc          = svc;
+        _db           = db;
+        _scopeFactory = scopeFactory;
         _users = users;
         _hub   = hub;
     }
@@ -674,5 +677,263 @@ public class CsLiveHelpController : Controller
             .ToListAsync();
 
         return PartialView("_CsBoardCardModals", req);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // DEMO SIMULATION  (TeamLeader | BrandManager | SwissArmyKnife only)
+    // Requests are identified by ClientId prefix "DEMO-SIM-" so no DB
+    // migration is required.  Remove this entire region + the Board.cshtml
+    // UI block when the demo is no longer needed.
+    // ─────────────────────────────────────────────────────────────────────
+
+    private const string SimPrefix = "DEMO-SIM-";
+
+    // Holds the running simulation loop — static so it survives across requests.
+    private static CancellationTokenSource? _simCts;
+    private static readonly object          _simLock = new();
+
+    // ── GET /CsLiveHelp/SimulationStatus ─────────────────────────────────
+
+    [HttpGet]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public IActionResult SimulationStatus()
+        => Json(new { running = _simCts is not null && !_simCts.IsCancellationRequested });
+
+    // ── POST /CsLiveHelp/StartSimulation ─────────────────────────────────
+
+    /// <summary>
+    /// Starts a continuous background simulation loop that keeps running
+    /// until StopSimulation is called.  Each iteration creates one demo card
+    /// and walks it through every lifecycle stage, pushing SignalR events
+    /// (CardAdded, CardStatusChanged, CommentAdded, SimulationStep) so the
+    /// Board and Requests views update live.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> StartSimulation()
+    {
+        lock (_simLock)
+        {
+            if (_simCts is not null && !_simCts.IsCancellationRequested)
+                return Json(new { running = true, message = "Simulation already running." });
+
+            _simCts = new CancellationTokenSource();
+        }
+
+        var actorId   = _users.GetUserId(User)!;
+        var actor     = await _users.GetUserAsync(User);
+        var actorName = actor?.DisplayName ?? "Demo";
+        var token     = _simCts.Token;
+
+        _ = Task.Run(async () =>
+            await RunSimLoopAsync(actorId, actorName, _hub, _scopeFactory, token));
+
+        return Json(new { running = true, message = "Simulation started." });
+    }
+
+    // ── POST /CsLiveHelp/StopSimulation ──────────────────────────────────
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public IActionResult StopSimulation()
+    {
+        lock (_simLock)
+        {
+            _simCts?.Cancel();
+            _simCts = null;
+        }
+        return Json(new { running = false, message = "Simulation stopped." });
+    }
+
+    // ── Simulation background loop ────────────────────────────────────────
+
+    private static readonly (string AmMsg, string CsReply, CsRequestStatus Mid, CsRequestStatus Final)[] SimScripts =
+    [
+        ("Client PL-{0} cannot log in — please reset.",               "Resetting password to default. Card marked InProgress.",          CsRequestStatus.InProgress,  CsRequestStatus.Completed),
+        ("Account verification pending for client PL-{0}.",           "KYC documents reviewed. Moved to OnGoing pending final check.",   CsRequestStatus.OnGoing,     CsRequestStatus.Completed),
+        ("Deposit not reflecting after 2 hrs for client PL-{0}.",     "Escalating to Payments team for immediate review.",               CsRequestStatus.Escalated,   CsRequestStatus.Completed),
+        ("Withdrawal on hold — compliance flag for client PL-{0}.",   "Compliance reviewed — hold lifted. Card InProgress.",             CsRequestStatus.InProgress,  CsRequestStatus.Completed),
+        ("Bonus not credited after qualifying deposit — PL-{0}.",     "Bonus manually applied by CS. Resolving now.",                    CsRequestStatus.OnGoing,     CsRequestStatus.Completed),
+        ("Client PL-{0} locked out after failed 2FA attempts.",       "2FA reset performed. Client notified via email.",                 CsRequestStatus.InProgress,  CsRequestStatus.Completed),
+        ("Account closure request received from client PL-{0}.",      "Closure process initiated. Documents sent to client.",            CsRequestStatus.Escalated,   CsRequestStatus.Completed),
+        ("Responsible gambling limit increase — client PL-{0}.",      "Cooling-off period observed. Limit adjusted per policy.",         CsRequestStatus.OnGoing,     CsRequestStatus.Completed),
+    ];
+
+    private static async Task RunSimLoopAsync(
+        string actorId, string actorName,
+        IHubContext<CsLiveHelpHub> hub,
+        IServiceScopeFactory factory,
+        CancellationToken ct)
+    {
+        var rng     = new Random();
+        var counter = 1;
+
+        async Task Step(string msg)
+            => await hub.Clients.Group("cs-board").SendAsync("SimulationStep",
+                   new { message = $"[{DateTime.UtcNow:HH:mm:ss}] {msg}" }, ct);
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await using var scope = factory.CreateAsyncScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var brand  = await db.Brands.OrderBy(b => b.Name).FirstOrDefaultAsync(ct);
+                var rtypes = await db.CsRequestTypes.Where(t => !t.IsOther).OrderBy(t => t.Id).ToListAsync(ct);
+
+                if (brand is null || rtypes.Count == 0)
+                {
+                    await Step("⚠ No brands or request types found — simulation paused.");
+                    await Task.Delay(5000, ct);
+                    continue;
+                }
+
+                var rtype    = rtypes[rng.Next(rtypes.Count)];
+                var script   = SimScripts[counter % SimScripts.Length];
+                var clientId = $"{SimPrefix}{counter:D4}";
+                var playerId = rng.Next(100_000, 999_999);
+                counter++;
+
+                var amMsg   = string.Format(script.AmMsg, playerId);
+                var csMsg   = script.CsReply;
+                var midSt   = script.Mid;
+                var finalSt = script.Final;
+
+                // 1. AM submits request ────────────────────────────────────
+                await Step($"🧑‍💼 AM submits request for client {clientId} · {rtype.Name}");
+
+                var req = new CsRequest
+                {
+                    AccountManagerId = actorId,
+                    BrandId          = brand.Id,
+                    RequestTypeId    = rtype.Id,
+                    ClientId         = clientId,
+                    Status           = CsRequestStatus.Open,
+                    CreatedAt        = DateTime.UtcNow,
+                    UpdatedAt        = DateTime.UtcNow
+                };
+                db.CsRequests.Add(req);
+                await db.SaveChangesAsync(ct);
+
+                await hub.Clients.Group("cs-board").SendAsync("CardAdded",
+                    new { id = req.Id, brandName = brand.Name, requestType = rtype.Name, status = "Open", isInternal = false }, ct);
+                await hub.Clients.Group($"am-{actorId}").SendAsync("CardAdded",
+                    new { id = req.Id, brandName = brand.Name, requestType = rtype.Name, status = "Open", isInternal = false }, ct);
+
+                await Task.Delay(rng.Next(800, 1500), ct);
+
+                // 2. AM adds a comment
+                await Step($"💬 AM: \"{amMsg}\"");
+
+                db.CsRequestComments.Add(new CsRequestComment
+                {
+                    RequestId = req.Id, AuthorId = actorId,
+                    Body      = $"[DEMO] {amMsg}", CreatedAt = DateTime.UtcNow
+                });
+                req.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+
+                await hub.Clients.Group("cs-board").SendAsync("CommentAdded",
+                    new { requestId = req.Id, author = $"{actorName} (AM)", body = $"[DEMO] {amMsg}", isSystem = false, createdAt = DateTime.UtcNow }, ct);
+                await hub.Clients.Group($"am-{actorId}").SendAsync("CommentAdded",
+                    new { requestId = req.Id, author = actorName, body = $"[DEMO] {amMsg}", isSystem = false, createdAt = DateTime.UtcNow }, ct);
+
+                await Task.Delay(rng.Next(800, 1500), ct);
+
+                // 3. CS picks up card
+                await Step($"🎯 CS picks up #{req.Id} → {midSt}");
+
+                req.Status       = midSt;
+                req.AssignedToId = actorId;
+                req.UpdatedAt    = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+
+                await hub.Clients.Group("cs-board").SendAsync("CardStatusChanged",
+                    new { id = req.Id, newStatus = midSt.ToString(), assignedTo = actorName }, ct);
+                await hub.Clients.Group($"am-{actorId}").SendAsync("CardStatusChanged",
+                    new { id = req.Id, newStatus = midSt.ToString(), assignedTo = actorName }, ct);
+
+                await Task.Delay(rng.Next(800, 1500), ct);
+
+                // 4. CS posts resolution comment
+                await Step($"✍ CS: \"{csMsg}\"");
+
+                db.CsRequestComments.Add(new CsRequestComment
+                {
+                    RequestId = req.Id, AuthorId = actorId,
+                    Body      = $"[DEMO – CS] {csMsg}", CreatedAt = DateTime.UtcNow, IsSystemMessage = true
+                });
+                req.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+
+                await hub.Clients.Group("cs-board").SendAsync("CommentAdded",
+                    new { requestId = req.Id, author = $"{actorName} (CS)", body = $"[DEMO – CS] {csMsg}", isSystem = true, createdAt = DateTime.UtcNow }, ct);
+                await hub.Clients.Group($"am-{actorId}").SendAsync("CommentAdded",
+                    new { requestId = req.Id, author = $"{actorName} (CS)", body = $"[DEMO – CS] {csMsg}", isSystem = true, createdAt = DateTime.UtcNow }, ct);
+
+                await Task.Delay(rng.Next(800, 1500), ct);
+
+                // 5. CS resolves card
+                await Step($"✅ Card #{req.Id} resolved → {finalSt}");
+
+                req.Status    = finalSt;
+                req.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+
+                await hub.Clients.Group("cs-board").SendAsync("CardStatusChanged",
+                    new { id = req.Id, newStatus = finalSt.ToString(), assignedTo = actorName }, ct);
+                await hub.Clients.Group($"am-{actorId}").SendAsync("CardStatusChanged",
+                    new { id = req.Id, newStatus = finalSt.ToString(), assignedTo = actorName }, ct);
+
+                await Task.Delay(rng.Next(1500, 2500), ct);
+            }
+            catch (OperationCanceledException) { break; }
+            catch (Exception ex)
+            {
+                await hub.Clients.Group("cs-board").SendAsync("SimulationStep",
+                    new { message = $"[{DateTime.UtcNow:HH:mm:ss}] ⚠ Error: {ex.Message}" });
+                await Task.Delay(3000);
+            }
+        }
+
+        await hub.Clients.Group("cs-board").SendAsync("SimulationStep",
+            new { message = $"[{DateTime.UtcNow:HH:mm:ss}] ⏹ Simulation stopped." });
+    }
+
+    // ── POST /CsLiveHelp/CleanupSimulation ───────────────────────────────
+
+    /// <summary>
+    /// Stops any running loop and deletes all DEMO-SIM- requests, pushing
+    /// CardDeleted SignalR events so the board clears in real-time.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> CleanupSimulation()
+    {
+        lock (_simLock)
+        {
+            _simCts?.Cancel();
+            _simCts = null;
+        }
+
+        var simRequests = await _db.CsRequests
+            .Where(r => r.ClientId != null && r.ClientId.StartsWith(SimPrefix))
+            .ToListAsync();
+
+        foreach (var r in simRequests)
+        {
+            await _hub.Clients.Group("cs-board").SendAsync("CardDeleted", new { id = r.Id });
+            if (r.AccountManagerId is not null)
+                await _hub.Clients.Group($"am-{r.AccountManagerId}").SendAsync("CardDeleted", new { id = r.Id });
+        }
+
+        _db.CsRequests.RemoveRange(simRequests);
+        await _db.SaveChangesAsync();
+
+        return Json(new { cleaned = simRequests.Count, message = $"{simRequests.Count} demo card(s) removed." });
     }
 }
