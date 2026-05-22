@@ -4,6 +4,21 @@ using Unified.Models.CsLiveHelp;
 
 namespace Unified.Services;
 
+/// <summary>
+/// CS Live Help Service — data access and mutation layer.
+/// 
+/// ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for:
+/// - Overall system architecture and three-page integration
+/// - Data visibility rules for each page (own, escalated, internal)
+/// - Comment visibility and filtering rules
+/// 
+/// Key patterns:
+/// - GetAmRequestsAsync(amId) — returns AM's own requests only
+/// - GetBoardRequestsAsync() — returns all non-internal, non-completed requests
+/// - GetAllBrandsRequestsAsync() — returns internal + escalated requests (CS-only)
+/// - GetRequestAsync(id) — returns single request with all comments (no filtering)
+/// - UpdateStatusAsync(id, status, csId) — sets AssignedToId for drag-drop tracking
+/// </summary>
 public class CsLiveHelpService
 {
     private readonly AppDbContext _db;
@@ -177,8 +192,9 @@ public class CsLiveHelpService
     /// </summary>
     public async Task<List<CsRequest>> GetAllBrandsRequestsAsync(bool escalatedOnly = false, int afterId = 0)
     {
+        // Include both internal requests AND escalated AM-originated requests
         var query = _db.CsRequests
-            .Where(r => r.Id > afterId && r.IsInternal);
+            .Where(r => r.Id > afterId && (r.IsInternal || r.Status == CsRequestStatus.Escalated));
 
         if (escalatedOnly)
             query = query.Where(r => r.Status == CsRequestStatus.Escalated);
@@ -223,11 +239,12 @@ public class CsLiveHelpService
         return req;
     }
 
-    /// <summary>Resolves an escalated card — sets Status to Completed and posts a system comment.</summary>
-    public async Task<bool> ResolveEscalationAsync(int id, string authorId)
+    /// <summary>Resolves an escalated card — sets Status to Completed and posts a system comment.
+    /// Returns the resolved <see cref="CsRequest"/> (with AccountManagerId populated) or null on failure.</summary>
+    public async Task<CsRequest?> ResolveEscalationAsync(int id, string authorId)
     {
         var req = await _db.CsRequests.FindAsync(id);
-        if (req is null || req.Status != CsRequestStatus.Escalated) return false;
+        if (req is null || req.Status != CsRequestStatus.Escalated) return null;
 
         req.Status    = CsRequestStatus.Completed;
         req.UpdatedAt = DateTime.UtcNow;
@@ -240,7 +257,7 @@ public class CsLiveHelpService
             IsSystemMessage = true
         });
         await _db.SaveChangesAsync();
-        return true;
+        return req;
     }
 
     // ── CS Agent: board ───────────────────────────────────────────────────

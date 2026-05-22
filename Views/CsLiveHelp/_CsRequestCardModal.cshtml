@@ -1,0 +1,78 @@
+@using Unified.Models.CsLiveHelp
+@model CsRequest
+@* Injected by SignalR when a new card appears on the AM Requests page
+   so that CommentAdded events can find #commentModal-N .thread-body. *@
+<div class="modal fade" id="commentModal-@Model.Id" tabindex="-1" aria-hidden="true"
+     data-request-id="@Model.Id">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    <i class="bx bx-message-square-detail me-2"></i>Thread &mdash; Request #@Model.Id
+                    @if (!string.IsNullOrWhiteSpace(Model.ClientId))
+                    {
+                        <span class="text-muted fw-normal ms-2" style="font-size:.82rem">Client: @Model.ClientId</span>
+                    }
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                @{
+                    var visibleComments = Model.Comments.Where(c => !c.IsCsInternalOnly).OrderBy(c => c.CreatedAt).ToList();
+                }
+                @if (visibleComments.Any())
+                {
+                    <div class="thread-body mb-3 border rounded p-2" style="max-height:260px;overflow-y:auto"
+                         id="threadBody-@Model.Id">
+                        @foreach (var c in visibleComments)
+                        {
+                            <div class="mb-2 p-2 rounded @(c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light")">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <strong class="small">@(c.Author?.DisplayName ?? c.AuthorId)</strong>
+                                    <span class="text-muted small">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
+                                </div>
+                                <p class="mb-0 small">@c.Body
+                                    @if (c.IsSystemMessage)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1">System</span>
+                                    }
+                                </p>
+                                @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                {
+                                    <div class="mt-2">
+                                        <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                            <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:200px" />
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3" id="threadBody-@Model.Id">No comments yet.</p>
+                }
+                <form asp-action="AddComment" asp-controller="CsLiveHelp" method="post"
+                      enctype="multipart/form-data"
+                      id="commentForm-@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <textarea name="body" class="form-control" rows="3" maxlength="1000"
+                              placeholder="Write your reply…" required></textarea>
+                    <div class="mt-2">
+                        <label class="form-label small fw-semibold mb-1">
+                            Attach image <span class="text-muted fw-normal">(optional · jpg/png/gif/webp · max 5 MB)</span>
+                        </label>
+                        <input type="file" name="image" class="form-control form-control-sm"
+                               accept="image/jpeg,image/png,image/gif,image/webp" />
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

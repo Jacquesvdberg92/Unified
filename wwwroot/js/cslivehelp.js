@@ -1,6 +1,16 @@
 /**
  * cslivehelp.js
- * Real-time SignalR client for the CS Live Help Kanban board.
+ * Shared real-time SignalR client for all three CS Live Help pages.
+ * 
+ * ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for:
+ * - SignalR group routing (am-{userId} vs cs-board)
+ * - Event flow and real-time update behavior
+ * - Card partial endpoints and live modal injection
+ * - AM comment thread refresh behavior (AmCommentThread endpoint)
+ * 
+ * Page-specific configuration:
+ *   window.csCardPartialUrl   — URL prefix for live card fetches (set per page)
+ *   window.csModalsPartialUrl — URL prefix for live modal fetches (set per page)
  *
  * Events received:
  *   CardAdded          { id, brandName, requestType, status, assignedTo, isInternal }
@@ -71,11 +81,14 @@
     }
 
     function ensureCardModals(id) {
-        if (document.getElementById('statusModal-' + id) || document.getElementById('csCommentModal-' + id)) {
+        if (document.getElementById('statusModal-' + id) ||
+            document.getElementById('csCommentModal-' + id) ||
+            document.getElementById('commentModal-' + id)) {
             return Promise.resolve();
         }
 
-        return fetch('/CsLiveHelp/CardModalsPartial/' + id, {
+        const modalsUrl = (window.csModalsPartialUrl ?? '/CsLiveHelp/CardModalsPartial/') + id;
+        return fetch(modalsUrl, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function (res) {
@@ -98,10 +111,11 @@
     const hasEscalatedColumn = !!document.getElementById('col-Escalated');
 
     function statusColumn(status) {
-        if (status === 'Escalated' && !hasEscalatedColumn && document.getElementById('col-InProgress')) {
-            return 'InProgress';
+        // On the AM Requests page there is no Escalated or OnGoing column —
+        // map both to InProgress so the card stays visible.
+        if (!document.getElementById('col-' + status)) {
+            if (document.getElementById('col-InProgress')) return 'InProgress';
         }
-
         return status;
     }
 
@@ -123,7 +137,9 @@
 
         const newStatus = data.newStatus;
         const targetCol = colEl(statusColumn(newStatus));
-        const sourceCol = card.closest('.kanban-col');
+        // Use [data-status] so this works on both the CS board (kanban-col) and
+        // the AM Requests page (column containers tagged with data-status only).
+        const sourceCol = card.closest('[data-status]');
 
         if (targetCol && sourceCol !== targetCol) {
             const oldStatus = sourceCol?.dataset.status;
@@ -142,7 +158,11 @@
 
         if (data.assignedTo) {
             const assignedEl = card.querySelector('.cs-assigned-name');
-            if (assignedEl) assignedEl.textContent = data.assignedTo;
+            if (assignedEl) {
+                assignedEl.textContent = data.assignedTo;
+                const row = card.querySelector('.cs-assigned-row');
+                if (row) row.style.display = '';
+            }
         }
     });
 
@@ -172,6 +192,8 @@
             }
             updateColCount(statusColumn(data.status ?? 'Open'));
             ensureCardModals(data.id).finally(function () {
+                wireCommentModal(data.id);
+                wireCsCommentModal(data.id);
                 showToastMsg('New card #' + data.id + ' added (' + escHtml(data.brandName ?? '') + ').', true);
             });
         })
@@ -191,6 +213,8 @@
             col.prepend(div);
             updateColCount(statusColumn(data.status ?? 'Open'));
             ensureCardModals(data.id).finally(function () {
+                wireCommentModal(data.id);
+                wireCsCommentModal(data.id);
                 showToastMsg('New card #' + data.id + ' added (' + escHtml(data.brandName ?? '') + ').', true);
             });
         });
@@ -241,11 +265,27 @@
             if (countBtn) countBtn.style.display = '';
         }
 
-        // Target both CS board thread modals (#threadModal-N) and AM comment modals (#commentModal-N .thread-body)
-        const threadBody = document.querySelector('#threadModal-' + data.requestId + ' .thread-body')
-                        ?? document.querySelector('#commentModal-' + data.requestId + ' .thread-body')
-                        ?? document.querySelector('#csCommentModal-' + data.requestId + ' .thread-body')
-                        ?? document.querySelector('#intCommentModal-' + data.requestId + ' .modal-body .border.rounded');
+        // Target both CS board thread modals (#threadModal-N) and AM comment modals (#commentModal-N .thread-body).
+        // When there are no prior comments the AM page renders a bare <p id="threadBody-N">
+        // instead of a div.thread-body, so we fall back to that element and upgrade it.
+        let threadBody = document.querySelector('#threadModal-' + data.requestId + ' .thread-body')
+                      ?? document.querySelector('#commentModal-' + data.requestId + ' .thread-body')
+                      ?? document.querySelector('#csCommentModal-' + data.requestId + ' .thread-body')
+                      ?? document.querySelector('#intCommentModal-' + data.requestId + ' .modal-body .border.rounded');
+
+        if (!threadBody) {
+            // Fallback: "No comments yet" placeholder — replace with a proper thread container
+            const placeholder = document.getElementById('threadBody-' + data.requestId);
+            if (placeholder) {
+                const wrap = document.createElement('div');
+                wrap.className = 'thread-body mb-3 border rounded p-2';
+                wrap.style.cssText = 'max-height:260px;overflow-y:auto';
+                wrap.id = 'threadBody-' + data.requestId;
+                placeholder.replaceWith(wrap);
+                threadBody = wrap;
+            }
+        }
+
         if (threadBody) {
             const emptyP = threadBody.querySelector('p.text-muted');
             if (emptyP) emptyP.remove();
@@ -310,6 +350,8 @@
     // we just close the modal and show a toast.
 
     function ajaxFormSetup(formEl, modalEl) {
+        if (formEl.dataset.ajaxWired) return;
+        formEl.dataset.ajaxWired = '1';
         formEl.addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -347,6 +389,20 @@
         });
     }
 
+    function wireCommentModal(id) {
+        const modal = document.getElementById('commentModal-' + id);
+        if (!modal) return;
+        const form = modal.querySelector('form[id^="commentForm-"]') ?? modal.querySelector('form');
+        if (form && !form.dataset.ajaxWired) ajaxFormSetup(form, modal);
+    }
+
+    function wireCsCommentModal(id) {
+        const modal = document.getElementById('csCommentModal-' + id);
+        if (!modal) return;
+        const form = modal.querySelector('form');
+        if (form && !form.dataset.ajaxWired) ajaxFormSetup(form, modal);
+    }
+
     function wireAmForms() {
         // Create modal
         const createModal = document.getElementById('createModal');
@@ -375,6 +431,21 @@
     wireAmForms();
 
     if (!hasAnyBoardColumn) return;
+
+    function wireCsCommentModals() {
+        // Wire all csCommentModal-* forms (CS Board page)
+        document.querySelectorAll('[id^="csCommentModal-"]').forEach(function (modal) {
+            const form = modal.querySelector('form');
+            if (form) ajaxFormSetup(form, modal);
+        });
+        // Wire all intCommentModal-* forms (All Brands internal page)
+        document.querySelectorAll('[id^="intCommentModal-"]').forEach(function (modal) {
+            const form = modal.querySelector('form');
+            if (form) ajaxFormSetup(form, modal);
+        });
+    }
+
+    wireCsCommentModals();
 
     function cleanupStaleModalState() {
         const openModals = document.querySelectorAll('.modal.show').length;
@@ -406,6 +477,33 @@
         if (!isCommentModal) return;
 
         cleanupStaleModalState();
+
+        // ── Refresh AM comment thread on open ─────────────────────────────
+        // For AM Requests page (commentModal-*), fetch fresh thread HTML
+        // so newly added CS comments appear without page refresh
+        if (modal.id.startsWith('commentModal-')) {
+            const requestId = modal.dataset.requestId;
+            if (requestId) {
+                const threadBody = modal.querySelector('#threadBody-' + requestId);
+                if (threadBody) {
+                    fetch('/CsLiveHelp/AmCommentThread/' + requestId, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function (res) {
+                        if (!res.ok) return;
+                        return res.text();
+                    })
+                    .then(function (html) {
+                        if (!html) return;
+                        threadBody.innerHTML = html;
+                        threadBody.scrollTop = threadBody.scrollHeight;
+                    })
+                    .catch(function () {
+                        // keep existing thread on error
+                    });
+                }
+            }
+        }
     });
 
     document.addEventListener('hidden.bs.modal', function (e) {

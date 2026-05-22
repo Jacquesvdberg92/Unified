@@ -6,17 +6,22 @@ namespace Unified.Hubs;
 
 /// <summary>
 /// SignalR hub for real-time CS Live Help board updates.
+/// 
+/// ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for:
+/// - Group membership and event routing
+/// - SignalR event flow between controller, hub, and client
+/// - Real-time update behavior on all three pages
 ///
 /// Groups:
-///   "cs-board"     — joined by every CS agent / TL / Manager / BrandManager / SAK
-///   "am-{userId}"  — joined by the individual AM so they only see their own card events
+///   "cs-board"     — joined by every CS agent / TL / Manager / BrandManager / SAK (receives all public updates)
+///   "am-{userId}"  — joined by individual AM; receives only their own card events
 ///
 /// Events pushed by the server (via IHubContext&lt;CsLiveHelpHub&gt;):
 ///   CardAdded          { id, brandName, requestType, status, assignedTo, isInternal }
 ///   CardUpdated        { id, brandName, requestType, status, assignedTo }
-///   CardStatusChanged  { id, newStatus, assignedTo }
+///   CardStatusChanged  { id, newStatus, assignedTo }  — includes assignment when card is moved
 ///   CardDeleted        { id }
-///   CommentAdded       { requestId, author, body, isSystem, createdAt }
+///   CommentAdded       { requestId, author, body, isSystem, createdAt }  — NOT sent if IsCsInternalOnly
 ///   SimulationStep     { message }  — demo simulation progress (cs-board group only)
 /// </summary>
 [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]

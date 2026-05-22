@@ -1,4 +1,17 @@
 @using Unified.Models.CsLiveHelp
+@*
+    ── CS LIVE HELP: BOARD PAGE ────────────────────────────────────────────
+
+    ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for:
+    - Overview of all three CS Live Help pages and their relationships
+    - SignalR real-time update flow and group routing
+    - Role-based access control and data visibility rules
+    - Expected behavior of drag-drop assignments, comment posting, and live card updates
+
+    This page shows all non-internal requests in a 5-column kanban board.
+    Drag-drop to change status; assignments persist via UpdateStatusJson.
+    Public comments are visible to both CS and assigned AMs via SignalR.
+*@
 @{
     ViewData["Title"] = "CS Live Help Board";
     var requests = (List<CsRequest>)ViewBag.Requests;

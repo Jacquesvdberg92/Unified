@@ -43,8 +43,14 @@
     }
     @if (assignedName is not null)
     {
-        <div class="text-muted mt-1" style="font-size:.72rem">
+        <div class="cs-assigned-row text-muted mt-1" style="font-size:.72rem">
             <i class="bx bx-user-check me-1"></i>Picked by: <span class="cs-assigned-name fw-semibold">@assignedName</span>
+        </div>
+    }
+    else
+    {
+        <div class="cs-assigned-row text-muted mt-1" style="font-size:.72rem;display:none">
+            <i class="bx bx-user-check me-1"></i>Picked by: <span class="cs-assigned-name fw-semibold"></span>
         </div>
     }
     @{

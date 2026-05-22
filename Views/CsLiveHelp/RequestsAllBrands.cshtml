@@ -1,5 +1,19 @@
 @using Unified.Models.CsLiveHelp
 @using Unified.Models.EmailTemplates
+@*
+    ── CS LIVE HELP: ALL BRANDS (INTERNAL) PAGE ────────────────────────────
+
+    ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for:
+    - Overview of all three CS Live Help pages and their relationships
+    - SignalR real-time update flow and group routing
+    - Role-based access control and data visibility rules
+    - Internal comment privacy rules and file attachment support
+
+    This page shows all internal requests + escalated AM requests in a 4-column board.
+    CS-internal comments are NEVER sent to AMs and NEVER shown in Requests.cshtml.
+    Comments support images (≤5MB) and documents (≤20MB) via /uploads/cs-docs/.
+    Team Leaders can resolve escalations, notifying the AM.
+*@
 @{
     ViewData["Title"] = "CS Requests – All Brands";
     var requests      = (List<CsRequest>)ViewBag.Requests;
@@ -242,13 +256,24 @@
                                     <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
                                         <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body
                                         @if (!string.IsNullOrWhiteSpace(c.ImagePath))
-                                        {
-                                            <div class="mt-1">
-                                                <a href="@c.ImagePath" target="_blank" rel="noopener">
-                                                    <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
-                                                </a>
-                                            </div>
-                                        }
+                                                    {
+                                                        var attachExt = System.IO.Path.GetExtension(c.ImagePath).ToLowerInvariant();
+                                                        var isImg = new[]{ ".jpg",".jpeg",".png",".gif",".webp" }.Contains(attachExt);
+                                                        <div class="mt-1">
+                                                            @if (isImg)
+                                                            {
+                                                                <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                                    <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
+                                                                </a>
+                                                            }
+                                                            else
+                                                            {
+                                                                <a href="@c.ImagePath" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                                                                    <i class="bx bx-file me-1"></i>@System.IO.Path.GetFileName(c.ImagePath)
+                                                                </a>
+                                                            }
+                                                        </div>
+                                                    }
                                     </div>
                                 }
                             </div>
@@ -257,8 +282,8 @@
                                   placeholder="Your comment…" maxlength="1000" required></textarea>
                         <div class="mt-2">
                             <input type="file" name="image" class="form-control form-control-sm"
-                                   accept="image/jpeg,image/png,image/gif,image/webp" />
-                            <div class="form-text">Optional · jpg/png/gif/webp · max 5 MB</div>
+                                   accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.doc,.docx,.xls,.xlsx" />
+                            <div class="form-text">Optional · jpg/png/gif/webp/pdf/doc/docx/xls/xlsx · max 5 MB for images, 20 MB for documents</div>
                         </div>
                     </div>
                     <div class="modal-footer py-2">

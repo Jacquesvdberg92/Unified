@@ -12,6 +12,23 @@ using Unified.Services;
 
 namespace Unified.Controllers;
 
+/// <summary>
+/// CS Live Help Controller — manages three integrated pages for Account Managers and CS Agents.
+/// 
+/// ARCHITECTURE REFERENCE: See docs/CsLiveHelp-Architecture.md for comprehensive documentation of:
+/// - The three pages (Requests, Board, RequestsAllBrands) and their relationships
+/// - Role-based access control and data visibility rules
+/// - SignalR real-time update flow and group routing
+/// - Card partial endpoints and live modal injection behavior
+/// - Comment thread visibility rules (CS-internal comments never reach AMs)
+/// - File attachment support and upload paths
+/// 
+/// Key invariants:
+/// - CS-internal comments (IsCsInternalOnly=true) only broadcast to 'cs-board' group
+/// - Card partials are role-gated and validate ownership before returning HTML
+/// - AM comment threads are refreshed on modal open to show new CS comments without page refresh
+/// - Card assignments persist through drag-drop (UpdateStatusJson sets AssignedToId)
+/// </summary>
 [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
 public class CsLiveHelpController : Controller
 {
@@ -241,8 +258,10 @@ public class CsLiveHelpController : Controller
 
     // ── POST /CsLiveHelp/AddComment/{id} ──────────────────────────────────
 
-    private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-    private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
+    private static readonly string[] AllowedImageExtensions    = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    private static readonly string[] AllowedDocumentExtensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx"];
+    private const long MaxImageBytes    = 5  * 1024 * 1024; // 5 MB
+    private const long MaxDocumentBytes = 20 * 1024 * 1024; // 20 MB
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -450,6 +469,9 @@ public class CsLiveHelpController : Controller
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
         {
+            var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+            if (isAjax)
+                return Json(new { success = false, error = "Comment must be between 1 and 1000 characters." });
             TempData["Error"] = "Comment must be between 1 and 1000 characters.";
             return RedirectToAction(nameof(Board));
         }
@@ -460,6 +482,9 @@ public class CsLiveHelpController : Controller
         {
             if (image.Length > MaxImageBytes)
             {
+                var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+                if (isAjax)
+                    return Json(new { success = false, error = "Image must be 5 MB or smaller." });
                 TempData["Error"] = "Image must be 5 MB or smaller.";
                 return RedirectToAction(nameof(Board));
             }
@@ -467,6 +492,9 @@ public class CsLiveHelpController : Controller
             var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
             if (!AllowedImageExtensions.Contains(ext))
             {
+                var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+                if (isAjax)
+                    return Json(new { success = false, error = "Only jpg, png, gif, and webp images are allowed." });
                 TempData["Error"] = "Only jpg, png, gif, and webp images are allowed.";
                 return RedirectToAction(nameof(Board));
             }
@@ -493,6 +521,9 @@ public class CsLiveHelpController : Controller
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Comment added.", imagePath });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(Board));
@@ -592,10 +623,20 @@ public class CsLiveHelpController : Controller
     public async Task<IActionResult> ResolveEscalation(int id)
     {
         var csId = _users.GetUserId(User)!;
-        var ok   = await _svc.ResolveEscalationAsync(id, csId);
-        if (!ok) return NotFound();
+        var req  = await _svc.ResolveEscalationAsync(id, csId);
+        if (req is null) return NotFound();
 
         await _svc.AuditAsync(csId, "ResolveEscalation", id, GetClientIp());
+
+        // Notify the CS board
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged",
+            new { id, newStatus = "Completed", assignedTo = (string?)null });
+
+        // Notify the owning AM (if this was an escalated AM-originated request)
+        if (req.AccountManagerId is not null)
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged",
+                new { id, newStatus = "Completed", assignedTo = (string?)null });
+
         TempData["Success"] = "Escalation resolved.";
         return RedirectToAction(nameof(RequestsAllBrands));
     }
@@ -659,6 +700,9 @@ public class CsLiveHelpController : Controller
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
         {
+            var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+            if (isAjax)
+                return Json(new { success = false, error = "Comment must be between 1 and 1000 characters." });
             TempData["Error"] = "Comment must be between 1 and 1000 characters.";
             return RedirectToAction(nameof(RequestsAllBrands));
         }
@@ -666,27 +710,41 @@ public class CsLiveHelpController : Controller
         string? imagePath = null;
         if (image is { Length: > 0 })
         {
-            if (image.Length > MaxImageBytes)
-            {
-                TempData["Error"] = "Image must be 5 MB or smaller.";
-                return RedirectToAction(nameof(RequestsAllBrands));
-            }
-
             var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
-            if (!AllowedImageExtensions.Contains(ext))
+            var isImage    = AllowedImageExtensions.Contains(ext);
+            var isDocument = AllowedDocumentExtensions.Contains(ext);
+
+            if (!isImage && !isDocument)
             {
-                TempData["Error"] = "Only jpg, png, gif, and webp images are allowed.";
+                var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+                if (isAjax)
+                    return Json(new { success = false, error = "Only jpg, png, gif, webp, pdf, doc, docx, xls, and xlsx files are allowed." });
+                TempData["Error"] = "Only jpg, png, gif, webp, pdf, doc, docx, xls, and xlsx files are allowed.";
                 return RedirectToAction(nameof(RequestsAllBrands));
             }
 
-            var folder = Path.Combine(_env.WebRootPath, "uploads", "cs-comments", id.ToString());
+            var maxBytes = isDocument ? MaxDocumentBytes : MaxImageBytes;
+            if (image.Length > maxBytes)
+            {
+                var errMsg = isDocument
+                    ? "Document must be 20 MB or smaller."
+                    : "Image must be 5 MB or smaller.";
+                var isAjax = Request.Headers.ContainsKey("X-Requested-With");
+                if (isAjax)
+                    return Json(new { success = false, error = errMsg });
+                TempData["Error"] = errMsg;
+                return RedirectToAction(nameof(RequestsAllBrands));
+            }
+
+            var subFolder = isDocument ? "cs-docs" : "cs-comments";
+            var folder    = Path.Combine(_env.WebRootPath, "uploads", subFolder, id.ToString());
             Directory.CreateDirectory(folder);
             var fileName = $"{Guid.NewGuid()}{ext}";
             var filePath = Path.Combine(folder, fileName);
             await using (var fs = System.IO.File.Create(filePath))
                 await image.CopyToAsync(fs);
 
-            imagePath = $"/uploads/cs-comments/{id}/{fileName}";
+            imagePath = $"/uploads/{subFolder}/{id}/{fileName}";
         }
 
         var csId = _users.GetUserId(User)!;
@@ -698,8 +756,74 @@ public class CsLiveHelpController : Controller
         var agent = await _users.GetUserAsync(User);
         await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
 
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Comment added.", imagePath });
+
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(RequestsAllBrands));
+    }
+
+    // ── GET /CsLiveHelp/AmCommentThread/{id} — refresh thread HTML ───────
+
+    [HttpGet]
+    [Authorize(Roles = Roles.AccountManager)]
+    public async Task<IActionResult> AmCommentThread(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With"))
+            return BadRequest();
+
+        var amId = _users.GetUserId(User)!;
+
+        var req = await _db.CsRequests
+            .Where(r => r.Id == id && r.AccountManagerId == amId)
+            .Include(r => r.Comments.Where(c => !c.IsCsInternalOnly))
+                .ThenInclude(c => c.Author)
+            .FirstOrDefaultAsync();
+
+        if (req is null)
+            return NotFound();
+
+        var comments = req.Comments.OrderBy(c => c.CreatedAt).ToList();
+
+        if (!comments.Any())
+        {
+            return Content("<p class=\"mb-0\">No comments yet.</p>");
+        }
+
+        var html = new System.Text.StringBuilder();
+        foreach (var c in comments)
+        {
+            var timestamp = c.CreatedAt.ToString("MMM dd, HH:mm");
+            var author = c.Author?.DisplayName ?? c.AuthorId;
+            var bgClass = c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light";
+
+            html.AppendLine($"<div class=\"mb-2 p-2 rounded {bgClass}\">");
+            html.AppendLine("  <div class=\"d-flex justify-content-between mb-1\">");
+            html.AppendLine($"    <strong class=\"small\">{System.Net.WebUtility.HtmlEncode(author)}</strong>");
+            html.AppendLine($"    <span class=\"text-muted small\">{timestamp} UTC</span>");
+            html.AppendLine("  </div>");
+            html.Append($"  <p class=\"mb-0 small\">{System.Net.WebUtility.HtmlEncode(c.Body)}");
+
+            if (c.IsSystemMessage)
+            {
+                html.Append(" <span class=\"badge bg-warning text-dark ms-1\">System</span>");
+            }
+
+            html.AppendLine("</p>");
+
+            if (!string.IsNullOrWhiteSpace(c.ImagePath))
+            {
+                html.AppendLine("  <div class=\"mt-2\">");
+                html.AppendLine($"    <a href=\"{System.Net.WebUtility.HtmlEncode(c.ImagePath)}\" target=\"_blank\" rel=\"noopener\">");
+                html.AppendLine($"      <img src=\"{System.Net.WebUtility.HtmlEncode(c.ImagePath)}\" alt=\"Attachment\" class=\"img-fluid rounded\" style=\"max-height:200px\" />");
+                html.AppendLine("    </a>");
+                html.AppendLine("  </div>");
+            }
+
+            html.AppendLine("</div>");
+        }
+
+        return Content(html.ToString(), "text/html");
     }
 
     // ── POST /CsLiveHelp/InternalUpdateStatusJson/{id} — drag-drop ─────────
@@ -740,6 +864,32 @@ public class CsLiveHelpController : Controller
 
         TempData["Success"] = $"Card status updated to {status}.";
         return RedirectToAction(nameof(RequestsAllBrands));
+    }
+
+    // ── GET /CsLiveHelp/AmCardPartial/{id} — AM-accessible card partial ─────
+
+    [HttpGet]
+    [Authorize(Roles = Roles.AccountManager)]
+    public async Task<IActionResult> AmCardPartial(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+        var amId = _users.GetUserId(User)!;
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null || req.AccountManagerId != amId) return NotFound();
+        return PartialView("_CsRequestCard", req);
+    }
+
+    // ── GET /CsLiveHelp/AmCardModalsPartial/{id} — AM comment modal partial ─
+
+    [HttpGet]
+    [Authorize(Roles = Roles.AccountManager)]
+    public async Task<IActionResult> AmCardModalsPartial(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+        var amId = _users.GetUserId(User)!;
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null || req.AccountManagerId != amId) return NotFound();
+        return PartialView("_CsRequestCardModal", req);
     }
 
     // ── GET /CsLiveHelp/CardPartial/{id} — returns fully rendered card partial ──
