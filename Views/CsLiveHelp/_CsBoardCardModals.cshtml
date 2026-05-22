@@ -37,7 +37,7 @@
                 <h6 class="modal-title"><i class="bx bx-message-square-detail me-1"></i>Thread — #@Model.Id · @(Model.Brand?.Name ?? "—")</h6>
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="CsAddComment" asp-route-id="@Model.Id" method="post">
+            <form asp-action="CsAddComment" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
                     @if (Model.Comments.Any())
@@ -58,6 +58,14 @@
                                         <span class="text-muted">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
                                     </div>
                                     <div>@c.Body</div>
+                                    @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                    {
+                                        <div class="mt-1">
+                                            <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:180px" />
+                                            </a>
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
@@ -70,6 +78,11 @@
                     }
                     <textarea name="body" class="form-control form-control-sm" rows="3"
                               placeholder="Write a reply…" maxlength="1000" required></textarea>
+                    <div class="mt-2">
+                        <input type="file" name="image" class="form-control form-control-sm"
+                               accept="image/jpeg,image/png,image/gif,image/webp" />
+                        <div class="form-text">Optional · jpg/png/gif/webp · max 5 MB</div>
+                    </div>
                 </div>
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>

@@ -259,7 +259,8 @@
                     '<span class="text-muted small">' + escHtml(ts) + '</span>' +
                 '</div>' +
                 '<p class="mb-0 small">' + escHtml(data.body) +
-                (data.isSystem ? ' <span class="badge bg-warning text-dark ms-1">System</span>' : '') + '</p>';
+                (data.isSystem ? ' <span class="badge bg-warning text-dark ms-1">System</span>' : '') + '</p>' +
+                (data.imagePath ? '<div class="mt-2"><a href="' + escHtml(data.imagePath) + '" target="_blank" rel="noopener"><img src="' + escHtml(data.imagePath) + '" alt="Attachment" class="img-fluid rounded" style="max-height:180px"></a></div>' : '');
             threadBody.appendChild(div);
             threadBody.scrollTop = threadBody.scrollHeight;
         }

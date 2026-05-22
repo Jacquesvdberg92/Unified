@@ -187,7 +187,7 @@
 - [x] AM forms (Create, Edit, Delete, AddComment) submit via AJAX — no full-page refresh; DOM driven by SignalR
 - [x] `_InternalBoardCard`: shows escalating/assigned CS agent name (`AssignedTo`), not the AM name
 - [x] CS Board cards: comment count only reflects AM↔CS thread; *Picked by* agent label added
-- [~] **AM image sharing in comments** — AMs can attach a single image per comment (for strange/edge-case evidence); stored as a file reference; rendered inline in the comment thread on both `Requests.cshtml` and `Board.cshtml`; max 5 MB, image types only (jpg/png/gif/webp); CS agents can view but not modify or delete AM attachments
+- [x] **AM image sharing in comments** — AMs can attach a single image per comment (for strange/edge-case evidence); stored as a file reference under `/uploads/cs-comments/{id}/`; rendered inline in the comment thread on both `Requests.cshtml` and `Board.cshtml`; max 5 MB, jpg/png/gif/webp only; CS agents can view but not modify or delete AM attachments
 - [ ] Final UI polish pass (spacing, labels, responsive tweaks)
 
 ---

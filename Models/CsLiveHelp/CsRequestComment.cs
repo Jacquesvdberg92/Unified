@@ -20,4 +20,7 @@ public class CsRequestComment
 
     /// <summary>True when the comment should be visible to CS roles only (hidden from Account Managers).</summary>
     public bool   IsCsInternalOnly { get; set; }
+
+    /// <summary>Relative URL path to an attached image (AM comments only). Null when no image attached.</summary>
+    public string? ImagePath { get; set; }
 }

@@ -110,7 +110,7 @@ public class CsLiveHelpService
 
     // ── AM: comments ──────────────────────────────────────────────────────
 
-    public async Task<bool> AddCommentAsync(int requestId, string amId, string body)
+    public async Task<bool> AddCommentAsync(int requestId, string amId, string body, string? imagePath = null)
     {
         // AM can only comment on their own requests
         var req = await _db.CsRequests
@@ -124,7 +124,8 @@ public class CsLiveHelpService
             Body       = body.Trim(),
             CreatedAt  = DateTime.UtcNow,
             IsSystemMessage = false,
-            IsCsInternalOnly = false
+            IsCsInternalOnly = false,
+            ImagePath  = imagePath
         });
         req.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -293,7 +294,7 @@ public class CsLiveHelpService
     // ── CS Agent: comments ─────────────────────────────────────────────────
 
     /// <summary>CS agents can comment on any request (not ownership-gated).</summary>
-    public async Task<bool> CsAddCommentAsync(int requestId, string authorId, string body, bool isSystem = false, bool isCsInternalOnly = false)
+    public async Task<bool> CsAddCommentAsync(int requestId, string authorId, string body, bool isSystem = false, bool isCsInternalOnly = false, string? imagePath = null)
     {
         var req = await _db.CsRequests.FindAsync(requestId);
         if (req is null) return false;
@@ -305,7 +306,8 @@ public class CsLiveHelpService
             Body            = body.Trim(),
             CreatedAt       = DateTime.UtcNow,
             IsSystemMessage = isSystem,
-            IsCsInternalOnly = isCsInternalOnly
+            IsCsInternalOnly = isCsInternalOnly,
+            ImagePath       = imagePath
         });
         req.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();

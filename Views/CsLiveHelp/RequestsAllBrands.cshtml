@@ -231,7 +231,7 @@
                     <h6 class="modal-title">Thread — #@r.Id @(r.IsInternal ? "(Internal)" : "")</h6>
                     <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
                 </div>
-                <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post">
+                <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div class="modal-body">
                         @if (r.Comments.Any(c => c.IsCsInternalOnly))
@@ -241,12 +241,25 @@
                                 {
                                     <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
                                         <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body
+                                        @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                        {
+                                            <div class="mt-1">
+                                                <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                    <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
+                                                </a>
+                                            </div>
+                                        }
                                     </div>
                                 }
                             </div>
                         }
                         <textarea name="body" class="form-control form-control-sm" rows="3"
                                   placeholder="Your comment…" maxlength="1000" required></textarea>
+                        <div class="mt-2">
+                            <input type="file" name="image" class="form-control form-control-sm"
+                                   accept="image/jpeg,image/png,image/gif,image/webp" />
+                            <div class="form-text">Optional · jpg/png/gif/webp · max 5 MB</div>
+                        </div>
                     </div>
                     <div class="modal-footer py-2">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>

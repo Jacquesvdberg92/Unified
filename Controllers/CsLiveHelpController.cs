@@ -20,19 +20,22 @@ public class CsLiveHelpController : Controller
     private readonly UserManager<AppUser>       _users;
     private readonly IHubContext<CsLiveHelpHub> _hub;
     private readonly IServiceScopeFactory       _scopeFactory;
+    private readonly IWebHostEnvironment        _env;
 
     public CsLiveHelpController(
         CsLiveHelpService svc,
         AppDbContext db,
         UserManager<AppUser> users,
         IHubContext<CsLiveHelpHub> hub,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IWebHostEnvironment env)
     {
         _svc          = svc;
         _db           = db;
         _scopeFactory = scopeFactory;
         _users = users;
         _hub   = hub;
+        _env   = env;
     }
 
     // ── GET /CsLiveHelp/Requests — AM Kanban (own cards + read-only Others) ──
@@ -238,10 +241,13 @@ public class CsLiveHelpController : Controller
 
     // ── POST /CsLiveHelp/AddComment/{id} ──────────────────────────────────
 
+    private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    private const long MaxImageBytes = 5 * 1024 * 1024; // 5 MB
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = Roles.AccountManager)]
-    public async Task<IActionResult> AddComment(int id, string body)
+    public async Task<IActionResult> AddComment(int id, string body, IFormFile? image)
     {
         var amId = _users.GetUserId(User)!;
 
@@ -261,17 +267,48 @@ public class CsLiveHelpController : Controller
             return RedirectToAction(nameof(Requests));
         }
 
-        var ok = await _svc.AddCommentAsync(id, amId, body);
+        // Validate and save image if provided
+        string? imagePath = null;
+        if (image is { Length: > 0 })
+        {
+            if (image.Length > MaxImageBytes)
+            {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Image must be 5 MB or smaller." });
+                TempData["Error"] = "Image must be 5 MB or smaller.";
+                return RedirectToAction(nameof(Requests));
+            }
+
+            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (!AllowedImageExtensions.Contains(ext))
+            {
+                if (Request.Headers.ContainsKey("X-Requested-With"))
+                    return Json(new { success = false, error = "Only jpg, png, gif, and webp images are allowed." });
+                TempData["Error"] = "Only jpg, png, gif, and webp images are allowed.";
+                return RedirectToAction(nameof(Requests));
+            }
+
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "cs-comments", id.ToString());
+            Directory.CreateDirectory(folder);
+            var fileName  = $"{Guid.NewGuid()}{ext}";
+            var filePath  = Path.Combine(folder, fileName);
+            await using (var fs = System.IO.File.Create(filePath))
+                await image.CopyToAsync(fs);
+
+            imagePath = $"/uploads/cs-comments/{id}/{fileName}";
+        }
+
+        var ok = await _svc.AddCommentAsync(id, amId, body, imagePath);
         if (!ok) return Forbid();
 
         await _svc.AuditAsync(amId, "AddComment", id, GetClientIp());
 
         var author = await _users.GetUserAsync(User);
-        await _hub.Clients.Group($"am-{amId}").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, createdAt = DateTime.UtcNow });
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, createdAt = DateTime.UtcNow });
+        await _hub.Clients.Group($"am-{amId}").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
-            return Json(new { success = true, message = "Comment added." });
+            return Json(new { success = true, message = "Comment added.", imagePath });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(Requests));
@@ -409,7 +446,7 @@ public class CsLiveHelpController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> CsAddComment(int id, string body)
+    public async Task<IActionResult> CsAddComment(int id, string body, IFormFile? image)
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
         {
@@ -417,18 +454,45 @@ public class CsLiveHelpController : Controller
             return RedirectToAction(nameof(Board));
         }
 
+        // Validate and save image if provided
+        string? imagePath = null;
+        if (image is { Length: > 0 })
+        {
+            if (image.Length > MaxImageBytes)
+            {
+                TempData["Error"] = "Image must be 5 MB or smaller.";
+                return RedirectToAction(nameof(Board));
+            }
+
+            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (!AllowedImageExtensions.Contains(ext))
+            {
+                TempData["Error"] = "Only jpg, png, gif, and webp images are allowed.";
+                return RedirectToAction(nameof(Board));
+            }
+
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "cs-comments", id.ToString());
+            Directory.CreateDirectory(folder);
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(folder, fileName);
+            await using (var fs = System.IO.File.Create(filePath))
+                await image.CopyToAsync(fs);
+
+            imagePath = $"/uploads/cs-comments/{id}/{fileName}";
+        }
+
         var csId = _users.GetUserId(User)!;
-        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: false);
+        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: false, imagePath: imagePath);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "CsAddComment", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, createdAt = DateTime.UtcNow });
+        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
-            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, createdAt = DateTime.UtcNow });
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(Board));
@@ -591,7 +655,7 @@ public class CsLiveHelpController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> InternalAddComment(int id, string body)
+    public async Task<IActionResult> InternalAddComment(int id, string body, IFormFile? image)
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
         {
@@ -599,14 +663,40 @@ public class CsLiveHelpController : Controller
             return RedirectToAction(nameof(RequestsAllBrands));
         }
 
+        string? imagePath = null;
+        if (image is { Length: > 0 })
+        {
+            if (image.Length > MaxImageBytes)
+            {
+                TempData["Error"] = "Image must be 5 MB or smaller.";
+                return RedirectToAction(nameof(RequestsAllBrands));
+            }
+
+            var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (!AllowedImageExtensions.Contains(ext))
+            {
+                TempData["Error"] = "Only jpg, png, gif, and webp images are allowed.";
+                return RedirectToAction(nameof(RequestsAllBrands));
+            }
+
+            var folder = Path.Combine(_env.WebRootPath, "uploads", "cs-comments", id.ToString());
+            Directory.CreateDirectory(folder);
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(folder, fileName);
+            await using (var fs = System.IO.File.Create(filePath))
+                await image.CopyToAsync(fs);
+
+            imagePath = $"/uploads/cs-comments/{id}/{fileName}";
+        }
+
         var csId = _users.GetUserId(User)!;
-        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: true);
+        var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: true, imagePath: imagePath);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "InternalAddComment", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, createdAt = DateTime.UtcNow });
+        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(RequestsAllBrands));

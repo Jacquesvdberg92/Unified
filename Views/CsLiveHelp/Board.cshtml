@@ -111,7 +111,7 @@
                     <span class="fw-semibold">Open</span>
                     <span class="badge bg-secondary rounded-pill ms-auto" id="count-Open">@openCards.Count</span>
                 </div>
-                <div id="col-Open"
+                <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Open" style="min-height:80px">
                     @foreach (var r in openCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
@@ -140,7 +140,7 @@
                     <span class="fw-semibold">In Progress</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto" id="count-InProgress">@inProgressCards.Count</span>
                 </div>
-                <div id="col-InProgress"
+                <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="InProgress" style="min-height:80px">
                     @foreach (var r in inProgressCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
@@ -169,7 +169,7 @@
                     <span class="fw-semibold">On Going</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto" id="count-OnGoing">@onGoingCards.Count</span>
                 </div>
-                <div id="col-OnGoing"
+                <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="OnGoing" style="min-height:80px">
                     @foreach (var r in onGoingCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
@@ -198,7 +198,7 @@
                     <span class="fw-semibold">Escalated</span>
                     <span class="badge bg-danger rounded-pill ms-auto" id="count-Escalated">@escalatedCards.Count</span>
                 </div>
-                <div id="col-Escalated"
+                <div id="col-Escalated" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Escalated" style="min-height:80px">
                     @foreach (var r in escalatedCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
@@ -227,7 +227,7 @@
                     <span class="fw-semibold">Completed</span>
                     <span class="badge bg-success rounded-pill ms-auto" id="count-Completed">@completedCards.Count</span>
                 </div>
-                <div id="col-Completed"
+                <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Completed" style="min-height:80px">
                     @foreach (var r in completedCards)
                     {
                         @await Html.PartialAsync("_CsBoardCard", r)
@@ -287,7 +287,7 @@
                     <h6 class="modal-title"><i class="bx bx-message-square-detail me-1"></i>Thread — #@r.Id · @(r.Brand?.Name ?? "—")</h6>
                     <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
                 </div>
-                <form asp-action="CsAddComment" asp-route-id="@r.Id" method="post">
+                <form asp-action="CsAddComment" asp-route-id="@r.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div class="modal-body">
                         @if (r.Comments.Any(c => !c.IsCsInternalOnly))
@@ -308,6 +308,14 @@
                                             <span class="text-muted">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
                                         </div>
                                         <div>@c.Body</div>
+                                        @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                        {
+                                            <div class="mt-1">
+                                                <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                    <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:180px" />
+                                                </a>
+                                            </div>
+                                        }
                                     </div>
                                 }
                             </div>
@@ -326,6 +334,11 @@
                         }
                         <textarea name="body" class="form-control form-control-sm" rows="3"
                                   placeholder="Write a reply…" maxlength="1000" required></textarea>
+                        <div class="mt-2">
+                            <input type="file" name="image" class="form-control form-control-sm"
+                                   accept="image/jpeg,image/png,image/gif,image/webp" />
+                            <div class="form-text">Optional · jpg/png/gif/webp · max 5 MB</div>
+                        </div>
                     </div>
                     <div class="modal-footer py-2">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
