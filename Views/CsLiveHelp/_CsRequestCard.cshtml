@@ -18,7 +18,7 @@
     };
 }
 
-<div class="card border shadow-sm p-2 small" data-card-id="@Model.Id">
+<div class="card border shadow-sm p-2 small" data-card-id="@Model.Id" data-brand-id="@Model.BrandId" data-client-id="@Model.ClientId?.ToLower()">
     <div class="d-flex justify-content-between align-items-start mb-1">
         <span class="badge @statusBadge">@statusText</span>
         <span class="text-muted" style="font-size:.75rem">#@Model.Id</span>

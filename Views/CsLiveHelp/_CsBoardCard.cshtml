@@ -16,7 +16,7 @@
     var assignedName    = Model.AssignedTo?.DisplayName ?? Model.AssignedTo?.UserName;
 }
 
-<div class="card border shadow-sm p-2 small" data-card-id="@Model.Id" data-card-status="@Model.Status">
+<div class="card border shadow-sm p-2 small" data-card-id="@Model.Id" data-card-status="@Model.Status" data-brand-id="@Model.BrandId" data-client-id="@Model.ClientId?.ToLower()">
     <div class="d-flex justify-content-between align-items-start mb-1">
         <span class="badge @statusBadge">@Model.Status</span>
         <span class="text-muted" style="font-size:.75rem">#@Model.Id</span>

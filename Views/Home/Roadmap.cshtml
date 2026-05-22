@@ -192,6 +192,92 @@
                         </ul>
                     </div>
 
+                    <!-- AM Account Creation Flow -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-user-plus me-1"></i>Phase 1e – Account Manager Registration Flow
+                            <span class="badge bg-secondary ms-2">Planned</span>
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Replaces the generic register page for external sign-ups. Visitors choose their account type; AMs go through a dedicated
+                            request-access flow that requires Management approval before the account is activated.
+                        </p>
+
+                        <p class="fw-semibold mb-2">Entry Point – Request Access Page</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RequestAccess</code> — landing page with two options: <strong>Account Manager</strong> and <strong>Other</strong></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><em>Other</em> button redirects to the existing <code>/Account/Register</code> page (CS, Finance, etc.)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><em>Account Manager</em> button redirects to the dedicated AM registration page</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">AM Registration Page</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RegisterAccountManager</code> — form: Full Name, Email, Password, Confirm Password</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Account/RegisterAccountManager</code> — creates <code>AppUser</code> with <code>IsExternal = true</code>, <code>EmailConfirmed = false</code>, account locked (<code>LockoutEnabled = true</code>) pending approval</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Role <code>AccountManager</code> is <strong>not</strong> assigned at registration — only after Management approval</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>On successful submit → redirect to <code>/Account/RegistrationPending</code> confirmation page</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">Pending Confirmation Page</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RegistrationPending</code> — static message: <em>"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."</em></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">Management Approval</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>New <code>GET /Admin/PendingAccountManagers</code> page listing all locked AM applicants (Name, Email, Requested date)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Admin/ApproveAccountManager/{id}</code> — unlocks account, assigns <code>AccountManager</code> role, sets <code>EmailConfirmed = true</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Admin/RejectAccountManager/{id}</code> — deletes the pending user record</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Approval page accessible to <strong>Management</strong> role only; add to sidebar under Admin section</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Optional: email notification to AM on approval/rejection <em>(requires email service configured)</em></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">Login Behaviour for Pending Accounts</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>If AM tries to log in while still locked → show friendly message: <em>"Your account is pending approval. Please check back in 15–30 minutes."</em> (not a generic lockout error)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Rate-limit the AM registration endpoint (max 3 submissions per IP per hour) to prevent abuse</li>
+                        </ul>
+                    </div>
+
+                    <!-- Activity Logging Middleware -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-list-check me-1"></i>Phase 1f – Activity Logging &amp; Error Tracking
+                            <span class="badge bg-secondary ms-2">Planned</span>
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Centralised middleware-level logging for page visits, user actions, and unhandled errors. Audit trail for compliance and debugging.
+                            Existing <code>AmAuditLog</code> stays as-is; this layer is broader and covers all authenticated users.
+                        </p>
+
+                        <p class="fw-semibold mb-2">Activity Logging Middleware</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Audit what middleware already exists (<code>Program.cs</code>) — confirm no duplicate logging pipeline</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ActivityLog</code> model: <code>Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration for <code>ActivityLogs</code> table + indexes on <code>(UserId)</code>, <code>(Timestamp)</code>, <code>(Path)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ActivityLoggingMiddleware</code> — logs every authenticated request (path, method, user, duration, status code)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Skip logging for static assets (<code>/lib/</code>, <code>/css/</code>, <code>/js/</code>, <code>/favicon.ico</code>) and SignalR hub endpoints</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register middleware in <code>Program.cs</code> (after authentication, before controllers)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Write async (fire-and-forget or background queue) so logging never blocks the request pipeline</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">Error Logging</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ErrorLog</code> model: <code>Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration for <code>ErrorLogs</code> table</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>GlobalExceptionHandlerMiddleware</code> — catches unhandled exceptions, persists to <code>ErrorLogs</code>, returns user-friendly error page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register exception handler middleware as the first middleware in <code>Program.cs</code> (outermost wrap)</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">Admin Log Viewer</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Admin/ActivityLog</code> — paginated table: user, path, method, status, duration, timestamp; filterable by user and date range</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Admin/ErrorLog</code> — paginated table: exception type, path, user, timestamp; detail drill-down showing stack trace</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Both views accessible to <strong>Admin / Management</strong> roles only; add to Admin sidebar</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Auto-purge old activity logs after configurable retention period (default: 90 days) via background service or extend archive service</li>
+                        </ul>
+                    </div>
+
                     <!-- Phase 2 -->
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
@@ -207,8 +293,8 @@
                         </ul>
                     </div>
 
-                    <!-- Phase 3 -->
-                    <div class="mb-4">
+                    <!-- Phase 3 – Notification System -->
+                    <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-bell me-1"></i>Phase 3 – Notification System
                             <span class="badge bg-secondary ms-2">Not Started</span>
@@ -225,10 +311,64 @@
                         </ul>
                     </div>
 
+                    <!-- Phase 4 – SIP -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-bulb me-1"></i>Phase 4 – System Improvement Proposals (SIP)
+                            <span class="badge bg-secondary ms-2">Not Started</span>
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Internal users (all roles except Account Managers) can submit improvement proposals or bug reports.
+                            Colleagues cast <strong>upvotes / downvotes</strong>. The owner reviews community feedback and decides whether to schedule each item for implementation.
+                            Account Managers are explicitly excluded — SIP is an internal tool only.
+                        </p>
+
+                        <p class="fw-semibold mb-2">4a – Data Models &amp; Migration</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Sip</code> model: <code>Id, AuthorId (FK), Title, Description, Category (enum: Improvement | BugReport), Status (enum: Open | UnderReview | Accepted | Declined | Implemented), CreatedAt, UpdatedAt, OwnerNote?</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>SipVote</code> model: <code>Id, SipId (FK), UserId (FK), IsUpvote (bool), CastAt</code> — unique constraint on <code>(SipId, UserId)</code> (one vote per user per SIP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>DB indexes on <code>(Status)</code>, <code>(AuthorId)</code>, <code>(CreatedAt)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration <code>Phase4_Sip</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">4b – Submission &amp; Listing</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip</code> — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Each row shows: title, category badge, status badge, vote score (<code>upvotes − downvotes</code>), author, date, owner note (if set)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Create</code> — form: Title (max 120 chars), Description (max 2 000 chars), Category dropdown</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/Create</code> — server-side validation; author set from <code>User.Identity</code>; initial status <code>Open</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Details/{id}</code> — full description, vote tally, current user's vote state (highlighted), owner note, status history</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Author can edit or delete their own SIP while status is <code>Open</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">4c – Voting</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/Vote/{id}</code> — body: <code>{ isUpvote: bool }</code>; toggles or changes vote; one vote per user per SIP enforced at DB level</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Vote submitted via AJAX fetch; score updated inline without page reload</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Authors cannot vote on their own SIP</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Rate-limit: max 20 votes per user per minute (prevent vote-farming)</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">4d – Owner Review Dashboard</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Admin</code> — owner/Management view: all SIPs ranked by net vote score; status filter tabs (Open / Under Review / Accepted / Declined / Implemented)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/UpdateStatus/{id}</code> — owner sets status (<code>UnderReview | Accepted | Declined | Implemented</code>) + optional <code>OwnerNote</code> (shown publicly on the SIP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Status changes visible to all users immediately; owner note displayed prominently on the detail page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Owner can delete any SIP (e.g. duplicates, spam)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Admin page gated to <strong>Admin / Management</strong> roles only</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">4e – Access &amp; Sidebar</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>All internal roles (Admin, Management, CS Agent, TL, Finance, etc.) can view, submit, and vote — <strong>Account Manager role explicitly excluded</strong> via <code>[Authorize(Policy = "InternalOnly")]</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <em>SIP</em> link to main sidebar (internal users); add <em>SIP Admin</em> link to Management sidebar section</li>
+                        </ul>
+                    </div>
+
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-06 — Phase 1d bug fixing &amp; refinement | image sharing planned</strong>
+                        Last updated: <strong>2025-06 — Phase 1d bug fixing &amp; refinement | Phase 1e AM registration planned | Phase 1f activity logging planned | Phase 4 SIP added</strong>
                     </div>
 
                 </div>

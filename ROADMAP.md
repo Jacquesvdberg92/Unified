@@ -192,6 +192,65 @@
 
 ---
 
+## Phase 1e – Account Manager Registration Flow
+
+> Replaces the generic register page for external sign-ups.
+> AMs request access via a dedicated flow. Account is locked pending Management approval before login is possible.
+
+### Entry Point – Request Access Page
+- [ ] `GET /Account/RequestAccess` — page with two options: **Account Manager** and **Other**
+- [ ] *Other* → redirects to existing `/Account/Register` (CS, Finance, etc.)
+- [ ] *Account Manager* → redirects to dedicated AM registration page
+
+### AM Registration Page
+- [ ] `GET /Account/RegisterAccountManager` — form: Full Name, Email, Password, Confirm Password
+- [ ] `POST /Account/RegisterAccountManager` — creates `AppUser` with `IsExternal = true`, account locked (`LockoutEnabled = true`, `LockoutEnd = DateTimeOffset.MaxValue`) pending approval; role **not** assigned yet
+- [ ] On successful submit → redirect to `GET /Account/RegistrationPending`
+- [ ] Rate-limit endpoint: max 3 submissions per IP per hour
+
+### Pending Confirmation Page
+- [ ] `GET /Account/RegistrationPending` — static message: *"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."*
+
+### Management Approval
+- [ ] `GET /Admin/PendingAccountManagers` — lists all locked AM applicants (Name, Email, Requested date); Management role only
+- [ ] `POST /Admin/ApproveAccountManager/{id}` — unlocks account, assigns `AccountManager` role, sets `EmailConfirmed = true`
+- [ ] `POST /Admin/RejectAccountManager/{id}` — deletes pending user record
+- [ ] Add "Pending AMs" link to Admin sidebar (Management only)
+- [ ] Optional: email notification to AM on approval/rejection *(requires email service configured)*
+
+### Login Behaviour for Pending Accounts
+- [ ] If AM tries to log in while still locked → friendly message: *"Your account is pending approval. Please check back in 15–30 minutes."* (override generic lockout error)
+
+---
+
+## Phase 1f – Activity Logging & Error Tracking
+
+> Centralised middleware-level logging for page visits, user actions, and unhandled errors.
+> Covers all authenticated users. `AmAuditLog` stays in place for AM-specific audit trail.
+
+### Activity Logging Middleware
+- [ ] Audit existing middleware in `Program.cs` — confirm no duplicate logging pipeline
+- [ ] Create `ActivityLog` model: `Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp`
+- [ ] EF Core migration for `ActivityLogs` table + indexes on `(UserId)`, `(Timestamp)`, `(Path)`
+- [ ] Create `ActivityLoggingMiddleware` — logs every authenticated request (path, method, user, duration, status code)
+  - Skip static assets (`/lib/`, `/css/`, `/js/`, `/favicon.ico`) and SignalR hub endpoints
+  - Write async (background queue / fire-and-forget) so logging never blocks the request pipeline
+- [ ] Register middleware in `Program.cs` after authentication, before controllers
+
+### Error Logging
+- [ ] Create `ErrorLog` model: `Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp`
+- [ ] EF Core migration for `ErrorLogs` table
+- [ ] Create `GlobalExceptionHandlerMiddleware` — catches unhandled exceptions, persists to `ErrorLogs`, returns user-friendly error page
+- [ ] Register as the outermost middleware in `Program.cs`
+
+### Admin Log Viewer
+- [ ] `GET /Admin/ActivityLog` — paginated table (user, path, method, status, duration, timestamp); filterable by user and date range
+- [ ] `GET /Admin/ErrorLog` — paginated table (exception type, path, user, timestamp); detail drill-down with stack trace
+- [ ] Both views gated to Admin / Management roles; add to Admin sidebar
+- [ ] Auto-purge activity logs after configurable retention period (default: 90 days) — extend archive background service or create dedicated one
+
+---
+
 ## Phase 2 – AnyDesk ID & Telegram "Log Me In" Bot
 
 ### 2a – Data Model
@@ -239,6 +298,56 @@
 
 ---
 
+## Phase 4 – System Improvement Proposals (SIP)
+
+> Internal users (all roles **except** Account Managers) can submit improvement proposals or bug reports.
+> Colleagues cast upvotes / downvotes. The owner reviews community feedback and decides whether to schedule each item.
+> Account Managers are explicitly excluded — SIP is an internal tool only.
+
+### 4a – Data Models & Migration
+- [ ] `Sip` model:
+  ```
+  Id, AuthorId (FK AppUser), Title (max 120), Description (max 2000),
+  Category (enum: Improvement | BugReport),
+  Status (enum: Open | UnderReview | Accepted | Declined | Implemented),
+  CreatedAt, UpdatedAt, OwnerNote?
+  ```
+- [ ] `SipVote` model:
+  ```
+  Id, SipId (FK), UserId (FK), IsUpvote (bool), CastAt
+  ```
+  - Unique constraint on `(SipId, UserId)` — one vote per user per SIP
+- [ ] DB indexes on `Sip(Status)`, `Sip(AuthorId)`, `Sip(CreatedAt)`
+- [ ] EF Core migration `Phase4_Sip`
+
+### 4b – Submission & Listing
+- [ ] `GET  /Sip` — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category
+  - Each row: title, category badge, status badge, net vote score (`upvotes − downvotes`), author, date, owner note (if set)
+- [ ] `GET  /Sip/Create` — form: Title, Description, Category dropdown
+- [ ] `POST /Sip/Create` — server-side validation; author from `User.Identity`; initial status `Open`
+- [ ] `GET  /Sip/Details/{id}` — full description, vote tally, current user's vote state (highlighted), owner note, status badge
+- [ ] Author can edit or delete their own SIP while status is `Open`
+
+### 4c – Voting
+- [ ] `POST /Sip/Vote/{id}` — body: `{ isUpvote: bool }`; toggles or changes vote; enforced at DB unique constraint
+- [ ] Vote submitted via AJAX fetch; score updated inline without page reload
+- [ ] Authors cannot vote on their own SIP
+- [ ] Rate-limit: max 20 votes per user per minute (prevent vote-farming)
+
+### 4d – Owner Review Dashboard
+- [ ] `GET  /Sip/Admin` — Management view: all SIPs ranked by net vote score; status filter tabs
+- [ ] `POST /Sip/UpdateStatus/{id}` — owner sets status + optional `OwnerNote` (shown publicly on SIP detail)
+- [ ] Status changes visible to all users immediately
+- [ ] Owner can delete any SIP (duplicates, spam)
+- [ ] Page gated to Admin / Management roles only
+
+### 4e – Access & Sidebar
+- [ ] All internal roles can view, submit, and vote — `AccountManager` role excluded via `[Authorize(Policy = "InternalOnly")]`
+- [ ] Add *SIP* link to main sidebar (internal users)
+- [ ] Add *SIP Admin* link to Management sidebar section
+
+---
+
 ## Ongoing / Cross-Cutting
 
 - [ ] Review all controller `[Authorize]` attributes after new roles are added
@@ -251,4 +360,4 @@
 
 ---
 
-*Last updated: 2025-06 — Phase 1d bug fixing & refinement active | AM image sharing planned | Owner: @Jacquesvdberg92*
+*Last updated: 2025-06 — Phase 1d bug fixing & refinement active | AM image sharing planned | Phase 1e AM registration flow added | Phase 1f activity & error logging added | Phase 4 SIP added | Owner: @Jacquesvdberg92*

@@ -39,6 +39,12 @@
         }
     }
 
+    function updateColCount(status) {
+        const col   = colEl(status);
+        const badge = document.getElementById('count-' + status);
+        if (col && badge) badge.textContent = col.querySelectorAll('[data-card-id]').length;
+    }
+
     const badgeClass = {
         Open:       'bg-secondary',
         InProgress: 'bg-warning text-dark',
@@ -120,9 +126,12 @@
         const sourceCol = card.closest('.kanban-col');
 
         if (targetCol && sourceCol !== targetCol) {
+            const oldStatus = sourceCol?.dataset.status;
             removeEmptyHint(targetCol);
             targetCol.appendChild(card);
             addEmptyHintIfEmpty(sourceCol);
+            updateColCount(newStatus);
+            if (oldStatus) updateColCount(oldStatus);
         }
 
         const badge = card.querySelector('.badge');
@@ -145,7 +154,8 @@
 
         removeEmptyHint(col);
 
-        fetch('/CsLiveHelp/CardPartial/' + data.id, {
+        const partialUrl = (window.csCardPartialUrl ?? '/CsLiveHelp/CardPartial/') + data.id;
+        fetch(partialUrl, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(function (res) {
@@ -160,6 +170,7 @@
                 card.classList.add('new-card-notice');
                 col.prepend(card);
             }
+            updateColCount(statusColumn(data.status ?? 'Open'));
             ensureCardModals(data.id).finally(function () {
                 showToastMsg('New card #' + data.id + ' added (' + escHtml(data.brandName ?? '') + ').', true);
             });
@@ -178,6 +189,7 @@
                 '<div class="card-footer py-1 px-3 text-muted small">New card &mdash; ' +
                 '<a href="" onclick="location.reload();return false;">refresh</a> for full actions</div>';
             col.prepend(div);
+            updateColCount(statusColumn(data.status ?? 'Open'));
             ensureCardModals(data.id).finally(function () {
                 showToastMsg('New card #' + data.id + ' added (' + escHtml(data.brandName ?? '') + ').', true);
             });
@@ -202,6 +214,7 @@
         if (!card) return;
 
         const col = card.closest('.kanban-col');
+        const deletedStatus = col?.dataset.status;
         card.remove();
         ['statusModal-', 'csCommentModal-', 'escalateModal-', 'resetModal-', 'passedModal-']
             .forEach(function (prefix) {
@@ -209,6 +222,7 @@
                 if (el) el.remove();
             });
         addEmptyHintIfEmpty(col);
+        if (deletedStatus) updateColCount(deletedStatus);
         showToastMsg('Card #' + data.id + ' was deleted.', true);
     });
 

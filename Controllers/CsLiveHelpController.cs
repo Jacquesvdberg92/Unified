@@ -300,9 +300,11 @@ public class CsLiveHelpController : Controller
         var teamAllocationTeams = await _db.Teams
             .OrderBy(t => t.Name)
             .ToListAsync();
+        var brands = await _db.Brands.OrderBy(b => b.Name).ToListAsync();
 
         ViewBag.Requests = requests;
         ViewBag.TeamAllocationTeams = teamAllocationTeams;
+        ViewBag.Brands = brands;
         return View();
     }
 
@@ -660,6 +662,18 @@ public class CsLiveHelpController : Controller
         var req = await _svc.GetRequestAsync(id);
         if (req is null) return NotFound();
         return PartialView("_CsBoardCard", req);
+    }
+
+    // ── GET /CsLiveHelp/InternalCardPartial/{id} — internal board card partial ──
+
+    [HttpGet]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> InternalCardPartial(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null) return NotFound();
+        return PartialView("_InternalBoardCard", req);
     }
 
     // ── GET /CsLiveHelp/CardModalsPartial/{id} — returns modal markup for one card ──

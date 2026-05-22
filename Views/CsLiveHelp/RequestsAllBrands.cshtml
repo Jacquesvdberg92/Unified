@@ -45,6 +45,26 @@
 
     <!-- Kanban board -->
     @Html.AntiForgeryToken()
+
+    <!-- Filter bar -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" id="allBrandsFilterBar">
+        <select id="allBrandsBrandFilter" class="form-select form-select-sm" style="max-width:200px">
+            <option value="">All Brands</option>
+            @foreach (var b in brands)
+            {
+                <option value="@b.Id">@b.Name</option>
+            }
+        </select>
+        <input id="allBrandsClientIdFilter" type="search" class="form-control form-control-sm" style="max-width:180px"
+               placeholder="Search Client ID…" autocomplete="off" />
+        <button type="button" class="btn btn-primary btn-sm" id="allBrandsFilterApply">
+            <i class="bx bx-filter-alt me-1"></i>Apply
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="allBrandsFilterClear">
+            <i class="bx bx-x me-1"></i>Clear
+        </button>
+    </div>
+
     <div class="row g-3">
 
         @* ── Open ── *@
@@ -53,7 +73,7 @@
                 <div class="card-header d-flex align-items-center gap-2 bg-secondary bg-opacity-10">
                     <span class="badge bg-secondary">Open</span>
                     <span class="fw-semibold">Open</span>
-                    <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
+                    <span class="badge bg-secondary rounded-pill ms-auto" id="count-Open">@openCards.Count</span>
                 </div>
                 <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Open" style="min-height:80px">
                     @foreach (var r in openCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
@@ -68,7 +88,7 @@
                 <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
                     <span class="badge bg-warning text-dark">InProgress</span>
                     <span class="fw-semibold">In Progress</span>
-                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto" id="count-InProgress">@inProgressCards.Count</span>
                 </div>
                 <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="InProgress" style="min-height:80px">
                     @foreach (var r in inProgressCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
@@ -83,7 +103,7 @@
                 <div class="card-header d-flex align-items-center gap-2 bg-warning bg-opacity-10">
                     <span class="badge bg-warning text-dark">OnGoing</span>
                     <span class="fw-semibold">On Going</span>
-                    <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
+                    <span class="badge bg-warning text-dark rounded-pill ms-auto" id="count-OnGoing">@onGoingCards.Count</span>
                 </div>
                 <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="OnGoing" style="min-height:80px">
                     @foreach (var r in onGoingCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
@@ -98,7 +118,7 @@
                 <div class="card-header d-flex align-items-center gap-2 bg-success bg-opacity-10">
                     <span class="badge bg-success">Done</span>
                     <span class="fw-semibold">Completed</span>
-                    <span class="badge bg-success rounded-pill ms-auto">@completedCards.Count</span>
+                    <span class="badge bg-success rounded-pill ms-auto" id="count-Completed">@completedCards.Count</span>
                 </div>
                 <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Completed" style="min-height:80px">
                     @foreach (var r in completedCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
@@ -277,6 +297,10 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
+    // Fix duplication bug: tell shared cslivehelp.js to use the internal card partial
+    window.csCardPartialUrl = '/CsLiveHelp/InternalCardPartial/';
+    </script>
+    <script>
     (function () {
         'use strict';
 
@@ -285,6 +309,38 @@
         function showToastMsg(msg, success) {
             if (typeof showToast === 'function') { showToast(msg, success); return; }
             console[success ? 'info' : 'warn']('[AllBrands]', msg);
+        }
+
+        // ── Filter ────────────────────────────────────────────────────────
+        const brandSel    = document.getElementById('allBrandsBrandFilter');
+        const clientInput = document.getElementById('allBrandsClientIdFilter');
+        const applyBtn    = document.getElementById('allBrandsFilterApply');
+        const clearBtn    = document.getElementById('allBrandsFilterClear');
+
+        function applyFilter() {
+            const brandId = brandSel?.value ?? '';
+            const query   = (clientInput?.value ?? '').toLowerCase().trim();
+            document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
+                const matchBrand  = !brandId || String(card.dataset.brandId) === brandId;
+                const matchClient = !query   || (card.dataset.clientId ?? '').includes(query);
+                card.style.display = (matchBrand && matchClient) ? '' : 'none';
+            });
+        }
+        applyBtn?.addEventListener('click', applyFilter);
+        clientInput?.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyFilter(); });
+        clearBtn?.addEventListener('click', function () {
+            if (brandSel)    brandSel.value    = '';
+            if (clientInput) clientInput.value = '';
+            document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
+                card.style.display = '';
+            });
+        });
+
+        // ── Column count helper ───────────────────────────────────────────
+        function updateColCount(status) {
+            const col   = document.getElementById('col-' + status);
+            const badge = document.getElementById('count-' + status);
+            if (col && badge) badge.textContent = col.querySelectorAll('[data-card-id]').length;
         }
 
         function removeEmptyHint(col) {
@@ -344,6 +400,8 @@
                                 badge.textContent = newStatus;
                             }
                             addEmptyHintIfEmpty(evt.from);
+                            updateColCount(newStatus);
+                            updateColCount(oldStatus);
                             showToastMsg('Card moved to ' + newStatus, true);
                         } else {
                             evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);

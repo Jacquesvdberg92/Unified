@@ -36,6 +36,25 @@
         </button>
     </div>
 
+    <!-- Filter bar -->
+    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" id="reqFilterBar">
+        <select id="reqBrandFilter" class="form-select form-select-sm" style="max-width:200px">
+            <option value="">All Brands</option>
+            @foreach (var b in brands)
+            {
+                <option value="@b.Id">@b.Name</option>
+            }
+        </select>
+        <input id="reqClientIdFilter" type="search" class="form-control form-control-sm" style="max-width:180px"
+               placeholder="Search Client ID…" autocomplete="off" />
+        <button type="button" class="btn btn-primary btn-sm" id="reqFilterApply">
+            <i class="bx bx-filter-alt me-1"></i>Apply
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="reqFilterClear">
+            <i class="bx bx-x me-1"></i>Clear
+        </button>
+    </div>
+
     <!-- Kanban board -->
     <div class="row g-3">
 
@@ -362,6 +381,34 @@
             if (thread) thread.scrollTop = thread.scrollHeight;
         });
     });
+
+    // ── Client ID / brand filter ──────────────────────────────────────────
+    (function () {
+        const brandSel    = document.getElementById('reqBrandFilter');
+        const clientInput = document.getElementById('reqClientIdFilter');
+        const applyBtn    = document.getElementById('reqFilterApply');
+        const clearBtn    = document.getElementById('reqFilterClear');
+
+        function applyFilter() {
+            const brandId = brandSel?.value ?? '';
+            const query   = (clientInput?.value ?? '').toLowerCase().trim();
+            document.querySelectorAll('[data-card-id]').forEach(function (card) {
+                const matchBrand  = !brandId || String(card.dataset.brandId) === brandId;
+                const matchClient = !query   || (card.dataset.clientId ?? '').includes(query);
+                card.style.display = (matchBrand && matchClient) ? '' : 'none';
+            });
+        }
+
+        applyBtn?.addEventListener('click', applyFilter);
+        clientInput?.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyFilter(); });
+        clearBtn?.addEventListener('click', function () {
+            if (brandSel)    brandSel.value    = '';
+            if (clientInput) clientInput.value = '';
+            document.querySelectorAll('[data-card-id]').forEach(function (card) {
+                card.style.display = '';
+            });
+        });
+    })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
 <script src="~/js/cslivehelp.js"></script>
