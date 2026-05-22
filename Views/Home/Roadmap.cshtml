@@ -7,10 +7,15 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="card-title mb-0">
-                        <i class="bx bx-map-alt me-2"></i>Project Roadmap
-                    </h5>
-                    <small class="text-muted">Source of truth: <code>ROADMAP.md</code> at repo root</small>
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="bx bx-map-alt me-2"></i>Project Roadmap
+                        </h5>
+                        <small class="text-muted">Source of truth: <code>ROADMAP.md</code> at repo root</small>
+                    </div>
+                    <button id="viewToggleBtn" class="btn btn-sm btn-outline-primary" title="Switch between technical and simplified views">
+                        <i class="bx bx-user me-1"></i><span id="viewToggleLabel">Human Friendly</span>
+                    </button>
                 </div>
                 <div class="card-body">
 
@@ -22,6 +27,9 @@
                         <span class="badge bg-info text-dark px-3 py-2"><i class="bx bx-bulb me-1"></i>Decided</span>
                         <span class="badge bg-danger px-3 py-2"><i class="bx bx-error-circle me-1"></i>Blocked / Deferred</span>
                     </div>
+
+                    <!-- Technical View -->
+                    <div id="technicalView">
 
                     <!-- Phase 0 -->
                     <div class="mb-5">
@@ -177,7 +185,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-bug me-1"></i>Phase 1d – Bug Fixes &amp; Refinement
-                            <span class="badge bg-warning text-dark ms-2">Active</span>
+                            <span class="badge bg-success ms-2">Complete</span>
                         </h6>
                         <ul class="list-group list-group-flush mb-4">
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>CS-internal comments (<code>RequestsAllBrands</code>) fully isolated — invisible to AMs (no count, no hint)</li>
@@ -365,10 +373,293 @@
                         </ul>
                     </div>
 
+                    <!-- Phase 5 – CS-to-CS Direct Messaging & Group Chat -->
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-chat me-1"></i>Phase 5 – CS-to-CS Direct Messaging &amp; Group Chat
+                            <span class="badge bg-secondary ms-2">Planned</span>
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Real-time direct messaging between CS agents and private group chats. Messages persist in DB with configurable archival (60-day or 300-message cap per conversation).
+                            File/image sharing supported (7-day retention). Group creation limits: 3 per agent, 5 per TL, 10 per manager. @@mentions trigger notifications (Phase 3). Built on SignalR for real-time push.
+                        </p>
+
+                        <p class="fw-semibold mb-2">Architecture Decisions</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Real-time: <strong>SignalR</strong> — extend existing hub pattern from Phase 1d for message push</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Message persistence: DB storage with archival — 60-day or 300-message cap per conversation (earliest messages archived first)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>File/image sharing: supported in messages; stored at <code>/uploads/cs-messages/{conversationId}/</code>; max 5 MB per file; retained for 7 days then deleted</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Group creation limits: 3 active groups per agent, 5 per TL, 10 per manager; unlimited members per group (team max ~70 people)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>@@mentions and notifications: Phase 3 dependency — mention syntax <code>@@{displayName}</code> triggers push notification to that user</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Direct vs. group: two conversation types — 1:1 (direct) or N-person (group); created by inviting members</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5a – Data Models &amp; Migration</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsConversation</code> model:
+                            <br/><code>Id, Name? (group only), IsGroup (bool), CreatedByUserId (FK), CreatedAt, UpdatedAt, IsArchived</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsConversationMember</code> model:
+                            <br/><code>Id, ConversationId (FK), UserId (FK), JoinedAt, IsActive</code> — track membership and join time</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsMessage</code> model:
+                            <br/><code>Id, ConversationId (FK), AuthorUserId (FK), Body (string, max 5000), CreatedAt, IsEdited, EditedAt?, IsDeleted</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsMessageAttachment</code> model:
+                            <br/><code>Id, MessageId (FK), FileName (string), FilePath (string), MimeType (string), SizeBytes (long), CreatedAt, ExpiresAt (7-day retention)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsConversationArchive</code> table (mirror of messages for old/archived conversations)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>DB indexes on <code>CsConversation(CreatedByUserId)</code>, <code>CsConversationMember(UserId, IsActive)</code>, <code>CsMessage(ConversationId, CreatedAt)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration <code>Phase5_CsMessaging</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5b – Backend: Direct &amp; Group Messaging</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsMessaging/Conversations</code> — list of user's active conversations (direct + groups); sorted by last message</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsMessaging/Conversation/{id}</code> — load conversation detail: members, message thread (keyset-paginated, top 50), unread status</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/StartDirect/{userId}</code> — initiate 1:1 conversation (or return existing)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/CreateGroup</code> — create new group (name, members list); enforce group creation limits (3/5/10 per role); return <code>ConversationId</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/AddMessage/{id}</code> — post message to conversation; parse @@mentions, extract attachment refs; broadcast via SignalR</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/UploadAttachment</code> — multipart file upload; validate MIME type + size (max 5 MB); store and return attachment ref</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/EditMessage/{id}</code> — edit own message (within 5 min window); mark as edited; broadcast update via SignalR</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/DeleteMessage/{id}</code> — soft-delete own message (or admin/group creator); broadcast deletion via SignalR</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/AddMember/{conversationId}/{userId}</code> — add user to group (group creator or manager); re-broadcast conversation state</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/RemoveMember/{conversationId}/{userId}</code> — remove user from group; broadcast update</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /CsMessaging/MarkRead/{conversationId}</code> — mark all messages in conversation as read (for unread badge tracking)</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5c – Real-Time SignalR Hub (CsMessagingHub)</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsMessagingHub</code> (SignalR hub)
+                            <br/>Groups: <code>cs-messaging</code> (all CS agents), <code>conv-{conversationId}</code> (members of each conversation)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Events pushed: <code>MessageAdded { conversationId, messageId, author, body, mentions[], attachments[], createdAt }</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Events pushed: <code>MessageUpdated { messageId, body, editedAt }</code>, <code>MessageDeleted { messageId }</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Events pushed: <code>MemberAdded { conversationId, userId, name }</code>, <code>MemberRemoved { conversationId, userId }</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Events pushed: <code>ConversationCreated { conversationId, name, members[] }</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register hub in <code>Program.cs</code> at <code>/hubs/cs-messaging</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5d – Client JS &amp; Real-Time UI</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>wwwroot/js/cs-messaging.js</code> — connect to hub, handle all push events (message add/update/delete, member add/remove)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Message thread: append/update/remove DOM elements in real time; no page reload required</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Unread badge: track unread message count per conversation (via server-side last-read timestamp)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Typing indicator (optional): show <em>"Agent X is typing..."</em> via hub event</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>@@mention autocomplete: as user types <code>@@</code>, show dropdown of conversation members</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5e – Views &amp; UI</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Views/CsMessaging/Index.cshtml</code> — main messaging hub (sidebar: conversations list, main panel: thread + input form)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /CsMessaging</code> — controller action rendering Index view</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Conversation list: active/inactive badge, unread count, last message preview, last-message timestamp</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Message thread: author name, timestamp, body (with @@mention links), attachment thumbnails, edit/delete buttons (own messages only)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Input form: textarea (max 5000 chars), file upload button, send button; show attachment list before send</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Group info modal: name, member list, add/remove member buttons (creator only), archive/leave group buttons</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Sidebar: add "Direct Messages" link under CS Support section (visible to all CS roles)</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5f – Message Archival &amp; File Cleanup</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>CsMessageArchiveService</code> (IHostedService) — runs on configurable duty cycle (default: daily)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Per conversation: archive messages older than 60 days OR if message count exceeds 300 (whichever comes first); move to <code>CsConversationArchive</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>CsMessaging:Archive</code> config section to <code>appsettings.json</code> (defaults: <code>RunEveryHours = 24</code>, <code>MessageAgeThresholdDays = 60</code>, <code>MessageCountThreshold = 300</code>)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>File attachment cleanup: delete files older than 7 days (separate cleanup pass via <code>ExpiresAt</code> column)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register archive service in <code>Program.cs</code></li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5g – Controller &amp; Authorization</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]</code> on <code>CsMessagingController</code> — block Account Managers</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Server-side validation: user membership in conversation before allowing message post/edit/delete</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Rate-limiting: max 30 messages per user per minute (prevent chat spam)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Audit log: optional — track group creation, member adds/removes for compliance</li>
+                        </ul>
+
+                        <p class="fw-semibold mb-2">5h – @@Mention &amp; Notification Integration (Phase 3 Dependency)</p>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Parse message body for <code>@@{displayName}</code> syntax (case-insensitive matching to user list)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>For each @@mention, trigger <code>NotificationService</code> (Phase 3) — create notification for mentioned user</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Notification type: "Mentioned in Direct Message" or "Mentioned in Group: {groupName}"</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Render @@mentions in message thread as links (or highlighted spans) pointing to that user's profile</li>
+                        </ul>
+                    </div>
+
+                    </div>
+                    <!-- End Technical View -->
+
+                    <!-- Human Friendly View (Initially Hidden) -->
+                    <div id="humanFriendlyView" style="display: none;">
+
+                        <p class="fs-5 fw-semibold text-center mb-4">
+                            <i class="bx bx-smile me-2"></i>Project Progress Overview
+                        </p>
+
+                        <!-- Foundation -->
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-check-circle text-success me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Foundation</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">We cleaned up our codebase and got everything organized properly.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                        </div>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Setup & Support -->
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-shield text-success me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Team Setup</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Created new user roles (Finance, Account Managers) and set up access controls.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                        </div>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-support text-success me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Customer Support Board</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Built a live support board where customers can submit requests and our team responds in real-time.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                        </div>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coming Soon -->
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-user-plus text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Smart Registration</span>
+                                            <span class="badge bg-warning text-dark ms-auto">Planned</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">New users will go through a guided signup process with approval workflows.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Coming next...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-list-check text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Activity Tracking</span>
+                                            <span class="badge bg-warning text-dark ms-auto">Planned</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">We'll track who did what and when for better security and auditing.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Coming next...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-desktop text-info me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Quick Access Tools</span>
+                                            <span class="badge bg-info text-dark ms-auto">Future</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Add quick-access buttons for remote support and instant messaging to IT.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">On the horizon...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-bell text-info me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Smart Notifications</span>
+                                            <span class="badge bg-info text-dark ms-auto">Future</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Stay connected with real-time notifications when important things happen.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">On the horizon...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-bulb text-info me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Suggestion System</span>
+                                            <span class="badge bg-info text-dark ms-auto">Future</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Everyone can suggest improvements and vote on the best ideas.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">On the horizon...</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-chat text-info me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Team Chat</span>
+                                            <span class="badge bg-info text-dark ms-auto">Future</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Direct messaging and group chats for easier team communication.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">On the horizon...</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-success mt-4 mb-0" role="alert">
+                            <i class="bx bx-heart-circle me-2"></i>
+                            <strong>We're making great progress!</strong> We've completed the foundation and customer support system. 
+                            Several exciting features are coming soon to make everyone's work easier.
+                        </div>
+
+                    </div>
+                    <!-- End Human Friendly View -->
+
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-06 — Phase 1d bug fixing &amp; refinement | Phase 1e AM registration planned | Phase 1f activity logging planned | Phase 4 SIP added</strong>
+                        Last updated: <strong>2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration planned | Phase 1f activity logging planned | Phase 4 SIP added | Phase 5 CS messaging added</strong>
                     </div>
 
                 </div>
@@ -377,4 +668,43 @@
     </div>
 </div>
 
-                
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('viewToggleBtn');
+    const toggleLabel = document.getElementById('viewToggleLabel');
+    const technicalView = document.getElementById('technicalView');
+    const humanFriendlyView = document.getElementById('humanFriendlyView');
+
+    // Get initial view preference from localStorage or default to human friendly
+    let isHumanFriendlyMode = localStorage.getItem('roadmapView') !== 'technical';
+
+    // Apply initial state
+    updateViewMode(isHumanFriendlyMode);
+
+    // Toggle button click handler
+    toggleBtn.addEventListener('click', function() {
+        isHumanFriendlyMode = !isHumanFriendlyMode;
+        localStorage.setItem('roadmapView', isHumanFriendlyMode ? 'humanFriendly' : 'technical');
+        updateViewMode(isHumanFriendlyMode);
+    });
+
+    function updateViewMode(isHriendly) {
+        if (isHriendly) {
+            // Show Human Friendly, hide Technical
+            humanFriendlyView.style.display = 'block';
+            technicalView.style.display = 'none';
+            toggleLabel.textContent = 'Technical Details';
+            toggleBtn.classList.remove('btn-outline-primary');
+            toggleBtn.classList.add('btn-outline-secondary');
+        } else {
+            // Show Technical, hide Human Friendly
+            technicalView.style.display = 'block';
+            humanFriendlyView.style.display = 'none';
+            toggleLabel.textContent = 'Human Friendly';
+            toggleBtn.classList.remove('btn-outline-secondary');
+            toggleBtn.classList.add('btn-outline-primary');
+        }
+    }
+});
+</script>
+

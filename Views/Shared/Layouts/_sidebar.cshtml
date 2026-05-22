@@ -212,7 +212,7 @@
                                             <li class="slide">
                                                 <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item">
                                                     <i class="bx bx-support side-menu__icon"></i>
-                                                    <span class="side-menu__label">CS Requests</span>
+                                                    <span class="side-menu__label">CS Live Help</span>
                                                 </a>
                                             </li>
                                         }
@@ -221,7 +221,7 @@
                                             <li class="slide">
                                                 <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item">
                                                     <i class="bx bx-support side-menu__icon"></i>
-                                                    <span class="side-menu__label">CS Board</span>
+                                                    <span class="side-menu__label">CS Live Help</span>
                                                 </a>
                                             </li>
                                             <li class="slide">
@@ -230,11 +230,11 @@
                                                     <span class="side-menu__label">
                                                         @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
                                                         {
-                                                            <text>All Brands</text>
+                                                            <text>Requests All Brands</text>
                                                         }
                                                         else
                                                         {
-                                                            <text>Team Board</text>
+                                                            <text>Requests All Brands</text>
                                                         }
                                                     </span>
                                                 </a>
