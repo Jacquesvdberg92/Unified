@@ -14,235 +14,457 @@
                     <!-- Start::nav -->
                     <nav class="main-menu-container nav nav-pills flex-column sub-open">
                         <ul class="main-menu">
+
+                            @* ── Main (agents & above) ── *@
                             @if (!User.IsInRole("AccountManager"))
                             {
-                            <li class="slide__category"><span class="category-name">Main</span></li>
-
-                            <li class="slide">
-                                <a asp-controller="Home" asp-action="Index" class="side-menu__item">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 side-menu__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                                    <span class="side-menu__label">Dashboard</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Updates" asp-action="Feed" class="side-menu__item">
-                                    <i class="bx bx-news side-menu__icon"></i>
-                                    <span class="side-menu__label">Updates Feed</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="ProcessTemplates" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-file side-menu__icon"></i>
-                                    <span class="side-menu__label">Process Templates</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Vault" asp-action="MyVault" class="side-menu__item">
-                                    <i class="bx bx-lock side-menu__icon"></i>
-                                    <span class="side-menu__label">My Vault</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Schedule" asp-action="AgentView" class="side-menu__item">
-                                    <i class="bx bx-calendar-check side-menu__icon"></i>
-                                    <span class="side-menu__label">My Schedule</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Schedule" asp-action="MyRequests" class="side-menu__item">
-                                    <i class="bx bx-calendar-event side-menu__icon"></i>
-                                    <span class="side-menu__label">My Requests</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Performance" asp-action="MyReviews" class="side-menu__item">
-                                    <i class="bx bx-bar-chart-alt-2 side-menu__icon"></i>
-                                    <span class="side-menu__label">My Reviews</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="WorkDistribution" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-list-ul side-menu__icon"></i>
-                                    <span class="side-menu__label">Work Distribution</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="PoiSimulation" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-id-card side-menu__icon"></i>
-                                    <span class="side-menu__label">POI Simulations</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Reports" asp-action="Dashboard" class="side-menu__item">
-                                    <i class="bx bx-line-chart side-menu__icon"></i>
-                                    <span class="side-menu__label">Reports</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="EmailTemplates" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-envelope side-menu__icon"></i>
-                                    <span class="side-menu__label">Email Templates</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Brands" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-buildings side-menu__icon"></i>
-                                    <span class="side-menu__label">Brands</span>
-                                </a>
-                            </li>
-
-                            <li class="slide">
-                                <a asp-controller="Attendance" asp-action="Index" class="side-menu__item">
-                                    <i class="bx bx-time-five side-menu__icon"></i>
-                                    <span class="side-menu__label">Attendance</span>
-                                </a>
-                            </li>
-
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="main">
+                                        <span class="category-name">Main</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="Home" asp-action="Index" class="side-menu__item">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 side-menu__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                                                <span class="side-menu__label">Dashboard</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Updates" asp-action="Feed" class="side-menu__item">
+                                                <i class="bx bx-news side-menu__icon"></i>
+                                                <span class="side-menu__label">Updates Feed</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Schedule" asp-action="AgentView" class="side-menu__item">
+                                                <i class="bx bx-calendar-check side-menu__icon"></i>
+                                                <span class="side-menu__label">My Schedule</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Schedule" asp-action="MyRequests" class="side-menu__item">
+                                                <i class="bx bx-calendar-event side-menu__icon"></i>
+                                                <span class="side-menu__label">My Requests</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Performance" asp-action="MyReviews" class="side-menu__item">
+                                                <i class="bx bx-bar-chart-alt-2 side-menu__icon"></i>
+                                                <span class="side-menu__label">My Reviews</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Attendance" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-time-five side-menu__icon"></i>
+                                                <span class="side-menu__label">Attendance</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Vault" asp-action="MyVault" class="side-menu__item">
+                                                <i class="bx bx-lock side-menu__icon"></i>
+                                                <span class="side-menu__label">My Vault</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="WorkDistribution" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-list-ul side-menu__icon"></i>
+                                                <span class="side-menu__label">Work Distribution</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="PoiSimulation" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-id-card side-menu__icon"></i>
+                                                <span class="side-menu__label">POI Simulations</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Reports" asp-action="Dashboard" class="side-menu__item">
+                                                <i class="bx bx-line-chart side-menu__icon"></i>
+                                                <span class="side-menu__label">Reports</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="ProcessTemplates" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-file side-menu__icon"></i>
+                                                <span class="side-menu__label">Process Templates</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="EmailTemplates" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-envelope side-menu__icon"></i>
+                                                <span class="side-menu__label">Email Templates</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Brands" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-buildings side-menu__icon"></i>
+                                                <span class="side-menu__label">Brands</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                             } @* end !AccountManager *@
 
+                            @* ── Management (TL / BM) ── *@
                             @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
                             {
-                                <li class="slide__category"><span class="category-name">Management</span></li>
-
-                                <li class="slide">
-                                    <a asp-controller="Schedule" asp-action="WeekView" class="side-menu__item">
-                                        <i class="bx bx-calendar side-menu__icon"></i>
-                                        <span class="side-menu__label">Team Schedule</span>
-                                    </a>
-                                </li>
-
-                                <li class="slide">
-                                    <a asp-controller="Schedule" asp-action="ReviewRequests" class="side-menu__item">
-                                        <i class="bx bx-task side-menu__icon"></i>
-                                        <span class="side-menu__label">Review Requests</span>
-                                    </a>
-                                </li>
-
-                                <li class="slide">
-                                    <a asp-controller="Performance" asp-action="TeamReviews" class="side-menu__item">
-                                        <i class="bx bx-clipboard side-menu__icon"></i>
-                                        <span class="side-menu__label">Performance Reviews</span>
-                                    </a>
-                                </li>
-
-                                <li class="slide">
-                                    <a asp-controller="Performance" asp-action="Leaderboard" class="side-menu__item">
-                                        <i class="bx bx-trophy side-menu__icon"></i>
-                                        <span class="side-menu__label">Leaderboard</span>
-                                    </a>
-                                </li>
-
-                                <li class="slide">
-                                    <a asp-controller="Vault" asp-action="BulkProvision" class="side-menu__item">
-                                        <i class="bx bx-key side-menu__icon"></i>
-                                        <span class="side-menu__label">Vault Provision</span>
-                                    </a>
-                                </li>
-
-                                <li class="slide">
-                                    <a asp-controller="AttendanceReport" asp-action="Index" class="side-menu__item">
-                                        <i class="bx bx-spreadsheet side-menu__icon"></i>
-                                        <span class="side-menu__label">Attendance Reports</span>
-                                    </a>
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="management">
+                                        <span class="category-name">Management</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="Schedule" asp-action="WeekView" class="side-menu__item">
+                                                <i class="bx bx-calendar side-menu__icon"></i>
+                                                <span class="side-menu__label">Team Schedule</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Schedule" asp-action="ReviewRequests" class="side-menu__item">
+                                                <i class="bx bx-task side-menu__icon"></i>
+                                                <span class="side-menu__label">Review Requests</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Performance" asp-action="TeamReviews" class="side-menu__item">
+                                                <i class="bx bx-clipboard side-menu__icon"></i>
+                                                <span class="side-menu__label">Performance Reviews</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Performance" asp-action="Leaderboard" class="side-menu__item">
+                                                <i class="bx bx-trophy side-menu__icon"></i>
+                                                <span class="side-menu__label">Leaderboard</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Vault" asp-action="BulkProvision" class="side-menu__item">
+                                                <i class="bx bx-key side-menu__icon"></i>
+                                                <span class="side-menu__label">Vault Provision</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="AttendanceReport" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-spreadsheet side-menu__icon"></i>
+                                                <span class="side-menu__label">Attendance Reports</span>
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
                             }
 
+                            @* ── Admin (BM only) ── *@
                             @if (User.IsInRole("BrandManager"))
                             {
-                                <li class="slide__category"><span class="category-name">Admin</span></li>
-                                <li class="slide">
-                                    <a asp-controller="Admin" asp-action="Users" class="side-menu__item">
-                                        <i class="bx bx-user side-menu__icon"></i>
-                                        <span class="side-menu__label">Users</span>
-                                    </a>
-                                </li>
-                                <li class="slide">
-                                    <a asp-controller="Admin" asp-action="Teams" class="side-menu__item">
-                                        <i class="bx bx-group side-menu__icon"></i>
-                                        <span class="side-menu__label">Teams</span>
-                                    </a>
-                                </li>
-                                <li class="slide">
-                                    <a asp-controller="Brands" asp-action="Manager" class="side-menu__item">
-                                        <i class="bx bx-buildings side-menu__icon"></i>
-                                        <span class="side-menu__label">Brand Manager</span>
-                                    </a>
-                                </li>
-                                <li class="slide">
-                                    <a asp-controller="Vault" asp-action="ManageCategories" class="side-menu__item">
-                                        <i class="bx bx-category side-menu__icon"></i>
-                                        <span class="side-menu__label">Vault Categories</span>
-                                    </a>
-                                </li>
-                                <li class="slide">
-                                    <a asp-controller="Vault" asp-action="AccessLog" class="side-menu__item">
-                                        <i class="bx bx-history side-menu__icon"></i>
-                                        <span class="side-menu__label">Vault Access Log</span>
-                                    </a>
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="admin">
+                                        <span class="category-name">Admin</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="Users" class="side-menu__item">
+                                                <i class="bx bx-user side-menu__icon"></i>
+                                                <span class="side-menu__label">Users</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="Teams" class="side-menu__item">
+                                                <i class="bx bx-group side-menu__icon"></i>
+                                                <span class="side-menu__label">Teams</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Brands" asp-action="Manager" class="side-menu__item">
+                                                <i class="bx bx-buildings side-menu__icon"></i>
+                                                <span class="side-menu__label">Brand Manager</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Vault" asp-action="ManageCategories" class="side-menu__item">
+                                                <i class="bx bx-category side-menu__icon"></i>
+                                                <span class="side-menu__label">Vault Categories</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Vault" asp-action="AccessLog" class="side-menu__item">
+                                                <i class="bx bx-history side-menu__icon"></i>
+                                                <span class="side-menu__label">Vault Access Log</span>
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </li>
                             }
 
-                                @if (User.IsInRole("AccountManager"))
-                                {
-                                    <li class="slide__category"><span class="category-name">CS Support</span></li>
-                                    <li class="slide">
-                                        <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item">
-                                            <i class="bx bx-support side-menu__icon"></i>
-                                            <span class="side-menu__label">CS Requests</span>
-                                        </a>
-                                    </li>
-                                }
-
-                                @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
-                                {
-                                    <li class="slide__category"><span class="category-name">CS Support</span></li>
-                                    <li class="slide">
-                                        <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item">
-                                            <i class="bx bx-support side-menu__icon"></i>
-                                            <span class="side-menu__label">CS Board</span>
-                                        </a>
-                                    </li>
-                                    <li class="slide">
-                                        <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
-                                            <i class="bx bx-globe side-menu__icon"></i>
-                                            <span class="side-menu__label">
-                                                @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
-                                                {
-                                                    <text>All Brands</text>
-                                                }
-                                                else
-                                                {
-                                                    <text>Team Board</text>
-                                                }
-                                            </span>
-                                        </a>
-                                    </li>
-                                }
-
-                                    <li class="slide__category"><span class="category-name">System</span></li>
-                                <li class="slide">
-                                    <a asp-controller="Home" asp-action="Roadmap" class="side-menu__item">
-                                        <i class="bx bx-map-alt side-menu__icon"></i>
-                                        <span class="side-menu__label">Roadmap</span>
-                                    </a>
+                            @* ── CS Support ── *@
+                            @if (User.IsInRole("AccountManager") || User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                            {
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="cs-support">
+                                        <span class="category-name">CS Support</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        @if (User.IsInRole("AccountManager"))
+                                        {
+                                            <li class="slide">
+                                                <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item">
+                                                    <i class="bx bx-support side-menu__icon"></i>
+                                                    <span class="side-menu__label">CS Requests</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                        {
+                                            <li class="slide">
+                                                <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item">
+                                                    <i class="bx bx-support side-menu__icon"></i>
+                                                    <span class="side-menu__label">CS Board</span>
+                                                </a>
+                                            </li>
+                                            <li class="slide">
+                                                <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
+                                                    <i class="bx bx-globe side-menu__icon"></i>
+                                                    <span class="side-menu__label">
+                                                        @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                                        {
+                                                            <text>All Brands</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>Team Board</text>
+                                                        }
+                                                    </span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
                                 </li>
+                            }
 
-                            </ul>
-                        </nav>
-                        <!-- End::nav -->
+                            @* ── System ── *@
+                            <li class="slide__category-group">
+                                <div class="slide__category" data-category="system">
+                                    <span class="category-name">System</span>
+                                    <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                </div>
+                                <ul class="category-items">
+                                    <li class="slide">
+                                        <a asp-controller="Home" asp-action="Roadmap" class="side-menu__item">
+                                            <i class="bx bx-map-alt side-menu__icon"></i>
+                                            <span class="side-menu__label">Roadmap</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        </ul>
+                    </nav>
+                    <!-- End::nav -->
 
                 </div>
                 <!-- End::main-sidebar -->
 
             </aside>
+
+            <style>
+                .slide__category {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+                    user-select: none;
+                }
+                .category-toggle-icon {
+                    font-size: 1rem;
+                    transition: transform 0.25s ease;
+                    margin-inline-end: 0.25rem;
+                    opacity: 0.7;
+                }
+                .slide__category-group.collapsed .category-toggle-icon {
+                    transform: rotate(-90deg);
+                }
+                .category-items {
+                    overflow: hidden;
+                    transition: max-height 0.3s ease, opacity 0.3s ease;
+                    max-height: 2000px;
+                    opacity: 1;
+                    padding-left: 0;
+                    list-style: none;
+                    margin: 0;
+                }
+                .slide__category-group.collapsed .category-items {
+                    max-height: 0;
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                /* drag-and-drop */
+                li.slide[draggable="true"] {
+                    cursor: grab;
+                }
+                li.slide.drag--active {
+                    opacity: 0.4;
+                }
+                li.slide.drag--over {
+                    outline: 2px dashed rgba(255,255,255,0.45);
+                    outline-offset: -2px;
+                    border-radius: 4px;
+                }
+            </style>
+
+            <script>
+                (function () {
+                    const COLLAPSED_KEY = 'sidebar_collapsed';
+                    const ORDER_KEY     = 'sidebar_order';
+
+                    /* ── collapsed state ── */
+                    function getCollapsed() {
+                        try { return JSON.parse(localStorage.getItem(COLLAPSED_KEY)) || []; }
+                        catch { return []; }
+                    }
+                    function saveCollapsed(list) {
+                        localStorage.setItem(COLLAPSED_KEY, JSON.stringify(list));
+                    }
+
+                    /* ── item order ── */
+                    function getOrders() {
+                        try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || {}; }
+                        catch { return {}; }
+                    }
+                    function saveOrders(orders) {
+                        localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
+                    }
+
+                    /* derive a stable key for a slide <li> from its anchor href */
+                    function itemKey(li) {
+                        const a = li.querySelector('a');
+                        return a ? a.getAttribute('href') || a.textContent.trim() : li.textContent.trim();
+                    }
+
+                    /* restore saved order inside a category-items <ul> */
+                    function restoreOrder(ul, categoryKey) {
+                        const orders = getOrders();
+                        const savedOrder = orders[categoryKey];
+                        if (!savedOrder || !savedOrder.length) return;
+
+                        const items = Array.from(ul.querySelectorAll(':scope > li.slide'));
+                        const map   = {};
+                        items.forEach(function (li) { map[itemKey(li)] = li; });
+
+                        savedOrder.forEach(function (key) {
+                            if (map[key]) ul.appendChild(map[key]);
+                        });
+                        /* append any items not present in saved order (newly added routes) */
+                        items.forEach(function (li) {
+                            if (!savedOrder.includes(itemKey(li))) ul.appendChild(li);
+                        });
+                    }
+
+                    /* persist current DOM order of a category-items <ul> */
+                    function persistOrder(ul, categoryKey) {
+                        const orders = getOrders();
+                        orders[categoryKey] = Array.from(ul.querySelectorAll(':scope > li.slide'))
+                            .map(itemKey);
+                        saveOrders(orders);
+                    }
+
+                    /* attach drag-and-drop to a category-items <ul> */
+                    function enableDrag(ul, categoryKey) {
+                        let dragged = null;
+
+                        ul.querySelectorAll(':scope > li.slide').forEach(function (li) {
+                            li.setAttribute('draggable', 'true');
+
+                            li.addEventListener('dragstart', function (e) {
+                                dragged = li;
+                                li.classList.add('drag--active');
+                                e.dataTransfer.effectAllowed = 'move';
+                            });
+
+                            li.addEventListener('dragend', function () {
+                                li.classList.remove('drag--active');
+                                ul.querySelectorAll(':scope > li.slide').forEach(function (s) {
+                                    s.classList.remove('drag--over');
+                                });
+                                dragged = null;
+                            });
+
+                            li.addEventListener('dragover', function (e) {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                                if (li === dragged) return;
+                                ul.querySelectorAll(':scope > li.slide').forEach(function (s) {
+                                    s.classList.remove('drag--over');
+                                });
+                                li.classList.add('drag--over');
+                            });
+
+                            li.addEventListener('dragleave', function () {
+                                li.classList.remove('drag--over');
+                            });
+
+                            li.addEventListener('drop', function (e) {
+                                e.preventDefault();
+                                li.classList.remove('drag--over');
+                                if (!dragged || dragged === li) return;
+
+                                /* insert dragged before or after target based on pointer position */
+                                const rect   = li.getBoundingClientRect();
+                                const midY   = rect.top + rect.height / 2;
+                                const after  = e.clientY > midY;
+
+                                if (after) {
+                                    li.after(dragged);
+                                } else {
+                                    li.before(dragged);
+                                }
+
+                                persistOrder(ul, categoryKey);
+                            });
+                        });
+                    }
+
+                    /* ── main init ── */
+                    function init() {
+                        const collapsed = getCollapsed();
+
+                        document.querySelectorAll('.slide__category[data-category]').forEach(function (header) {
+                            const group       = header.closest('.slide__category-group');
+                            const categoryKey = header.getAttribute('data-category');
+                            const ul          = group.querySelector('.category-items');
+
+                            /* restore saved item order */
+                            if (ul) {
+                                restoreOrder(ul, categoryKey);
+                                enableDrag(ul, categoryKey);
+                            }
+
+                            /* restore collapsed state */
+                            if (collapsed.includes(categoryKey)) {
+                                group.classList.add('collapsed');
+                            }
+
+                            header.addEventListener('click', function () {
+                                const isCollapsed = group.classList.toggle('collapsed');
+                                const list = getCollapsed();
+                                if (isCollapsed) {
+                                    if (!list.includes(categoryKey)) list.push(categoryKey);
+                                } else {
+                                    const idx = list.indexOf(categoryKey);
+                                    if (idx > -1) list.splice(idx, 1);
+                                }
+                                saveCollapsed(list);
+                            });
+                        });
+                    }
+
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', init);
+                    } else {
+                        init();
+                    }
+                })();
+            </script>

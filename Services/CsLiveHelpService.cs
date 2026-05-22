@@ -44,6 +44,7 @@ public class CsLiveHelpService
 
         return await _db.CsRequests
             .Where(r => r.AccountManagerId != amId
+                     && !r.IsInternal
                      && amBrandIds.Contains(r.BrandId)
                      && (r.Status == CsRequestStatus.Open || r.Status == CsRequestStatus.InProgress)
                      && r.Id > afterId)
@@ -169,14 +170,14 @@ public class CsLiveHelpService
     // ── CS Agent: All-Brands internal board ──────────────────────────────
 
     /// <summary>
-    /// Returns requests for the internal "All Brands" board.
-    /// TL/Manager default view = Escalated only; agents get all open items.
-    /// <paramref name="escalatedOnly"/> controls the filter.
+    /// Returns internal CS requests for the "All Brands" board.
+    /// Only requests created via the internal CS flow (IsInternal = true) are included.
+    /// <paramref name="escalatedOnly"/> controls the status filter.
     /// </summary>
     public async Task<List<CsRequest>> GetAllBrandsRequestsAsync(bool escalatedOnly = false, int afterId = 0)
     {
         var query = _db.CsRequests
-            .Where(r => r.Id > afterId);
+            .Where(r => r.Id > afterId && r.IsInternal);
 
         if (escalatedOnly)
             query = query.Where(r => r.Status == CsRequestStatus.Escalated);
@@ -201,7 +202,8 @@ public class CsLiveHelpService
 
     /// <summary>Creates a CS-internal request (not originating from an AM).</summary>
     public async Task<CsRequest> CreateInternalRequestAsync(
-        string authorId, int brandId, int requestTypeId, string? customDescription)
+        string authorId, int brandId, int requestTypeId, string? customDescription,
+        string? clientId = null)
     {
         var req = new CsRequest
         {
@@ -210,6 +212,7 @@ public class CsLiveHelpService
             BrandId           = brandId,
             RequestTypeId     = requestTypeId,
             CustomDescription = customDescription?.Trim(),
+            ClientId          = clientId?.Trim(),
             Status            = CsRequestStatus.Open,
             CreatedAt         = DateTime.UtcNow,
             UpdatedAt         = DateTime.UtcNow
@@ -241,10 +244,11 @@ public class CsLiveHelpService
 
     // ── CS Agent: board ───────────────────────────────────────────────────
 
-    /// <summary>Returns all non-archived requests for the CS board, newest first, paginated (top 50).</summary>
+    /// <summary>Returns all non-archived requests for the CS board, newest first, paginated (top 50).
+    /// Internal-only requests (posted from RequestsAllBrands) are excluded — they live on that board only.</summary>
     public async Task<List<CsRequest>> GetBoardRequestsAsync(int afterId = 0, CsRequestStatus? status = null)
     {
-        var q = _db.CsRequests.Where(r => r.Id > afterId);
+        var q = _db.CsRequests.Where(r => r.Id > afterId && !r.IsInternal);
         if (status.HasValue) q = q.Where(r => r.Status == status.Value);
         return await q
             .Include(r => r.Brand)

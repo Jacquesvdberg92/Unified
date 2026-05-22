@@ -109,3 +109,15 @@ pre.work-dist-body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Sidebar hover – light mode only.
+   The theme default (#f9fafb on a #fff sidebar) is near-invisible.
+   Use a mid-tone tint so the item is clearly highlighted and text stays readable. */
+:root:not([data-theme-mode="dark"]) .app-sidebar .side-menu__item:hover {
+    background-color: rgba(92, 103, 247, 0.08) !important; /* primary at 8% */
+    color: var(--primary-color) !important;
+}
+:root:not([data-theme-mode="dark"]) .app-sidebar .side-menu__item:hover .side-menu__label,
+:root:not([data-theme-mode="dark"]) .app-sidebar .side-menu__item:hover .side-menu__icon {
+    color: var(--primary-color) !important;
+}

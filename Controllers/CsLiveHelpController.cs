@@ -504,10 +504,12 @@ public class CsLiveHelpController : Controller
         var requests = await _svc.GetAllBrandsRequestsAsync(escalatedOnly);
         var types    = await _svc.GetRequestTypesAsync();
         var brands   = await _db.Brands.OrderBy(b => b.Name).ToListAsync();
+        var teams    = await _db.Teams.OrderBy(t => t.Name).ToListAsync();
 
         ViewBag.Requests      = requests;
         ViewBag.RequestTypes  = types;
         ViewBag.Brands        = brands;
+        ViewBag.Teams         = teams;
         ViewBag.EscalatedOnly = escalatedOnly;
         ViewBag.IsTlManager   = isTlManager;
         return View();
@@ -534,7 +536,9 @@ public class CsLiveHelpController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> CreateInternalRequest(int brandId, int requestTypeId, string? customDescription)
+    public async Task<IActionResult> CreateInternalRequest(
+        int brandId, int requestTypeId, string? customDescription,
+        string? clientId, int? teamId)
     {
         var csId = _users.GetUserId(User)!;
 
@@ -556,8 +560,18 @@ public class CsLiveHelpController : Controller
             return RedirectToAction(nameof(RequestsAllBrands));
         }
 
-        var req = await _svc.CreateInternalRequestAsync(csId, brandId, requestTypeId, customDescription);
+        var req = await _svc.CreateInternalRequestAsync(
+            csId, brandId, requestTypeId, customDescription,
+            clientId: string.IsNullOrWhiteSpace(clientId) ? null : clientId.Trim());
         await _svc.AuditAsync(csId, "CreateInternalRequest", req.Id, GetClientIp());
+
+        // If a team was selected, post it as a system comment so it shows in the thread
+        if (teamId.HasValue && teamId.Value > 0)
+        {
+            var team = await _db.Teams.FindAsync(teamId.Value);
+            if (team is not null)
+                await _svc.CsAddCommentAsync(req.Id, csId, $"Team allocation: {team.Name}.", isSystem: true);
+        }
 
         var brand = await _db.Brands.FindAsync(brandId);
         var rtype = await _db.CsRequestTypes.FindAsync(requestTypeId);
@@ -591,6 +605,26 @@ public class CsLiveHelpController : Controller
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(RequestsAllBrands));
+    }
+
+    // ── POST /CsLiveHelp/InternalUpdateStatusJson/{id} — drag-drop ─────────
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> InternalUpdateStatusJson(int id, CsRequestStatus status)
+    {
+        var csId = _users.GetUserId(User)!;
+        var ok   = await _svc.UpdateStatusAsync(id, status, csId);
+        if (!ok) return NotFound();
+
+        await _svc.AuditAsync(csId, $"InternalDragDrop:{status}", id, GetClientIp());
+
+        var agent = await _users.GetUserAsync(User);
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged",
+            new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
+
+        return Json(new { success = true });
     }
 
     // ── POST /CsLiveHelp/InternalUpdateStatus/{id} ───────────────────────

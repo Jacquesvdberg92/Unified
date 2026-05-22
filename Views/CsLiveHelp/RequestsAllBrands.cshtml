@@ -5,6 +5,7 @@
     var requests      = (List<CsRequest>)ViewBag.Requests;
     var types         = (List<CsRequestType>)ViewBag.RequestTypes;
     var brands        = (List<Brand>)ViewBag.Brands;
+    var teams         = (List<Unified.Models.Identity.Team>)ViewBag.Teams;
     var isTlManager   = (bool)ViewBag.IsTlManager;
 
     var openCards       = requests.Where(r => r.Status == CsRequestStatus.Open || r.Status == CsRequestStatus.Escalated).ToList();
@@ -43,6 +44,7 @@
     </div>
 
     <!-- Kanban board -->
+    @Html.AntiForgeryToken()
     <div class="row g-3">
 
         @* ── Open ── *@
@@ -53,9 +55,9 @@
                     <span class="fw-semibold">Open</span>
                     <span class="badge bg-secondary rounded-pill ms-auto">@openCards.Count</span>
                 </div>
-                <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-Open" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Open" style="min-height:80px">
                     @foreach (var r in openCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                    @if (!openCards.Any()) { <p class="text-muted small text-center mt-3">No open requests</p> }
+                    @if (!openCards.Any()) { <p class="text-muted small text-center mt-3 empty-col-hint">No open requests</p> }
                 </div>
             </div>
         </div>
@@ -68,9 +70,9 @@
                     <span class="fw-semibold">In Progress</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto">@inProgressCards.Count</span>
                 </div>
-                <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-InProgress" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="InProgress" style="min-height:80px">
                     @foreach (var r in inProgressCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                    @if (!inProgressCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                    @if (!inProgressCards.Any()) { <p class="text-muted small text-center mt-3 empty-col-hint">None</p> }
                 </div>
             </div>
         </div>
@@ -83,9 +85,9 @@
                     <span class="fw-semibold">On Going</span>
                     <span class="badge bg-warning text-dark rounded-pill ms-auto">@onGoingCards.Count</span>
                 </div>
-                <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-OnGoing" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="OnGoing" style="min-height:80px">
                     @foreach (var r in onGoingCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                    @if (!onGoingCards.Any()) { <p class="text-muted small text-center mt-3">None</p> }
+                    @if (!onGoingCards.Any()) { <p class="text-muted small text-center mt-3 empty-col-hint">None</p> }
                 </div>
             </div>
         </div>
@@ -98,9 +100,9 @@
                     <span class="fw-semibold">Completed</span>
                     <span class="badge bg-success rounded-pill ms-auto">@completedCards.Count</span>
                 </div>
-                <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2">
+                <div id="col-Completed" class="card-body p-2 d-flex flex-column gap-2 kanban-col" data-status="Completed" style="min-height:80px">
                     @foreach (var r in completedCards) { @await Html.PartialAsync("_InternalBoardCard", r) }
-                    @if (!completedCards.Any()) { <p class="text-muted small text-center mt-3">No completed requests</p> }
+                    @if (!completedCards.Any()) { <p class="text-muted small text-center mt-3 empty-col-hint">No completed requests</p> }
                 </div>
             </div>
         </div>
@@ -110,7 +112,7 @@
 
 @* ── New Internal Request Modal ─────────────────────────────────────────── *@
 <div class="modal fade" id="newInternalRequestModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title"><i class="bx bx-plus-circle me-2"></i>New Internal Request</h6>
@@ -119,30 +121,51 @@
             <form asp-action="CreateInternalRequest" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label form-label-sm">Brand</label>
-                        <select name="brandId" class="form-select form-select-sm" required>
-                            <option value="">— select brand —</option>
-                            @foreach (var b in brands)
-                            {
-                                <option value="@b.Id">@b.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label form-label-sm">Request Type</label>
-                        <select name="requestTypeId" id="intReqType" class="form-select form-select-sm" required>
-                            <option value="">— select type —</option>
-                            @foreach (var t in types)
-                            {
-                                <option value="@t.Id" data-isother="@t.IsOther.ToString().ToLower()">@t.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-3" id="intDescRow" style="display:none">
-                        <label class="form-label form-label-sm">Description <span class="text-muted">(max 500 chars)</span></label>
-                        <textarea name="customDescription" class="form-control form-control-sm" rows="3" maxlength="500"
-                                  placeholder="Describe the issue…"></textarea>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-sm">Brand <span class="text-danger">*</span></label>
+                            <select name="brandId" class="form-select form-select-sm" required>
+                                <option value="">— select brand —</option>
+                                @foreach (var b in brands)
+                                {
+                                    <option value="@b.Id">@b.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-sm">Request Type <span class="text-danger">*</span></label>
+                            <select name="requestTypeId" id="intReqType" class="form-select form-select-sm" required>
+                                <option value="">— select type —</option>
+                                @foreach (var t in types)
+                                {
+                                    <option value="@t.Id" data-isother="@t.IsOther.ToString().ToLower()">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-sm">Client ID <span class="text-muted">(optional)</span></label>
+                            <input type="text" name="clientId" class="form-control form-control-sm"
+                                   maxlength="100" placeholder="e.g. 123456" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-sm">Team Allocation <span class="text-muted">(optional)</span></label>
+                            <select name="teamId" class="form-select form-select-sm">
+                                <option value="">— no specific team —</option>
+                                @foreach (var t in teams)
+                                {
+                                    <option value="@t.Id">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label form-label-sm">
+                                Description / Question
+                                <span id="intDescHint" class="text-muted">(optional — max 500 chars)</span>
+                            </label>
+                            <textarea name="customDescription" id="intDescription" class="form-control form-control-sm"
+                                      rows="4" maxlength="500"
+                                      placeholder="Describe the issue, ask a question, e.g. How do I reset the 2FA for this player?…"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer py-2">
@@ -240,18 +263,123 @@
 
 @section Scripts {
     <script>
-        // Show/hide description textarea based on request type selection
+        // Mark description required only when IsOther type is selected
         document.getElementById('intReqType')?.addEventListener('change', function () {
             const opt = this.options[this.selectedIndex];
             const isOther = opt.dataset.isother === 'true';
-            const row = document.getElementById('intDescRow');
-            if (row) {
-                row.style.display = isOther ? '' : 'none';
-                const ta = row.querySelector('textarea');
-                if (ta) ta.required = isOther;
-            }
+            const ta   = document.getElementById('intDescription');
+            const hint = document.getElementById('intDescHint');
+            if (ta)   ta.required = isOther;
+            if (hint) hint.textContent = isOther
+                ? '(required for this type — max 500 chars)'
+                : '(optional — max 500 chars)';
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+        function showToastMsg(msg, success) {
+            if (typeof showToast === 'function') { showToast(msg, success); return; }
+            console[success ? 'info' : 'warn']('[AllBrands]', msg);
+        }
+
+        function removeEmptyHint(col) {
+            col?.querySelectorAll('.empty-col-hint').forEach(el => el.remove());
+        }
+
+        function addEmptyHintIfEmpty(col) {
+            if (col && col.querySelectorAll('[data-card-id]').length === 0 && !col.querySelector('.empty-col-hint')) {
+                const p = document.createElement('p');
+                p.className = 'text-muted small text-center mt-3 empty-col-hint';
+                p.textContent = 'None';
+                col.appendChild(p);
+            }
+        }
+
+        const badgeClass = {
+            Open:       'bg-secondary',
+            InProgress: 'bg-warning text-dark',
+            OnGoing:    'bg-warning text-dark',
+            Escalated:  'bg-danger',
+            Completed:  'bg-success'
+        };
+
+        document.querySelectorAll('.kanban-col').forEach(function (col) {
+            Sortable.create(col, {
+                group:      'int-kanban',
+                animation:  150,
+                ghostClass: 'sortable-ghost',
+                dragClass:  'sortable-drag',
+                filter:     'button, a, input, textarea',
+                preventOnFilter: false,
+                onEnd: async function (evt) {
+                    const card      = evt.item;
+                    const cardId    = card.dataset.cardId;
+                    const newStatus = evt.to.dataset.status;
+                    const oldStatus = evt.from.dataset.status;
+
+                    if (!cardId || !newStatus || newStatus === oldStatus) return;
+
+                    removeEmptyHint(evt.to);
+
+                    try {
+                        const fd = new FormData();
+                        fd.append('status', newStatus);
+                        fd.append('__RequestVerificationToken', token);
+
+                        const res = await fetch(`/CsLiveHelp/InternalUpdateStatusJson/${cardId}`, {
+                            method: 'POST',
+                            body:   fd,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+
+                        if (res.ok) {
+                            const badge = card.querySelector('.badge');
+                            if (badge && badgeClass[newStatus]) {
+                                badge.className = 'badge ' + badgeClass[newStatus];
+                                badge.textContent = newStatus;
+                            }
+                            addEmptyHintIfEmpty(evt.from);
+                            showToastMsg('Card moved to ' + newStatus, true);
+                        } else {
+                            evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
+                            showToastMsg('Failed to update card status.', false);
+                        }
+                    } catch (_) {
+                        evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
+                        showToastMsg('Network error — card move reverted.', false);
+                    }
+                }
+            });
+        });
+
+        // Highlight drop target while dragging
+        document.addEventListener('dragover', function (e) {
+            const col = e.target.closest('.kanban-col');
+            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+            if (col) col.classList.add('drag-over');
+        });
+        document.addEventListener('dragleave', function (e) {
+            if (!e.relatedTarget?.closest('.kanban-col'))
+                document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        });
+        document.addEventListener('drop', function () {
+            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+        });
+    })();
+    </script>
+    <style>
+        .sortable-ghost  { opacity: .4; background: #e8f4ff; border: 2px dashed #0d6efd !important; }
+        .sortable-drag   { box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+        .kanban-col      { transition: background .15s; }
+        .kanban-col .card { cursor: grab; }
+        .kanban-col .card:active { cursor: grabbing; }
+        .drag-over       { background: rgba(13,110,253,.06) !important; border: 2px dashed #0d6efd; border-radius: .375rem; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
     <script src="~/js/cslivehelp.js"></script>
 }
