@@ -167,7 +167,13 @@
                                         <li class="slide">
                                             <a asp-controller="Admin" asp-action="Users" class="side-menu__item">
                                                 <i class="bx bx-user side-menu__icon"></i>
-                                                <span class="side-menu__label">Users</span>
+                                                <span class="side-menu__label">
+                                                    Users
+                                                    @if ((ViewBag.PendingAccountRequestsCount as int?) is int pendingCount && pendingCount > 0)
+                                                    {
+                                                        <span class="badge bg-danger ms-1">@pendingCount</span>
+                                                    }
+                                                </span>
                                             </a>
                                         </li>
                                         <li class="slide">
@@ -192,6 +198,24 @@
                                             <a asp-controller="Vault" asp-action="AccessLog" class="side-menu__item">
                                                 <i class="bx bx-history side-menu__icon"></i>
                                                 <span class="side-menu__label">Vault Access Log</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="PendingAccountManagers" class="side-menu__item">
+                                                <i class="bx bx-user-check side-menu__icon"></i>
+                                                <span class="side-menu__label">Pending AMs</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="ActivityLog" class="side-menu__item">
+                                                <i class="bx bx-history side-menu__icon"></i>
+                                                <span class="side-menu__label">Activity Log</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="ErrorLog" class="side-menu__item">
+                                                <i class="bx bx-error side-menu__icon"></i>
+                                                <span class="side-menu__label">Error Log</span>
                                             </a>
                                         </li>
                                     </ul>

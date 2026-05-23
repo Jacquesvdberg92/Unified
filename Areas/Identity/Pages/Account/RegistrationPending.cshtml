@@ -1,0 +1,47 @@
+@page
+@model RegistrationPendingModel
+@{
+    ViewData["Title"] = "Registration Pending";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme-mode="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] — Unified</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link href="~/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/assets/css/styles.css" rel="stylesheet">
+    <link href="~/assets/CSS/icons.css" rel="stylesheet">
+</head>
+<body class="authentication-background">
+<div class="container-xxl">
+    <div class="authentication-wrapper authentication-cover authentication-bg">
+        <div class="authentication-inner row m-0">
+            <div class="d-none d-lg-flex col-lg-7 authentication-bg p-0">
+                <div class="authentication-cover-content">
+                    <div class="p-5 text-white">
+                        <h1 class="display-5 fw-bold mb-3">Unified</h1>
+                        <p class="lead opacity-75">Your request has been received and is waiting for approval.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5 d-flex align-items-center authentication-bg py-sm-5 p-4">
+                <div class="w-100 text-center" style="max-width: 440px; margin: auto;">
+                    <span class="avatar avatar-xl bg-success-transparent rounded-circle mb-3">
+                        <i class="ri-check-double-line fs-1 text-success"></i>
+                    </span>
+                    <h4 class="fw-semibold mb-2 text-white">Request Submitted</h4>
+                    <p class="mb-4 text-white">Your request has been received. Please allow 15–30 minutes for approval, then try to log in.</p>
+                    <a asp-page="./Login" class="btn btn-primary">Back to Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

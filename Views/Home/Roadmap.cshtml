@@ -204,7 +204,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-user-plus me-1"></i>Phase 1e – Account Manager Registration Flow
-                            <span class="badge bg-secondary ms-2">Planned</span>
+                            <span class="badge bg-success ms-2">Complete</span>
                         </h6>
                         <p class="text-muted small mb-3">
                             Replaces the generic register page for external sign-ups. Visitors choose their account type; AMs go through a dedicated
@@ -213,37 +213,37 @@
 
                         <p class="fw-semibold mb-2">Entry Point – Request Access Page</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RequestAccess</code> — landing page with two options: <strong>Account Manager</strong> and <strong>Other</strong></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><em>Other</em> button redirects to the existing <code>/Account/Register</code> page (CS, Finance, etc.)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><em>Account Manager</em> button redirects to the dedicated AM registration page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Account/RequestAccess</code> — landing page with two options: <strong>Account Manager</strong> and <strong>Other</strong></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><em>Other</em> button redirects to the existing <code>/Account/Register</code> page (CS, Finance, etc.)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><em>Account Manager</em> button redirects to the dedicated AM registration page</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">AM Registration Page</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RegisterAccountManager</code> — form: Full Name, Email, Password, Confirm Password</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Account/RegisterAccountManager</code> — creates <code>AppUser</code> with <code>IsExternal = true</code>, <code>EmailConfirmed = false</code>, account locked (<code>LockoutEnabled = true</code>) pending approval</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Role <code>AccountManager</code> is <strong>not</strong> assigned at registration — only after Management approval</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>On successful submit → redirect to <code>/Account/RegistrationPending</code> confirmation page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Account/RegisterAccountManager</code> — form: Full Name, Email, Password, Confirm Password</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Account/RegisterAccountManager</code> — creates <code>AppUser</code> with <code>IsExternal = true</code>, <code>EmailConfirmed = false</code>, account locked (<code>LockoutEnabled = true</code>) pending approval</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Role <code>AccountManager</code> is <strong>not</strong> assigned at registration — only after Management approval</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>On successful submit → redirect to <code>/Account/RegistrationPending</code> confirmation page</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">Pending Confirmation Page</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Account/RegistrationPending</code> — static message: <em>"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Account/RegistrationPending</code> — static message: <em>"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."</em></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">Management Approval</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>New <code>GET /Admin/PendingAccountManagers</code> page listing all locked AM applicants (Name, Email, Requested date)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Admin/ApproveAccountManager/{id}</code> — unlocks account, assigns <code>AccountManager</code> role, sets <code>EmailConfirmed = true</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Admin/RejectAccountManager/{id}</code> — deletes the pending user record</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Approval page accessible to <strong>Management</strong> role only; add to sidebar under Admin section</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Optional: email notification to AM on approval/rejection <em>(requires email service configured)</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>New <code>GET /Admin/PendingAccountManagers</code> page listing all locked AM applicants (Name, Email, Requested date)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Admin/ApproveAccountManager/{id}</code> — unlocks account, assigns <code>AccountManager</code> role, sets <code>EmailConfirmed = true</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Admin/RejectAccountManager/{id}</code> — deletes the pending user record</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Approval page accessible to <strong>Management</strong> role only; add to sidebar under Admin section</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Optional: email notification to AM on approval/rejection <em>(requires email service configured)</em></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">Login Behaviour for Pending Accounts</p>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>If AM tries to log in while still locked → show friendly message: <em>"Your account is pending approval. Please check back in 15–30 minutes."</em> (not a generic lockout error)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Rate-limit the AM registration endpoint (max 3 submissions per IP per hour) to prevent abuse</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>If AM tries to log in while still locked → show friendly message: <em>"Your account is pending approval. Please check back in 15–30 minutes."</em> (not a generic lockout error)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Rate-limit the AM registration endpoint (max 3 submissions per IP per hour) to prevent abuse</li>
                         </ul>
                     </div>
 
@@ -251,7 +251,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-list-check me-1"></i>Phase 1f – Activity Logging &amp; Error Tracking
-                            <span class="badge bg-secondary ms-2">Planned</span>
+                            <span class="badge bg-success ms-2">Complete</span>
                         </h6>
                         <p class="text-muted small mb-3">
                             Centralised middleware-level logging for page visits, user actions, and unhandled errors. Audit trail for compliance and debugging.
@@ -260,29 +260,29 @@
 
                         <p class="fw-semibold mb-2">Activity Logging Middleware</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Audit what middleware already exists (<code>Program.cs</code>) — confirm no duplicate logging pipeline</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ActivityLog</code> model: <code>Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration for <code>ActivityLogs</code> table + indexes on <code>(UserId)</code>, <code>(Timestamp)</code>, <code>(Path)</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ActivityLoggingMiddleware</code> — logs every authenticated request (path, method, user, duration, status code)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Skip logging for static assets (<code>/lib/</code>, <code>/css/</code>, <code>/js/</code>, <code>/favicon.ico</code>) and SignalR hub endpoints</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register middleware in <code>Program.cs</code> (after authentication, before controllers)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Write async (fire-and-forget or background queue) so logging never blocks the request pipeline</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Audited middleware in <code>Program.cs</code> and confirmed no duplicate logging pipeline</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created <code>ActivityLog</code> model: <code>Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created EF Core migration for <code>ActivityLogs</code> with indexes on <code>(UserId)</code>, <code>(Timestamp)</code>, <code>(Path)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Implemented <code>ActivityLoggingMiddleware</code> for authenticated request logging (path, method, user, duration, status)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Configured skip rules for static assets and SignalR hub endpoints</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Registered activity middleware in <code>Program.cs</code> after authentication</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Implemented async background queue persistence so logging never blocks the request pipeline</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">Error Logging</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>ErrorLog</code> model: <code>Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration for <code>ErrorLogs</code> table</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Create <code>GlobalExceptionHandlerMiddleware</code> — catches unhandled exceptions, persists to <code>ErrorLogs</code>, returns user-friendly error page</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Register exception handler middleware as the first middleware in <code>Program.cs</code> (outermost wrap)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created <code>ErrorLog</code> model: <code>Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created EF Core migration for <code>ErrorLogs</code> table</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Implemented <code>GlobalExceptionHandlerMiddleware</code> to catch and persist unhandled exceptions to <code>ErrorLogs</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Registered exception middleware as the outermost middleware in <code>Program.cs</code></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">Admin Log Viewer</p>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Admin/ActivityLog</code> — paginated table: user, path, method, status, duration, timestamp; filterable by user and date range</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Admin/ErrorLog</code> — paginated table: exception type, path, user, timestamp; detail drill-down showing stack trace</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Both views accessible to <strong>Admin / Management</strong> roles only; add to Admin sidebar</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Auto-purge old activity logs after configurable retention period (default: 90 days) via background service or extend archive service</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Admin/ActivityLog</code> — paginated table with user/date filters</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Admin/ErrorLog</code> — paginated table with drill-down detail view for stack traces</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Activity and Error log views are role-gated through existing Admin authorization and linked in Admin sidebar</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Implemented configurable auto-purge for activity logs (default retention: 60 days)</li>
                         </ul>
                     </div>
 
@@ -550,34 +550,34 @@
                         <!-- Coming Soon -->
                         <div class="row g-3 mb-5">
                             <div class="col-md-6">
-                                <div class="card border-warning h-100">
+                                <div class="card border-success h-100">
                                     <div class="card-body">
                                         <h6 class="card-title d-flex align-items-center">
-                                            <i class="bx bx-user-plus text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <i class="bx bx-user-plus text-success me-2" style="font-size: 1.5rem;"></i>
                                             <span>Smart Registration</span>
-                                            <span class="badge bg-warning text-dark ms-auto">Planned</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
                                         </h6>
-                                        <p class="card-text small text-muted mb-2">New users will go through a guided signup process with approval workflows.</p>
+                                        <p class="card-text small text-muted mb-2">New users now go through a guided signup process with approval workflows.</p>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-warning" style="width: 0%;"></div>
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
                                         </div>
-                                        <small class="text-muted d-block mt-2">Coming next...</small>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="card border-warning h-100">
+                                <div class="card border-success h-100">
                                     <div class="card-body">
                                         <h6 class="card-title d-flex align-items-center">
-                                            <i class="bx bx-list-check text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <i class="bx bx-list-check text-success me-2" style="font-size: 1.5rem;"></i>
                                             <span>Activity Tracking</span>
-                                            <span class="badge bg-warning text-dark ms-auto">Planned</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
                                         </h6>
-                                        <p class="card-text small text-muted mb-2">We'll track who did what and when for better security and auditing.</p>
+                                        <p class="card-text small text-muted mb-2">We now track who did what and when for better security and auditing.</p>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-warning" style="width: 0%;"></div>
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
                                         </div>
-                                        <small class="text-muted d-block mt-2">Coming next...</small>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
                                     </div>
                                 </div>
                             </div>
@@ -649,9 +649,9 @@
 
                         <div class="alert alert-success mt-4 mb-0" role="alert">
                             <i class="bx bx-heart-circle me-2"></i>
-                            <strong>We're making great progress!</strong> We've completed the foundation and customer support system. 
-                            Several exciting features are coming soon to make everyone's work easier.
-                        </div>
+                                <strong>We're making great progress!</strong> We've completed the foundation and customer support system. 
+                                Several exciting features are coming soon to make everyone's work easier.
+                            </div>
 
                     </div>
                     <!-- End Human Friendly View -->
@@ -659,7 +659,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration planned | Phase 1f activity logging planned | Phase 4 SIP added | Phase 5 CS messaging added</strong>
+                        Last updated: <strong>2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration complete | Phase 1f activity logging complete | Phase 4 SIP added | Phase 5 CS messaging added</strong>
                     </div>
 
                 </div>

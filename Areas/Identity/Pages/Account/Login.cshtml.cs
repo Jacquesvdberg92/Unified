@@ -7,10 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -137,14 +135,19 @@ namespace Unified.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user != null && user.IsExternal)
+                    {
+                        ModelState.AddModelError(string.Empty, "Your account is pending approval. Please check back in 15–30 minutes.");
+                        return Page();
+                    }
+
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form

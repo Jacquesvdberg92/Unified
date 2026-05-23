@@ -1,0 +1,101 @@
+@model IEnumerable<Unified.Controllers.PendingAccountManagerViewModel>
+@{
+    ViewData["Title"] = "Pending Account Managers";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Pending Account Managers</h1>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a asp-action="Users" class="nav-link">Users</a></li>
+    <li class="nav-item"><a asp-action="Teams" class="nav-link">Teams</a></li>
+    <li class="nav-item"><a asp-action="AccountRequests" class="nav-link">Account Requests</a></li>
+    <li class="nav-item"><a asp-action="PendingAccountManagers" class="nav-link active">Pending AMs</a></li>
+</ul>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["Info"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css")" />
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle nowrap w-100" id="pendingAmTable" data-admin-datatable data-order-column="2" data-order-dir="desc">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Requested At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var req in Model)
+                {
+                    <tr>
+                        <td>@req.FullName</td>
+                        <td>@req.Email</td>
+                        <td>@req.RequestedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            @if (req.EmailConfirmed)
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (req.IsLockedOut)
+                            {
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Waiting</span>
+                            }
+                        </td>
+                        <td>
+                            <form asp-action="ApproveAccountManager" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@req.AccountRequestId" />
+                                <button type="submit" class="btn btn-sm btn-success me-1">Approve</button>
+                            </form>
+                            <form asp-action="RejectAccountManager" method="post" class="d-inline" onsubmit="return confirm('Reject this account manager request?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@req.AccountRequestId" />
+                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.11/js/jquery.dataTables.min.js"></script>
+    <script src="@Url.Content("~/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js")"></script>
+    <script src="~/js/admin.js"></script>
+}

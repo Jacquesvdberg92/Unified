@@ -12,6 +12,7 @@ using Unified.Models.Poi;
 using Unified.Models.WorkDistribution;
 using Unified.Models.Dashboard;
 using Unified.Models.CsLiveHelp;
+using Unified.Models.Logging;
 
 namespace Unified.Data;
 
@@ -69,6 +70,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<CsRequestComment>    CsRequestComments    => Set<CsRequestComment>();
     public DbSet<CsRequestArchive>    CsRequestArchives    => Set<CsRequestArchive>();
     public DbSet<AmAuditLog>          AmAuditLogs          => Set<AmAuditLog>();
+
+    // Activity + Error logging
+    public DbSet<ActivityLog>         ActivityLogs         => Set<ActivityLog>();
+    public DbSet<ErrorLog>            ErrorLogs            => Set<ErrorLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -436,6 +441,16 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<AmAuditLog>()
             .HasIndex(a => new { a.UserId, a.Timestamp });
+
+        builder.Entity<ActivityLog>()
+            .HasIndex(a => a.UserId);
+        builder.Entity<ActivityLog>()
+            .HasIndex(a => a.Timestamp);
+        builder.Entity<ActivityLog>()
+            .HasIndex(a => a.Path);
+
+        builder.Entity<ErrorLog>()
+            .HasIndex(e => e.Timestamp);
 
         builder.Entity<DashboardWidget>()
             .HasIndex(w => w.UserId);

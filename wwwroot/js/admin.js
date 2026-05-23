@@ -1,9 +1,19 @@
 // Admin shared table initializations
 $(function () {
-    if (document.getElementById('requestsTable')) {
-        $('#requestsTable').DataTable({ responsive: true, order: [[4, 'desc']] });
-    }
-    if (document.getElementById('usersTable')) {
-        $('#usersTable').DataTable({ responsive: true });
-    }
+    $('[data-admin-datatable]').each(function () {
+        const $table = $(this);
+        if ($.fn.DataTable.isDataTable(this)) {
+            return;
+        }
+
+        const orderColumn = $table.data('order-column');
+        const orderDir = $table.data('order-dir') || 'asc';
+        const pageLength = $table.data('page-length') || 10;
+
+        $table.DataTable({
+            responsive: true,
+            pageLength: pageLength,
+            order: orderColumn !== undefined ? [[orderColumn, orderDir]] : []
+        });
+    });
 });

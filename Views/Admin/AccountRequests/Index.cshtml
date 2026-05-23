@@ -3,10 +3,20 @@
 @{
     ViewData["Title"] = "Account Requests";
     var allRoles = new[] { Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.AccountManager, Roles.Finance, Roles.SwissArmyKnife };
+    var pendingCount = Model.Count(r => r.Status == AccountRequestStatus.Pending);
 }
 
-<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-    <h1 class="page-title fw-semibold fs-18 mb-0">Account Requests</h1>
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb gap-3">
+    <div>
+        <h1 class="page-title fw-semibold fs-18 mb-1">Admin Account Requests</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-warning text-dark">@pendingCount pending requests</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Users" class="btn btn-outline-primary btn-sm">Users</a>
+        <a asp-action="Teams" class="btn btn-outline-primary btn-sm">Teams</a>
+    </div>
 </div>
 
 <ul class="nav nav-tabs mb-3">
@@ -53,140 +63,145 @@
     </div>
 }
 
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css")" />
+}
+
 <div class="card">
     <div class="card-body">
-        <table id="requestsTable" class="table table-hover nowrap w-100">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Requested Role</th>
-                    <th>Message</th>
-                    <th>Requested At</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var req in Model)
-                {
+        <div class="table-responsive">
+            <table id="requestsTable" class="table table-hover align-middle nowrap w-100" data-admin-datatable data-order-column="4" data-order-dir="desc">
+                <thead>
                     <tr>
-                        <td>@req.FullName</td>
-                        <td>@req.Email</td>
-                        <td><span class="badge bg-secondary">@req.Role</span></td>
-                        <td>@(req.Message ?? "—")</td>
-                        <td>@req.RequestedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>
-                            @switch (req.Status)
-                            {
-                                case AccountRequestStatus.Pending:
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                    break;
-                                case AccountRequestStatus.Approved:
-                                    <span class="badge bg-success">Approved</span>
-                                    break;
-                                case AccountRequestStatus.Rejected:
-                                    <span class="badge bg-danger">Rejected</span>
-                                    if (req.RejectionReason != null)
-                                    {
-                                        <small class="d-block text-muted">@req.RejectionReason</small>
-                                    }
-                                    break;
-                            }
-                        </td>
-                        <td>
-                            @if (req.Status == AccountRequestStatus.Pending)
-                            {
-                                <button class="btn btn-sm btn-success me-1"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#approveModal-@req.Id">
-                                    <i class="ri-check-line"></i> Approve
-                                </button>
-                                <button class="btn btn-sm btn-danger"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#rejectModal-@req.Id">
-                                    <i class="ri-close-line"></i> Reject
-                                </button>
-                            }
-                        </td>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Requested Role</th>
+                        <th>Message</th>
+                        <th>Requested At</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-
-                    @if (req.Status == AccountRequestStatus.Pending)
+                </thead>
+                <tbody>
+                    @foreach (var req in Model)
                     {
-                        <!-- Approve Modal -->
-                        <div class="modal fade" id="approveModal-@req.Id" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form asp-action="ApproveRequest" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@req.Id" />
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Approve Request — @req.FullName</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label">Assign Role</label>
-                                                <select name="role" class="form-select" required>
-                                                    @foreach (var r in allRoles)
-                                                    {
-                                                        <option value="@r" selected="@(r == req.Role)">@r</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Assign Teams (optional)</label>
-                                                @foreach (var team in ViewBag.AllTeams as IEnumerable<Unified.Models.Identity.Team> ?? [])
-                                                {
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="teamIds" value="@team.Id" id="team-@req.Id-@team.Id" />
-                                                        <label class="form-check-label" for="team-@req.Id-@team.Id">@team.Name</label>
-                                                    </div>
-                                                }
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-success">Create Account</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+                        <tr>
+                            <td class="fw-semibold">@req.FullName</td>
+                            <td>@req.Email</td>
+                            <td><span class="badge bg-secondary">@req.Role</span></td>
+                            <td>@(req.Message ?? "—")</td>
+                            <td>@req.RequestedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @switch (req.Status)
+                                {
+                                    case AccountRequestStatus.Pending:
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        break;
+                                    case AccountRequestStatus.Approved:
+                                        <span class="badge bg-success">Approved</span>
+                                        break;
+                                    case AccountRequestStatus.Rejected:
+                                        <span class="badge bg-danger">Rejected</span>
+                                        if (req.RejectionReason != null)
+                                        {
+                                            <small class="d-block text-muted">@req.RejectionReason</small>
+                                        }
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (req.Status == AccountRequestStatus.Pending)
+                                {
+                                    <button class="btn btn-sm btn-success me-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#approveModal-@req.Id">
+                                        <i class="ri-check-line"></i> Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#rejectModal-@req.Id">
+                                        <i class="ri-close-line"></i> Reject
+                                    </button>
+                                }
+                            </td>
+                        </tr>
 
-                        <!-- Reject Modal -->
-                        <div class="modal fade" id="rejectModal-@req.Id" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form asp-action="RejectRequest" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@req.Id" />
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Reject Request — @req.FullName</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label">Reason (optional)</label>
-                                                <textarea name="reason" class="form-control" rows="3"></textarea>
+                        @if (req.Status == AccountRequestStatus.Pending)
+                        {
+                            <div class="modal fade" id="approveModal-@req.Id" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form asp-action="ApproveRequest" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@req.Id" />
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Approve Request — @req.FullName</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-danger">Reject</button>
-                                        </div>
-                                    </form>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assign Role</label>
+                                                    <select name="role" class="form-select" required>
+                                                        @foreach (var r in allRoles)
+                                                        {
+                                                            <option value="@r" selected="@(r == req.Role)">@r</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assign Teams (optional)</label>
+                                                    @foreach (var team in ViewBag.AllTeams as IEnumerable<Unified.Models.Identity.Team> ?? [])
+                                                    {
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="teamIds" value="@team.Id" id="team-@req.Id-@team.Id" />
+                                                            <label class="form-check-label" for="team-@req.Id-@team.Id">@team.Name</label>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-success">Create Account</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <div class="modal fade" id="rejectModal-@req.Id" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form asp-action="RejectRequest" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@req.Id" />
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reject Request — @req.FullName</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Reason (optional)</label>
+                                                    <textarea name="reason" class="form-control" rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-danger">Reject</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.datatables.net/1.13.11/js/jquery.dataTables.min.js"></script>
     <script src="@Url.Content("~/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js")"></script>
     <script src="~/js/admin.js"></script>
 }

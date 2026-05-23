@@ -1,13 +1,27 @@
-@model IEnumerable<Unified.Models.Identity.AppUser>
+@model Unified.Controllers.AdminUsersIndexViewModel
 @{
     ViewData["Title"] = "Users";
 }
 
-<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-    <h1 class="page-title fw-semibold fs-18 mb-0">Admin</h1>
-    <a asp-action="CreateUser" class="btn btn-primary btn-sm">
-        <i class="ri-user-add-line me-1"></i> New User
-    </a>
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb gap-3">
+    <div>
+        <h1 class="page-title fw-semibold fs-18 mb-1">Admin Users</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-warning text-dark">@Model.PendingAccountRequestsCount pending account requests</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="CreateUser" class="btn btn-primary btn-sm">
+            <i class="ri-user-add-line me-1"></i> New User
+        </a>
+        <a asp-action="AccountRequests" class="btn btn-outline-primary btn-sm position-relative">
+            <i class="ri-inbox-line me-1"></i> Account Requests
+            @if (Model.PendingAccountRequestsCount > 0)
+            {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">@Model.PendingAccountRequestsCount</span>
+            }
+        </a>
+    </div>
 </div>
 
 <ul class="nav nav-tabs mb-3">
@@ -22,39 +36,99 @@
     </li>
 </ul>
 
-<div class="card">
-    <div class="card-body">
-        <table id="usersTable" class="table table-hover nowrap w-100">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Teams</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var user in Model)
-                {
-                    var role = ((Dictionary<string, IList<string>>)ViewBag.UserRoles)[user.Id].FirstOrDefault() ?? "—";
-                    var teams = string.Join(", ", user.Teams.Select(t => t.Team?.Name ?? ""));
-                    <tr>
-                        <td>@user.DisplayName</td>
-                        <td>@user.Email</td>
-                        <td><span class="badge bg-secondary">@role</span></td>
-                        <td>@teams</td>
-                        <td>
-                            <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+@section Styles {
+    <link rel="stylesheet" href="@Url.Content("~/assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css")" />
+}
+
+@foreach (var userSection in Model.Sections)
+{
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="mb-0">@userSection.Title</h5>
+                <small class="text-muted">@userSection.Description</small>
+            </div>
+            <span class="badge bg-secondary">@userSection.Users.Count</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 nowrap w-100" data-admin-datatable data-order-column="0" data-order-dir="asc">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Teams</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in userSection.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@user.DisplayName</div>
+                                    @if (user.IsCurrentUser)
+                                    {
+                                        <small class="text-muted">Current user</small>
+                                    }
+                                </td>
+                                <td>@user.Email</td>
+                                <td>
+                                    <span class="badge @(user.SectionKey == "account-managers" ? "bg-info text-dark" : (user.IsExternal ? "bg-warning text-dark" : "bg-secondary"))">@user.Role</span>
+                                </td>
+                                <td>@(string.IsNullOrWhiteSpace(user.Teams) ? "—" : user.Teams)</td>
+                                <td>
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge bg-danger">Locked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-outline-primary">Edit</a>
+                                        @if (user.CanUnlock)
+                                        {
+                                            <form asp-action="UnlockUser" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-outline-success">Unlock</button>
+                                            </form>
+                                        }
+                                        else if (user.CanLock)
+                                        {
+                                            <form asp-action="LockUser" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-outline-warning">Lock</button>
+                                            </form>
+                                        }
+                                        @if (user.CanDelete)
+                                        {
+                                            <form asp-action="DeleteUser" method="post" class="d-inline" onsubmit="return confirm('Delete @user.DisplayName? This cannot be undone.');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@user.Id" />
+                                                <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
+}
 
 @section Scripts {
+    <script src="https://cdn.datatables.net/1.13.11/js/jquery.dataTables.min.js"></script>
     <script src="@Url.Content("~/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js")"></script>
     <script src="~/js/admin.js"></script>
 }

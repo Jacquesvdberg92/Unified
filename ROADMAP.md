@@ -192,62 +192,62 @@
 
 ---
 
-## Phase 1e – Account Manager Registration Flow
+## Phase 1e – Account Manager Registration Flow ✅
 
 > Replaces the generic register page for external sign-ups.
 > AMs request access via a dedicated flow. Account is locked pending Management approval before login is possible.
 
 ### Entry Point – Request Access Page
-- [ ] `GET /Account/RequestAccess` — page with two options: **Account Manager** and **Other**
-- [ ] *Other* → redirects to existing `/Account/Register` (CS, Finance, etc.)
-- [ ] *Account Manager* → redirects to dedicated AM registration page
+- [x] `GET /Account/RequestAccess` — page with two options: **Account Manager** and **Other**
+- [x] *Other* → redirects to existing `/Account/Register` (CS, Finance, etc.)
+- [x] *Account Manager* → redirects to dedicated AM registration page
 
 ### AM Registration Page
-- [ ] `GET /Account/RegisterAccountManager` — form: Full Name, Email, Password, Confirm Password
-- [ ] `POST /Account/RegisterAccountManager` — creates `AppUser` with `IsExternal = true`, account locked (`LockoutEnabled = true`, `LockoutEnd = DateTimeOffset.MaxValue`) pending approval; role **not** assigned yet
-- [ ] On successful submit → redirect to `GET /Account/RegistrationPending`
-- [ ] Rate-limit endpoint: max 3 submissions per IP per hour
+- [x] `GET /Account/RegisterAccountManager` — form: Full Name, Email, Password, Confirm Password
+- [x] `POST /Account/RegisterAccountManager` — creates `AppUser` with `IsExternal = true`, account locked (`LockoutEnabled = true`, `LockoutEnd = DateTimeOffset.MaxValue`) pending approval; role **not** assigned yet
+- [x] On successful submit → redirect to `GET /Account/RegistrationPending`
+- [x] Rate-limit endpoint: max 3 submissions per IP per hour
 
 ### Pending Confirmation Page
-- [ ] `GET /Account/RegistrationPending` — static message: *"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."*
+- [x] `GET /Account/RegistrationPending` — static message: *"Your request has been received. Please allow 15–30 minutes for approval, then try to log in."*
 
 ### Management Approval
-- [ ] `GET /Admin/PendingAccountManagers` — lists all locked AM applicants (Name, Email, Requested date); Management role only
-- [ ] `POST /Admin/ApproveAccountManager/{id}` — unlocks account, assigns `AccountManager` role, sets `EmailConfirmed = true`
-- [ ] `POST /Admin/RejectAccountManager/{id}` — deletes pending user record
-- [ ] Add "Pending AMs" link to Admin sidebar (Management only)
-- [ ] Optional: email notification to AM on approval/rejection *(requires email service configured)*
+- [x] `GET /Admin/PendingAccountManagers` — lists all locked AM applicants (Name, Email, Requested date); Management role only
+- [x] `POST /Admin/ApproveAccountManager/{id}` — unlocks account, assigns `AccountManager` role, sets `EmailConfirmed = true`
+- [x] `POST /Admin/RejectAccountManager/{id}` — deletes pending user record
+- [x] Add "Pending AMs" link to Admin sidebar (Management only)
+- [x] Optional: email notification to AM on approval/rejection *(requires email service configured)*
 
 ### Login Behaviour for Pending Accounts
-- [ ] If AM tries to log in while still locked → friendly message: *"Your account is pending approval. Please check back in 15–30 minutes."* (override generic lockout error)
+- [x] If AM tries to log in while still locked → friendly message: *"Your account is pending approval. Please check back in 15–30 minutes."* (override generic lockout error)
 
 ---
 
-## Phase 1f – Activity Logging & Error Tracking
+## Phase 1f – Activity Logging & Error Tracking ✅
 
 > Centralised middleware-level logging for page visits, user actions, and unhandled errors.
 > Covers all authenticated users. `AmAuditLog` stays in place for AM-specific audit trail.
 
 ### Activity Logging Middleware
-- [ ] Audit existing middleware in `Program.cs` — confirm no duplicate logging pipeline
-- [ ] Create `ActivityLog` model: `Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp`
-- [ ] EF Core migration for `ActivityLogs` table + indexes on `(UserId)`, `(Timestamp)`, `(Path)`
-- [ ] Create `ActivityLoggingMiddleware` — logs every authenticated request (path, method, user, duration, status code)
+- [x] Audit existing middleware in `Program.cs` — confirmed no duplicate logging pipeline
+- [x] Create `ActivityLog` model: `Id, UserId?, UserName?, Action, Path, Method, StatusCode, IpAddress, UserAgent, DurationMs, Timestamp`
+- [x] EF Core migration for `ActivityLogs` table + indexes on `(UserId)`, `(Timestamp)`, `(Path)`
+- [x] Create `ActivityLoggingMiddleware` — logs every authenticated request (path, method, user, duration, status code)
   - Skip static assets (`/lib/`, `/css/`, `/js/`, `/favicon.ico`) and SignalR hub endpoints
   - Write async (background queue / fire-and-forget) so logging never blocks the request pipeline
-- [ ] Register middleware in `Program.cs` after authentication, before controllers
+- [x] Register middleware in `Program.cs` after authentication, before controllers
 
 ### Error Logging
-- [ ] Create `ErrorLog` model: `Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp`
-- [ ] EF Core migration for `ErrorLogs` table
-- [ ] Create `GlobalExceptionHandlerMiddleware` — catches unhandled exceptions, persists to `ErrorLogs`, returns user-friendly error page
-- [ ] Register as the outermost middleware in `Program.cs`
+- [x] Create `ErrorLog` model: `Id, UserId?, Path, Method, ExceptionType, Message, StackTrace, Timestamp`
+- [x] EF Core migration for `ErrorLogs` table
+- [x] Create `GlobalExceptionHandlerMiddleware` — catches unhandled exceptions, persists to `ErrorLogs`, returns user-friendly error page
+- [x] Register as the outermost middleware in `Program.cs`
 
 ### Admin Log Viewer
-- [ ] `GET /Admin/ActivityLog` — paginated table (user, path, method, status, duration, timestamp); filterable by user and date range
-- [ ] `GET /Admin/ErrorLog` — paginated table (exception type, path, user, timestamp); detail drill-down with stack trace
-- [ ] Both views gated to Admin / Management roles; add to Admin sidebar
-- [ ] Auto-purge activity logs after configurable retention period (default: 90 days) — extend archive background service or create dedicated one
+- [x] `GET /Admin/ActivityLog` — paginated table (user, path, method, status, duration, timestamp); filterable by user and date range
+- [x] `GET /Admin/ErrorLog` — paginated table (exception type, path, user, timestamp); detail drill-down with stack trace
+- [x] Both views gated to Admin / Management roles; add to Admin sidebar
+- [x] Auto-purge activity logs after configurable retention period (default: 60 days) — extend archive background service or create dedicated one
 
 ---
 
@@ -443,4 +443,4 @@
 
 ---
 
-*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow planned | Phase 1f activity logging planned | Phase 4 SIP planned | Phase 5 CS-to-CS messaging planned | Owner: @Jacquesvdberg92*
+*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP planned | Phase 5 CS-to-CS messaging planned | Owner: @Jacquesvdberg92*

@@ -1,0 +1,35 @@
+@model Unified.Controllers.AdminErrorLogDetailViewModel
+@{
+    ViewData["Title"] = "Error Log Detail";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Error Log Detail</h1>
+    <a asp-action="ErrorLog" class="btn btn-outline-primary btn-sm">Back to Error Log</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-2">Timestamp</dt>
+            <dd class="col-sm-10">@Model.Timestamp.ToString("yyyy-MM-dd HH:mm:ss") UTC</dd>
+
+            <dt class="col-sm-2">User</dt>
+            <dd class="col-sm-10">@(string.IsNullOrWhiteSpace(Model.UserId) ? "Anonymous" : Model.UserId)</dd>
+
+            <dt class="col-sm-2">Request</dt>
+            <dd class="col-sm-10">@Model.Method @Model.Path</dd>
+
+            <dt class="col-sm-2">Exception</dt>
+            <dd class="col-sm-10"><code>@Model.ExceptionType</code></dd>
+
+            <dt class="col-sm-2">Message</dt>
+            <dd class="col-sm-10 text-break">@Model.Message</dd>
+
+            <dt class="col-sm-2">Stack Trace</dt>
+            <dd class="col-sm-10">
+                <pre class="bg-light border rounded p-3 small mb-0" style="white-space: pre-wrap;">@Model.StackTrace</pre>
+            </dd>
+        </dl>
+    </div>
+</div>

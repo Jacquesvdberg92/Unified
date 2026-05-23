@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
 using Unified.Hubs;
+using Unified.Middleware;
 using Unified.Models.Identity;
+using Unified.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +89,9 @@ builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
+builder.Services.AddSingleton<IActivityLogQueue, ActivityLogQueueService>();
+builder.Services.AddHostedService(sp => (ActivityLogQueueService)sp.GetRequiredService<IActivityLogQueue>());
+builder.Services.AddHostedService<ActivityLogRetentionService>();
 builder.Services.AddDataProtection();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -100,10 +105,10 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -124,6 +129,7 @@ app.UseRouting();
 app.UseOutputCache();
 
 app.UseAuthentication();
+app.UseMiddleware<ActivityLoggingMiddleware>();
 app.UseAuthorization();
 app.UseSession();
 
