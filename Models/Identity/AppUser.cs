@@ -13,6 +13,9 @@ public class AppUser : IdentityUser
     /// <summary>True for Account Manager users who log in from outside the internal team.</summary>
     public bool IsExternal       { get; set; }
 
+    /// <summary>AnyDesk remote-access ID for this user — used by the "Request Login" feature.</summary>
+    public string? AnydeskId { get; set; }
+
     /// <summary>Normal hourly rate in USD used for pay calculations.</summary>
     public decimal HourlyRate { get; set; } = 0m;
 

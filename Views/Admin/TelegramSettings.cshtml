@@ -1,0 +1,109 @@
+@model Unified.Models.TelegramBotSettings
+@{
+    ViewData["Title"] = "Telegram Bot Settings";
+}
+
+<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+    <h1 class="page-title fw-semibold fs-18 mb-0">Telegram Bot Settings</h1>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bx bx-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="bx bx-bot me-2"></i>Bot Configuration</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading fw-semibold"><i class="bx bx-info-circle me-2"></i>Setup Instructions</h6>
+                    <ol class="mb-0 ps-3 small">
+                        <li>Open Telegram and search for <strong>@@BotFather</strong>.</li>
+                        <li>Send <code>/newbot</code> and follow the prompts to create a bot. Copy the <strong>Bot Token</strong> it gives you.</li>
+                        <li>Create (or use an existing) Telegram group for your IT channel.</li>
+                        <li>Add your bot to that group and give it <strong>admin rights</strong> (so it can post messages).</li>
+                        <li>To find the <strong>Group Chat ID</strong>: add <strong>@@userinfobot</strong> to the group, send any message, and it will reply with the chat ID (usually a negative number like <code>-1001234567890</code>).</li>
+                        <li>Enter the token and chat ID below, tick <em>Enabled</em>, and save.</li>
+                    </ol>
+                </div>
+
+                <form asp-action="TelegramSettings" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Bot Token</label>
+                        <input name="botToken" value="@Model.BotToken" class="form-control font-monospace"
+                               placeholder="123456789:ABCDefgh-ijklMNOP_qrstUVWX" autocomplete="off" />
+                        <div class="form-text">Obtain from @@BotFather on Telegram.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Target Group Chat ID</label>
+                        <input name="chatId" value="@Model.ChatId" class="form-control font-monospace"
+                               placeholder="-1001234567890" autocomplete="off" />
+                        <div class="form-text">Numeric ID of the Telegram group the bot should post to. Usually negative for groups.</div>
+                    </div>
+                    <div class="mb-4 form-check">
+                        <input class="form-check-input" type="checkbox" name="isEnabled" id="isEnabled" value="true"
+                               @(Model.IsEnabled ? "checked" : "") />
+                        <label class="form-check-label" for="isEnabled">
+                            Enable Telegram integration
+                        </label>
+                        <div class="form-text">
+                            When <strong>disabled</strong>, the "Request Login" widget button will show an error instead of sending a Telegram message —
+                            useful if you want to temporarily pause the feature without deleting your settings.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i> Save Settings
+                    </button>
+                    <a asp-action="Users" class="btn btn-secondary ms-2">Cancel</a>
+                </form>
+            </div>
+            @if (Model.UpdatedAt != default)
+            {
+                <div class="card-footer text-muted small">
+                    Last updated: @Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm") UTC
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary bg-opacity-10">
+                <h6 class="card-title mb-0"><i class="bx bx-message-detail me-2"></i>Example Telegram Message</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">When an agent clicks <em>Request Login</em> on their dashboard, IT will receive:</p>
+                <div class="bg-light rounded p-3 font-monospace small">
+                    🔐 <strong>Login Request</strong><br/><br/>
+                    <strong>Agent:</strong> John Smith<br/>
+                    <strong>AnyDesk ID:</strong> <code>123 456 789</code><br/><br/>
+                    Please log this agent in.
+                </div>
+                <p class="text-muted small mt-3 mb-0">
+                    <i class="bx bx-info-circle me-1"></i>
+                    If an agent has no AnyDesk ID set in their profile, the message will note that. 
+                    Admins can set AnyDesk IDs on the <a asp-action="Users">Edit User</a> page.
+                </p>
+            </div>
+        </div>
+
+        <div class="card border-warning mt-3">
+            <div class="card-body small">
+                <p class="fw-semibold mb-2"><i class="bx bx-shield-alt-2 me-1 text-warning"></i>Security Note</p>
+                <ul class="mb-0 ps-3">
+                    <li>The bot token grants full control over your bot — keep it secret.</li>
+                    <li>Do not share this page with non-admin users.</li>
+                    <li>Agents are rate-limited to 1 login request every 5 minutes.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

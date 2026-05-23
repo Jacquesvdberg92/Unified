@@ -1,0 +1,78 @@
+@model Unified.Controllers.SipDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y" data-sip-details data-sip-id="@Model.Id">
+    <form id="sipVoteTokenForm" class="d-none">@Html.AntiForgeryToken()</form>
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">SIP</a></li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="mb-1">@Model.Title</h5>
+                <small class="text-muted">By @Model.AuthorName · @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</small>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge bg-label-primary">@Model.Category</span>
+                <span class="badge bg-label-info">@Model.Status</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="mb-4" style="white-space: pre-wrap">@Model.Description</p>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ScreenshotPath))
+            {
+                <div class="mb-3">
+                    <a href="@Model.ScreenshotPath" target="_blank" rel="noopener">
+                        <img src="@Model.ScreenshotPath" alt="SIP screenshot" class="img-fluid rounded border" style="max-height: 360px;" />
+                    </a>
+                    <div><small class="text-muted">Click image to open full size.</small></div>
+                </div>
+            }
+
+            <div class="d-flex flex-wrap gap-3 mb-3">
+                <span class="badge bg-success">Upvotes: <span data-sip-upvotes>@Model.Upvotes</span></span>
+                <span class="badge bg-danger">Downvotes: <span data-sip-downvotes>@Model.Downvotes</span></span>
+                <span class="badge bg-dark">Score: <span data-sip-score>@Model.NetScore</span></span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.OwnerNote))
+            {
+                <div class="alert alert-secondary mb-3">
+                    <strong>Owner note:</strong> @Model.OwnerNote
+                </div>
+            }
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn @(Model.CurrentUserVoteIsUpvote == true ? "btn-success" : "btn-outline-success")" data-vote="up">
+                    <i class="bx bx-upvote me-1"></i>Upvote
+                </button>
+                <button type="button" class="btn @(Model.CurrentUserVoteIsUpvote == false ? "btn-danger" : "btn-outline-danger")" data-vote="down">
+                    <i class="bx bx-downvote me-1"></i>Downvote
+                </button>
+
+                @if (Model.CanEdit)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this SIP?');">Delete</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to SIP list</a>
+</div>
+
+@section Scripts {
+    <script src="~/js/sip.js" defer></script>
+}

@@ -102,6 +102,12 @@
                                                 <span class="side-menu__label">Brands</span>
                                             </a>
                                         </li>
+                                        @* <li class="slide">
+                                            <a asp-controller="Sip" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-bulb side-menu__icon"></i>
+                                                <span class="side-menu__label">SIP</span>
+                                            </a>
+                                        </li> *@
                                     </ul>
                                 </li>
                             } @* end !AccountManager *@
@@ -149,6 +155,12 @@
                                             <a asp-controller="AttendanceReport" asp-action="Index" class="side-menu__item">
                                                 <i class="bx bx-spreadsheet side-menu__icon"></i>
                                                 <span class="side-menu__label">Attendance Reports</span>
+                                            </a>
+                                        </li>
+                                        <li class="slide">
+                                            <a asp-controller="Sip" asp-action="Admin" class="side-menu__item">
+                                                <i class="bx bx-shield-quarter side-menu__icon"></i>
+                                                <span class="side-menu__label">SIP Admin</span>
                                             </a>
                                         </li>
                                     </ul>
@@ -218,6 +230,12 @@
                                                 <span class="side-menu__label">Error Log</span>
                                             </a>
                                         </li>
+                                        <li class="slide">
+                                            <a asp-controller="Admin" asp-action="TelegramSettings" class="side-menu__item">
+                                                <i class="bx bx-bot side-menu__icon"></i>
+                                                <span class="side-menu__label">Telegram Bot</span>
+                                            </a>
+                                        </li>
                                     </ul>
                                 </li>
                             }
@@ -275,6 +293,16 @@
                                     <i class="bx bx-chevron-down category-toggle-icon"></i>
                                 </div>
                                 <ul class="category-items">
+                                @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife") || User.IsInRole("Finance"))
+                                    {
+                                        <li class="slide">
+                                            <a asp-controller="Sip" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-bulb side-menu__icon"></i>
+                                                <span class="side-menu__label">SIP</span>
+                                            </a>
+                                        </li>
+                                    }
+                                    
                                     <li class="slide">
                                         <a asp-controller="Home" asp-action="Roadmap" class="side-menu__item">
                                             <i class="bx bx-map-alt side-menu__icon"></i>

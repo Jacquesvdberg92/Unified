@@ -1,0 +1,211 @@
+@using Unified.Models.Identity
+@model AppUser
+
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "_Layout";
+}
+
+<div class="container-xl">
+    <!-- Page Header -->
+    <div class="page-header d-print-none mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    My Profile
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div class="container-xl">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-12 col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Avatar Column -->
+                            <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
+                                <div class="mb-3">
+                                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                                    {
+                                        <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle avatar avatar-xxl" style="width: 150px; height: 150px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                            <i class="bx bx-user fs-48 text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <a href="/Profile/Edit" class="btn btn-primary btn-sm">
+                                    <i class="bx bx-edit me-1"></i>Edit Profile
+                                </a>
+                            </div>
+
+                            <!-- Profile Info Column -->
+                            <div class="col">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Display Name</label>
+                                    <p class="text-muted mb-0">@Model.DisplayName</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <p class="text-muted mb-0">@Model.Email</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">User ID</label>
+                                    <p class="text-muted mb-0 font-monospace fs-12">@Model.Id</p>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(Model.AnydeskId))
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">AnyDesk ID</label>
+                                        <p class="text-muted mb-0">@Model.AnydeskId</p>
+                                    </div>
+                                }
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Phone</label>
+                                    <p class="text-muted mb-0">
+                                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                                        {
+                                            @Model.PhoneNumber
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not provided</span>
+                                        }
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Account Created</label>
+                                    <p class="text-muted mb-0">@Model.Id?.ToString().Substring(0, 8) <small>(Account ID)</small></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Information Card -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Role & Permissions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            @{
+                                var roleBadges = new List<string>();
+                                if (User.IsInRole("BrandManager")) roleBadges.Add("BrandManager");
+                                if (User.IsInRole("TeamLeader")) roleBadges.Add("TeamLeader");
+                                if (User.IsInRole("SwissArmyKnife")) roleBadges.Add("SwissArmyKnife");
+                                if (User.IsInRole("AccountManager")) roleBadges.Add("AccountManager");
+                                if (User.IsInRole("Finance")) roleBadges.Add("Finance");
+                                if (User.IsInRole("CSAgent")) roleBadges.Add("CSAgent");
+                                if (User.IsInRole("Admin")) roleBadges.Add("Admin");
+                                if (User.IsInRole("Management")) roleBadges.Add("Management");
+
+                                if (roleBadges.Any())
+                                {
+                                    @foreach (var role in roleBadges)
+                                    {
+                                        <span class="badge bg-primary me-2 mb-2">@role</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No roles assigned</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Account Status</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email Confirmed</label>
+                                    <p class="mb-0">
+                                        @if (Model.EmailConfirmed)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bx bx-check me-1"></i>Confirmed
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="bx bx-time me-1"></i>Pending
+                                            </span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Account Locked</label>
+                                    <p class="mb-0">
+                                        @if (Model.LockoutEnd.HasValue && Model.LockoutEnd > DateTimeOffset.UtcNow)
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="bx bx-lock me-1"></i>Locked
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bx bx-unlock me-1"></i>Active
+                                            </span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links Sidebar -->
+            <div class="col-12 col-lg-4 mt-3 mt-lg-0">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/Profile/Edit" class="btn btn-primary">
+                                <i class="bx bx-edit me-2"></i>Edit Profile
+                            </a>
+                            <a href="/Account/ChangePassword" class="btn btn-secondary">
+                                <i class="bx bx-lock me-2"></i>Change Password
+                            </a>
+                            <a href="/" class="btn btn-light">
+                                <i class="bx bx-arrow-back me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

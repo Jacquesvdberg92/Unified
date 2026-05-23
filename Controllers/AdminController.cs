@@ -125,11 +125,11 @@ public class AdminController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateUser(string displayName, string email, string password,
-        string role, int[] teamIds)
+        string role, int[] teamIds, string? anydeskId)
     {
         if (!ModelState.IsValid) { PopulateRolesAndTeams(); return View(); }
 
-        var user = new AppUser { UserName = email, Email = email, DisplayName = displayName, EmailConfirmed = true };
+        var user = new AppUser { UserName = email, Email = email, DisplayName = displayName, EmailConfirmed = true, AnydeskId = anydeskId?.Trim() };
         var result = await _userManager.CreateAsync(user, password);
         if (!result.Succeeded)
         {
@@ -161,7 +161,7 @@ public class AdminController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> EditUser(string id, string displayName, string? language,
-        bool hasWeekendShift, bool hasCsLiveHelp, string role, int[] teamIds)
+        bool hasWeekendShift, bool hasCsLiveHelp, string role, int[] teamIds, string? anydeskId)
     {
         var user = await _db.Users.Include(u => u.Teams).FirstOrDefaultAsync(u => u.Id == id);
         if (user == null) return NotFound();
@@ -171,6 +171,7 @@ public class AdminController : Controller
         user.HasWeekendShift = hasWeekendShift;
         user.HasCsLiveHelp   = hasCsLiveHelp;
         user.IsSwissArmyKnife = role == Roles.SwissArmyKnife;
+        user.AnydeskId       = anydeskId?.Trim();
 
         var currentRoles = await _userManager.GetRolesAsync(user);
         await _userManager.RemoveFromRolesAsync(user, currentRoles);
@@ -612,6 +613,37 @@ public class AdminController : Controller
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────
+
+    // ── Telegram Bot Settings ───────────────────────────────────────────────
+
+    [Authorize(Roles = Roles.BrandManager)]
+    public async Task<IActionResult> TelegramSettings()
+    {
+        var settings = await _db.TelegramBotSettings.FirstOrDefaultAsync()
+                       ?? new Models.TelegramBotSettings();
+        return View("TelegramSettings", settings);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.BrandManager)]
+    public async Task<IActionResult> TelegramSettings(string? botToken, string? chatId, string? isEnabled)
+    {
+        var settings = await _db.TelegramBotSettings.FirstOrDefaultAsync();
+        if (settings == null)
+        {
+            settings = new Models.TelegramBotSettings();
+            _db.TelegramBotSettings.Add(settings);
+        }
+
+        settings.BotToken  = botToken?.Trim();
+        settings.ChatId    = chatId?.Trim();
+        settings.IsEnabled = isEnabled == "true";
+        settings.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "Telegram settings saved.";
+        return RedirectToAction(nameof(TelegramSettings));
+    }
 
     private void PopulateRolesAndTeams(int[]? selectedTeams = null)
     {

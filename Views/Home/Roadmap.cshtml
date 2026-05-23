@@ -290,14 +290,16 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-desktop me-1"></i>Phase 2 – AnyDesk ID &amp; Telegram Bot
-                            <span class="badge bg-secondary ms-2">Not Started</span>
+                            <span class="badge bg-success ms-2">Done</span>
                         </h6>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>AnydeskId</code> to <code>AppUser</code> + EF migration</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>AnyDesk ID field in Admin Create/Edit User + agent self-service profile</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <code>Telegram.Bot</code> NuGet + <code>TelegramService</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Home/RequestLogin</code> endpoint (rate-limited: 1 per 5 min per user)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>"Request Google Login" dashboard button → posts to Telegram IT channel</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Add <code>AnydeskId</code> to <code>AppUser</code> + EF migration <code>Phase2_AnydeskAndTelegram</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>AnyDesk ID field in Admin Create/Edit User</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Created <code>TelegramService</code> — posts message to bot API</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Home/RequestLogin</code> endpoint (rate-limited: 1 per 5 min per user)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>"Request Google Login" dashboard widget (<code>request_login</code>) — sends name + AnyDesk ID to Telegram IT channel</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Admin <code>GET/POST /Admin/TelegramSettings</code> — configure bot token, group chat ID, and enable/disable toggle with setup guide</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Agent self-service profile page — let agents update their own AnyDesk ID</li>
                         </ul>
                     </div>
 
@@ -323,7 +325,7 @@
                     <div class="mb-4">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-bulb me-1"></i>Phase 4 – System Improvement Proposals (SIP)
-                            <span class="badge bg-secondary ms-2">Not Started</span>
+                            <span class="badge bg-success ms-2">Complete</span>
                         </h6>
                         <p class="text-muted small mb-3">
                             Internal users (all roles except Account Managers) can submit improvement proposals or bug reports.
@@ -333,43 +335,43 @@
 
                         <p class="fw-semibold mb-2">4a – Data Models &amp; Migration</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Sip</code> model: <code>Id, AuthorId (FK), Title, Description, Category (enum: Improvement | BugReport), Status (enum: Open | UnderReview | Accepted | Declined | Implemented), CreatedAt, UpdatedAt, OwnerNote?</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>SipVote</code> model: <code>Id, SipId (FK), UserId (FK), IsUpvote (bool), CastAt</code> — unique constraint on <code>(SipId, UserId)</code> (one vote per user per SIP)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>DB indexes on <code>(Status)</code>, <code>(AuthorId)</code>, <code>(CreatedAt)</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>EF Core migration <code>Phase4_Sip</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>Sip</code> model: <code>Id, AuthorId (FK), Title, Description, Category (enum: Improvement | BugReport), Status (enum: Open | UnderReview | Accepted | Declined | Implemented), CreatedAt, UpdatedAt, OwnerNote?, ScreenshotPath?</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>SipVote</code> model: <code>Id, SipId (FK), UserId (FK), IsUpvote (bool), CastAt</code> — unique constraint on <code>(SipId, UserId)</code> (one vote per user per SIP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>DB indexes on <code>(Status)</code>, <code>(AuthorId)</code>, <code>(CreatedAt)</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>EF Core migrations <code>Phase4_Sip</code> and <code>Phase4_SipScreenshot</code></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">4b – Submission &amp; Listing</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip</code> — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Each row shows: title, category badge, status badge, vote score (<code>upvotes − downvotes</code>), author, date, owner note (if set)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Create</code> — form: Title (max 120 chars), Description (max 2 000 chars), Category dropdown</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/Create</code> — server-side validation; author set from <code>User.Identity</code>; initial status <code>Open</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Details/{id}</code> — full description, vote tally, current user's vote state (highlighted), owner note, status history</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Author can edit or delete their own SIP while status is <code>Open</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Sip</code> — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Each row shows: title, category badge, status badge, vote score (<code>upvotes − downvotes</code>), author, date, owner note (if set)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Sip/Create</code> — form: Title (max 120 chars), Description (max 2 000 chars), Category dropdown, optional screenshot upload</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Sip/Create</code> — server-side validation; author set from <code>User.Identity</code>; initial status <code>Open</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Sip/Details/{id}</code> — full description, vote tally, current user's vote state (highlighted), owner note, status badge, screenshot (if attached)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Author can edit or delete their own SIP while status is <code>Open</code></li>
                         </ul>
 
                         <p class="fw-semibold mb-2">4c – Voting</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/Vote/{id}</code> — body: <code>{ isUpvote: bool }</code>; toggles or changes vote; one vote per user per SIP enforced at DB level</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Vote submitted via AJAX fetch; score updated inline without page reload</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Authors cannot vote on their own SIP</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Rate-limit: max 20 votes per user per minute (prevent vote-farming)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Sip/Vote/{id}</code> — body: <code>{ isUpvote: bool }</code>; toggles or changes vote; one vote per user per SIP enforced at DB level</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Vote submitted via AJAX fetch; score updated inline without page reload</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Authors cannot vote on their own SIP</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Rate-limit: max 20 votes per user per minute (prevent vote-farming)</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">4d – Owner Review Dashboard</p>
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>GET /Sip/Admin</code> — owner/Management view: all SIPs ranked by net vote score; status filter tabs (Open / Under Review / Accepted / Declined / Implemented)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>POST /Sip/UpdateStatus/{id}</code> — owner sets status (<code>UnderReview | Accepted | Declined | Implemented</code>) + optional <code>OwnerNote</code> (shown publicly on the SIP)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Status changes visible to all users immediately; owner note displayed prominently on the detail page</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Owner can delete any SIP (e.g. duplicates, spam)</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Admin page gated to <strong>Admin / Management</strong> roles only</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>GET /Sip/Admin</code> — owner/Management view: all SIPs ranked by net vote score; status filter tabs (Open / Under Review / Accepted / Declined / Implemented)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span><code>POST /Sip/UpdateStatus/{id}</code> — owner sets status (<code>UnderReview | Accepted | Declined | Implemented</code>) + optional <code>OwnerNote</code> (shown publicly on the SIP)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Status changes visible to all users immediately; owner note displayed prominently on the detail page</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Owner can delete any SIP (e.g. duplicates, spam)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Admin page gated to <strong>Admin / Management</strong> roles only</li>
                         </ul>
 
                         <p class="fw-semibold mb-2">4e – Access &amp; Sidebar</p>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>All internal roles (Admin, Management, CS Agent, TL, Finance, etc.) can view, submit, and vote — <strong>Account Manager role explicitly excluded</strong> via <code>[Authorize(Policy = "InternalOnly")]</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Add <em>SIP</em> link to main sidebar (internal users); add <em>SIP Admin</em> link to Management sidebar section</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>All internal roles (Admin, Management, CS Agent, TL, Finance, etc.) can view, submit, and vote — <strong>Account Manager role explicitly excluded</strong> via <code>[Authorize(Policy = "InternalOnly")]</code></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Add <em>SIP</em> link to main sidebar (internal users); add <em>SIP Admin</em> link to Management sidebar section</li>
                         </ul>
                     </div>
 
@@ -582,21 +584,21 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="card border-info h-100">
-                                    <div class="card-body">
-                                        <h6 class="card-title d-flex align-items-center">
-                                            <i class="bx bx-desktop text-info me-2" style="font-size: 1.5rem;"></i>
-                                            <span>Quick Access Tools</span>
-                                            <span class="badge bg-info text-dark ms-auto">Future</span>
-                                        </h6>
-                                        <p class="card-text small text-muted mb-2">Add quick-access buttons for remote support and instant messaging to IT.</p>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                    <div class="card border-success h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title d-flex align-items-center">
+                                                <i class="bx bx-desktop text-success me-2" style="font-size: 1.5rem;"></i>
+                                                <span>Quick Access Tools</span>
+                                                <span class="badge bg-success ms-auto">Complete</span>
+                                            </h6>
+                                            <p class="card-text small text-muted mb-2">Add quick-access buttons for remote support and instant messaging to IT.</p>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                            </div>
+                                            <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
                                         </div>
-                                        <small class="text-muted d-block mt-2">On the horizon...</small>
                                     </div>
                                 </div>
-                            </div>
                             <div class="col-md-6">
                                 <div class="card border-info h-100">
                                     <div class="card-body">
@@ -659,7 +661,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration complete | Phase 1f activity logging complete | Phase 4 SIP added | Phase 5 CS messaging added</strong>
+                        Last updated: <strong>2025-06 — Phase 1d–1f complete | Phase 2 AnyDesk + Telegram complete | Phase 4 SIP planned | Phase 5 CS messaging planned</strong>
                     </div>
 
                 </div>

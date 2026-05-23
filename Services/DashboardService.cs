@@ -22,6 +22,7 @@ public class DashboardService
         new("reports",             "Reports",               "bx bx-line-chart",        "Team report overview"),
         new("cs_live_help",        "CS Live Help",          "bx bx-headphone",         "CS Live Help slot overview"),
         new("quick_links",         "Quick Links",           "bx bx-link",              "Handy shortcuts to key pages"),
+        new("request_login",       "Request Login",         "bx bx-desktop",           "Send your AnyDesk ID to IT via Telegram to request a Google login"),
     };
 
     public DashboardService(AppDbContext db) => _db = db;

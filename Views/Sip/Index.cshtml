@@ -1,0 +1,116 @@
+@using Unified.Models.Sip
+@model Unified.Controllers.SipIndexViewModel
+@{
+    ViewData["Title"] = "SIP";
+    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bx bx-bulb me-2"></i>System Improvement Proposals</h4>
+        <a asp-action="Create" class="btn btn-primary"><i class="bx bx-plus me-1"></i>Submit SIP</a>
+    </div>
+
+    <div class="alert alert-warning mb-3">
+        <div class="fw-semibold mb-1">Submission quality requirements</div>
+        <ul class="mb-0 ps-3">
+            <li>Provide as much detail as possible. Low-detail reports are likely to be declined.</li>
+            <li>For bug reports, include exact reproduction steps and clearly state whether you could reproduce it.</li>
+            <li>Include relevant logs, screenshots, and expected vs actual behavior whenever possible.</li>
+            <li>SIPs are proposals only; submission and votes do not guarantee implementation.</li>
+        </ul>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="newest" selected="@(Model.Sort == "newest" ? "selected" : null)">Newest</option>
+                        <option value="votes" selected="@(Model.Sort == "votes" ? "selected" : null)">Most Votes</option>
+                        <option value="status" selected="@(Model.Sort == "status" ? "selected" : null)">Status</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        @foreach (var cat in Enum.GetValues<SipCategory>())
+                        {
+                            <option value="@cat" selected="@(Model.Category == cat ? "selected" : null)">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Author</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No SIPs found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@row.Title</div>
+                                <div class="d-flex gap-2 flex-wrap mt-1">
+                                    @if (!string.IsNullOrWhiteSpace(row.OwnerNote))
+                                    {
+                                        <small class="text-muted">Owner note: @row.OwnerNote</small>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(row.ScreenshotPath))
+                                    {
+                                        <span class="badge bg-light text-dark border"><i class="bx bx-image me-1"></i>Screenshot</span>
+                                    }
+                                </div>
+                            </td>
+                            <td><span class="badge bg-label-primary">@row.Category</span></td>
+                            <td><span class="badge bg-label-info">@row.Status</span></td>
+                            <td><span class="badge bg-label-secondary">@row.NetScore (@row.Upvotes / @row.Downvotes)</span></td>
+                            <td>@row.AuthorName</td>
+                            <td>@row.CreatedAt.ToString("yyyy-MM-dd")</td>
+                            <td class="text-end"><a asp-action="Details" asp-route-id="@row.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination pagination-sm">
+                @for (var i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : string.Empty)">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.PageSize" asp-route-sort="@Model.Sort" asp-route-category="@Model.Category">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>

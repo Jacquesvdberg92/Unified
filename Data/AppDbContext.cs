@@ -13,6 +13,8 @@ using Unified.Models.WorkDistribution;
 using Unified.Models.Dashboard;
 using Unified.Models.CsLiveHelp;
 using Unified.Models.Logging;
+using Unified.Models.Sip;
+using Unified.Models;
 
 namespace Unified.Data;
 
@@ -74,6 +76,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
     // Activity + Error logging
     public DbSet<ActivityLog>         ActivityLogs         => Set<ActivityLog>();
     public DbSet<ErrorLog>            ErrorLogs            => Set<ErrorLog>();
+
+    // Telegram bot configuration
+    public DbSet<TelegramBotSettings> TelegramBotSettings  => Set<TelegramBotSettings>();
+
+    // SIP (System Improvement Proposals)
+    public DbSet<Sip> SipItems => Set<Sip>();
+    public DbSet<SipVote> SipVotes => Set<SipVote>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -438,6 +447,44 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasIndex(r => r.BrandId);
         builder.Entity<CsRequest>()
             .HasIndex(r => r.AccountManagerId);
+
+        // SIP
+        builder.Entity<Sip>()
+            .Property(s => s.Category)
+            .HasConversion<string>();
+
+        builder.Entity<Sip>()
+            .Property(s => s.Status)
+            .HasConversion<string>();
+
+        builder.Entity<Sip>()
+            .HasOne(s => s.Author)
+            .WithMany()
+            .HasForeignKey(s => s.AuthorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Sip>()
+            .HasIndex(s => s.Status);
+        builder.Entity<Sip>()
+            .HasIndex(s => s.AuthorId);
+        builder.Entity<Sip>()
+            .HasIndex(s => s.CreatedAt);
+
+        builder.Entity<SipVote>()
+            .HasOne(v => v.Sip)
+            .WithMany(s => s.Votes)
+            .HasForeignKey(v => v.SipId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SipVote>()
+            .HasOne(v => v.User)
+            .WithMany()
+            .HasForeignKey(v => v.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<SipVote>()
+            .HasIndex(v => new { v.SipId, v.UserId })
+            .IsUnique();
 
         builder.Entity<AmAuditLog>()
             .HasIndex(a => new { a.UserId, a.Timestamp });

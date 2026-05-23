@@ -22,6 +22,11 @@
                 <label class="form-label">Language</label>
                 <input name="language" value="@Model.Language" class="form-control" placeholder="e.g. EN, JP, PT" />
             </div>
+            <div class="mb-3">
+                <label class="form-label">AnyDesk ID</label>
+                <input name="anydeskId" value="@Model.AnydeskId" class="form-control" placeholder="e.g. 123 456 789" />
+                <div class="form-text">Used by the &ldquo;Request Login&rdquo; dashboard widget to send the AnyDesk ID to IT via Telegram.</div>
+            </div>
             <div class="mb-3 form-check">
                 <input class="form-check-input" type="checkbox" name="hasWeekendShift" value="true"
                        @(Model.HasWeekendShift ? "checked" : "") />

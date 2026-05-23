@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unified.Data;
 
@@ -11,9 +12,11 @@ using Unified.Data;
 namespace Unified.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260523061658_Phase2_AnydeskAndTelegram")]
+    partial class Phase2_AnydeskAndTelegram
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1382,96 +1385,13 @@ namespace Unified.Migrations
                     b.ToTable("WeekendShiftOffers");
                 });
 
-            modelBuilder.Entity("Unified.Models.Sip.Sip", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuthorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("OwnerNote")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("ScreenshotPath")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorId");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("SipItems");
-                });
-
-            modelBuilder.Entity("Unified.Models.Sip.SipVote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CastAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsUpvote")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SipId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("SipId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("SipVotes");
-                });
-
             modelBuilder.Entity("Unified.Models.TelegramBotSettings", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BotToken")
                         .HasColumnType("nvarchar(max)");
@@ -2222,36 +2142,6 @@ namespace Unified.Migrations
                     b.Navigation("OfferedToAgent");
                 });
 
-            modelBuilder.Entity("Unified.Models.Sip.Sip", b =>
-                {
-                    b.HasOne("Unified.Models.Identity.AppUser", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Author");
-                });
-
-            modelBuilder.Entity("Unified.Models.Sip.SipVote", b =>
-                {
-                    b.HasOne("Unified.Models.Sip.Sip", "Sip")
-                        .WithMany("Votes")
-                        .HasForeignKey("SipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Unified.Models.Identity.AppUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Sip");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Unified.Models.Updates.Update", b =>
                 {
                     b.HasOne("Unified.Models.Identity.AppUser", "Author")
@@ -2443,11 +2333,6 @@ namespace Unified.Migrations
                     b.Navigation("AgentStats");
 
                     b.Navigation("FTDLanguageStats");
-                });
-
-            modelBuilder.Entity("Unified.Models.Sip.Sip", b =>
-                {
-                    b.Navigation("Votes");
                 });
 
             modelBuilder.Entity("Unified.Models.Updates.Update", b =>

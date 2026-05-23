@@ -24,6 +24,11 @@
                 <input name="password" type="password" class="form-control" required />
             </div>
             <div class="mb-3">
+                <label class="form-label">AnyDesk ID <span class="text-muted">(optional)</span></label>
+                <input name="anydeskId" class="form-control" placeholder="e.g. 123 456 789" />
+                <div class="form-text">Used by the &ldquo;Request Login&rdquo; dashboard widget.</div>
+            </div>
+            <div class="mb-3">
                 <label class="form-label">Role</label>
                 <select name="role" class="form-select" asp-items="ViewBag.AllRoles"></select>
             </div>

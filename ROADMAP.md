@@ -254,23 +254,23 @@
 ## Phase 2 – AnyDesk ID & Telegram "Log Me In" Bot
 
 ### 2a – Data Model
-- [ ] Add `string? AnydeskId` property to `AppUser`
-- [ ] Create & apply EF Core migration
+- [x] Add `string? AnydeskId` property to `AppUser`
+- [x] Create & apply EF Core migration
 
 ### 2b – Admin & Agent UI
-- [ ] Add AnyDesk ID field to `Views/Admin/Users/Edit.cshtml`
-- [ ] Add AnyDesk ID field to `Views/Admin/Users/Create.cshtml`
-- [ ] Save field in `AdminController.EditUser` and `AdminController.CreateUser`
+- [x] Add AnyDesk ID field to `Views/Admin/Users/Edit.cshtml`
+- [x] Add AnyDesk ID field to `Views/Admin/Users/Create.cshtml`
+- [x] Save field in `AdminController.EditUser` and `AdminController.CreateUser`
 - [ ] Add AnyDesk ID field to agent self-service profile/settings page
 
 ### 2c – Telegram Bot Integration
-- [ ] Add `Telegram.Bot` NuGet package
-- [ ] Add `BotToken` and `ItChannelChatId` to `appsettings.json` (use User Secrets for dev)
-- [ ] Create `Services/TelegramService.cs` with `PostLoginRequestAsync(displayName, anydeskId)`
-- [ ] Add `POST /Home/RequestLogin` endpoint (reads current user's name + AnyDesk ID, calls service)
-- [ ] Add rate-limiting (max 1 request per 5 minutes per user)
-- [ ] Add "Request Google Login" button to dashboard/home page (visible to all logged-in users)
-- [ ] Test Telegram message format: *"🔐 {DisplayName} needs Google login — AnyDesk: {AnydeskId}"*
+- [x] Add `BotToken` and `ChatId` to `TelegramBotSettings` (admin-configurable via UI)
+- [x] Create `Services/TelegramService.cs` with `SendLoginRequestAsync(displayName, anydeskId)`
+- [x] Add `POST /Home/RequestLogin` endpoint (reads current user's name + AnyDesk ID, calls service)
+- [x] Add rate-limiting (max 1 request per 5 minutes per user)
+- [x] Add "Request Login" dashboard widget (visible to all logged-in users)
+- [x] Admin `GET/POST /Admin/TelegramSettings` — configure bot token, group chat ID, and enable/disable toggle
+- [x] Message format: *"🔐 {DisplayName} needs login — AnyDesk: {AnydeskId}"* (HTML parse mode)
 
 ---
 
@@ -305,46 +305,46 @@
 > Account Managers are explicitly excluded — SIP is an internal tool only.
 
 ### 4a – Data Models & Migration
-- [ ] `Sip` model:
+- [x] `Sip` model:
   ```
   Id, AuthorId (FK AppUser), Title (max 120), Description (max 2000),
   Category (enum: Improvement | BugReport),
   Status (enum: Open | UnderReview | Accepted | Declined | Implemented),
-  CreatedAt, UpdatedAt, OwnerNote?
+  CreatedAt, UpdatedAt, OwnerNote?, ScreenshotPath?
   ```
-- [ ] `SipVote` model:
+- [x] `SipVote` model:
   ```
   Id, SipId (FK), UserId (FK), IsUpvote (bool), CastAt
   ```
   - Unique constraint on `(SipId, UserId)` — one vote per user per SIP
-- [ ] DB indexes on `Sip(Status)`, `Sip(AuthorId)`, `Sip(CreatedAt)`
-- [ ] EF Core migration `Phase4_Sip`
+- [x] DB indexes on `Sip(Status)`, `Sip(AuthorId)`, `Sip(CreatedAt)`
+- [x] EF Core migrations `Phase4_Sip` and `Phase4_SipScreenshot`
 
 ### 4b – Submission & Listing
-- [ ] `GET  /Sip` — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category
+- [x] `GET  /Sip` — paginated list of all SIPs; sortable by newest / most votes / status; filterable by category
   - Each row: title, category badge, status badge, net vote score (`upvotes − downvotes`), author, date, owner note (if set)
-- [ ] `GET  /Sip/Create` — form: Title, Description, Category dropdown
-- [ ] `POST /Sip/Create` — server-side validation; author from `User.Identity`; initial status `Open`
-- [ ] `GET  /Sip/Details/{id}` — full description, vote tally, current user's vote state (highlighted), owner note, status badge
-- [ ] Author can edit or delete their own SIP while status is `Open`
+- [x] `GET  /Sip/Create` — form: Title, Description, Category dropdown
+- [x] `POST /Sip/Create` — server-side validation; author from `User.Identity`; initial status `Open`
+- [x] `GET  /Sip/Details/{id}` — full description, vote tally, current user's vote state (highlighted), owner note, status badge
+- [x] Author can edit or delete their own SIP while status is `Open`
 
 ### 4c – Voting
-- [ ] `POST /Sip/Vote/{id}` — body: `{ isUpvote: bool }`; toggles or changes vote; enforced at DB unique constraint
-- [ ] Vote submitted via AJAX fetch; score updated inline without page reload
-- [ ] Authors cannot vote on their own SIP
-- [ ] Rate-limit: max 20 votes per user per minute (prevent vote-farming)
+- [x] `POST /Sip/Vote/{id}` — body: `{ isUpvote: bool }`; toggles or changes vote; enforced at DB unique constraint
+- [x] Vote submitted via AJAX fetch; score updated inline without page reload
+- [x] Authors cannot vote on their own SIP
+- [x] Rate-limit: max 20 votes per user per minute (prevent vote-farming)
 
 ### 4d – Owner Review Dashboard
-- [ ] `GET  /Sip/Admin` — Management view: all SIPs ranked by net vote score; status filter tabs
-- [ ] `POST /Sip/UpdateStatus/{id}` — owner sets status + optional `OwnerNote` (shown publicly on SIP detail)
-- [ ] Status changes visible to all users immediately
-- [ ] Owner can delete any SIP (duplicates, spam)
-- [ ] Page gated to Admin / Management roles only
+- [x] `GET  /Sip/Admin` — Management view: all SIPs ranked by net vote score; status filter tabs
+- [x] `POST /Sip/UpdateStatus/{id}` — owner sets status + optional `OwnerNote` (shown publicly on SIP detail)
+- [x] Status changes visible to all users immediately
+- [x] Owner can delete any SIP (duplicates, spam)
+- [x] Page gated to Admin / Management roles only
 
 ### 4e – Access & Sidebar
-- [ ] All internal roles can view, submit, and vote — `AccountManager` role excluded via `[Authorize(Policy = "InternalOnly")]`
-- [ ] Add *SIP* link to main sidebar (internal users)
-- [ ] Add *SIP Admin* link to Management sidebar section
+- [x] All internal roles can view, submit, and vote — `AccountManager` role excluded via `[Authorize(Policy = "InternalOnly")]`
+- [x] Add *SIP* link to main sidebar (internal users)
+- [x] Add *SIP Admin* link to Management sidebar section
 
 ---
 

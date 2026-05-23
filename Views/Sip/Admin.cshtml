@@ -1,0 +1,104 @@
+@using Unified.Models.Sip
+@model Unified.Controllers.SipAdminViewModel
+@{
+    ViewData["Title"] = "SIP Admin";
+    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0"><i class="bx bx-shield-quarter me-2"></i>SIP Admin</h4>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to SIP</a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All</option>
+                        @foreach (var status in Enum.GetValues<SipStatus>())
+                        {
+                            <option value="@status" selected="@(Model.StatusFilter == status ? "selected" : null)">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <a asp-action="Admin" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Author</th>
+                        <th>Owner Review</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Rows.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No SIPs found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.Title</td>
+                            <td><span class="badge bg-label-primary">@row.Category</span></td>
+                            <td><span class="badge bg-label-info">@row.Status</span></td>
+                            <td><span class="badge bg-label-secondary">@row.NetScore</span></td>
+                            <td>@row.AuthorName</td>
+                            <td style="min-width:320px;">
+                                <form asp-action="UpdateStatus" asp-route-id="@row.Id" method="post" class="d-flex gap-2 flex-wrap">
+                                    @Html.AntiForgeryToken()
+                                    <select name="status" class="form-select form-select-sm" style="max-width:170px;">
+                                        @foreach (var status in Enum.GetValues<SipStatus>())
+                                        {
+                                            <option value="@status" selected="@(row.Status == status ? "selected" : null)">@status</option>
+                                        }
+                                    </select>
+                                    <input type="text" name="ownerNote" class="form-control form-control-sm" style="max-width:420px;" value="@row.OwnerNote" placeholder="Owner note (optional)" maxlength="2000" />
+                                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                </form>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@row.Id" class="btn btn-sm btn-outline-primary">Open</a>
+                                <form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this SIP?');">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination pagination-sm">
+                @for (var i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : string.Empty)">
+                        <a class="page-link" asp-action="Admin" asp-route-page="@i" asp-route-pageSize="@Model.PageSize" asp-route-status="@Model.StatusFilter">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>

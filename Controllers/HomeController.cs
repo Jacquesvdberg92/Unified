@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,19 +18,25 @@ public class HomeController : Controller
     private readonly SignInManager<AppUser>  _signInManager;
     private readonly DashboardService        _dashboardService;
     private readonly UserManager<AppUser>    _userManager;
+    private readonly TelegramService         _telegramService;
+
+    // In-memory rate-limit: userId → last request time (max 1 per 5 min)
+    private static readonly ConcurrentDictionary<string, DateTime> _loginRequestTimes = new();
 
     public HomeController(
         ILogger<HomeController> logger,
         UpdateService updateService,
         SignInManager<AppUser> signInManager,
         DashboardService dashboardService,
-        UserManager<AppUser> userManager)
+        UserManager<AppUser> userManager,
+        TelegramService telegramService)
     {
         _logger           = logger;
         _updateService    = updateService;
         _signInManager    = signInManager;
         _dashboardService = dashboardService;
         _userManager      = userManager;
+        _telegramService  = telegramService;
     }
 
     [Route("/")]
@@ -115,6 +122,7 @@ public class HomeController : Controller
             "reports"          => "Widgets/_Reports",
             "cs_live_help"     => "Widgets/_CsLiveAllocation",
             "quick_links"      => "Widgets/_QuickLinks",
+            "request_login"    => "Widgets/_RequestLogin",
             _                  => null
         };
 
@@ -132,6 +140,35 @@ public class HomeController : Controller
     public IActionResult Roadmap()
     {
         return View();
+    }
+
+    /// <summary>
+    /// Sends a "Please log me in" Telegram message with the user's AnyDesk ID.
+    /// Rate-limited to 1 request per 5 minutes per user.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RequestLogin()
+    {
+        var userId = _userManager.GetUserId(User)!;
+
+        // Rate-limit: max 1 request per 5 minutes per user
+        if (_loginRequestTimes.TryGetValue(userId, out var last) &&
+            (DateTime.UtcNow - last).TotalMinutes < 5)
+        {
+            var waitSeconds = (int)(300 - (DateTime.UtcNow - last).TotalSeconds);
+            return Json(new { success = false, error = $"Please wait {waitSeconds} seconds before sending another request." });
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Json(new { success = false, error = "User not found." });
+
+        var (success, error) = await _telegramService.SendLoginRequestAsync(user.DisplayName, user.AnydeskId);
+
+        if (success)
+            _loginRequestTimes[userId] = DateTime.UtcNow;
+
+        return Json(new { success, error });
     }
 
     [AllowAnonymous]

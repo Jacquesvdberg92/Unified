@@ -1,0 +1,205 @@
+@using Unified.Models.Identity
+@model AppUser
+
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "_Layout";
+}
+
+<div class="container-xl">
+    <!-- Page Header -->
+    <div class="page-header d-print-none mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Edit Profile
+                </h2>
+            </div>
+            <div class="col-auto">
+                <a href="/Profile" class="btn btn-secondary">
+                    <i class="bx bx-arrow-back me-1"></i>Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-12 col-lg-8 offset-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post" action="/Profile/UpdateProfile" enctype="multipart/form-data" id="editProfileForm">
+                            @Html.AntiForgeryToken()
+
+                            @if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <h4 class="alert-title">Validation Errors</h4>
+                                    <ul class="mb-0">
+                                        @foreach (var modelState in ViewData.ModelState.Values)
+                                        {
+                                            @foreach (var error in modelState.Errors)
+                                            {
+                                                <li>@error.ErrorMessage</li>
+                                            }
+                                        }
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            }
+
+                            <!-- Current Avatar Section -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Current Profile Picture</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                                    {
+                                        <img src="@Model.AvatarUrl" alt="@Model.DisplayName" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                            <i class="bx bx-user fs-36 text-muted"></i>
+                                        </div>
+                                    }
+                                    <div>
+                                        <p class="text-muted small mb-0">Current profile picture</p>
+                                        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                                        {
+                                            <p class="text-muted small mb-0">Upload a new image to replace it</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Display Name -->
+                            <div class="mb-3">
+                                <label class="form-label" for="displayName">
+                                    Display Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control @(ViewData.ModelState["displayName"]?.Errors.Any() == true ? "is-invalid" : "")"
+                                       id="displayName"
+                                       name="displayName"
+                                       value="@Model.DisplayName"
+                                       required
+                                       maxlength="100"
+                                       placeholder="Enter your display name">
+                                @if (ViewData.ModelState["displayName"]?.Errors.Any() == true)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @ViewData.ModelState["displayName"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                                <small class="form-hint">Your name as it will appear to other users.</small>
+                            </div>
+
+                            <!-- Email (Read-only) -->
+                            <div class="mb-3">
+                                <label class="form-label" for="email">Email</label>
+                                <input type="email"
+                                       class="form-control"
+                                       id="email"
+                                       value="@Model.Email"
+                                       disabled
+                                       readonly>
+                                <small class="form-hint">Your email address cannot be changed here. Contact an administrator if you need to update it.</small>
+                            </div>
+
+                            <!-- AnyDesk ID -->
+                            <div class="mb-3">
+                                <label class="form-label" for="anydeskId">
+                                    AnyDesk ID
+                                </label>
+                                <input type="text"
+                                       class="form-control @(ViewData.ModelState["anydeskId"]?.Errors.Any() == true ? "is-invalid" : "")"
+                                       id="anydeskId"
+                                       name="anydeskId"
+                                       value="@Model.AnydeskId"
+                                       maxlength="50"
+                                       placeholder="Enter your AnyDesk ID (optional)">
+                                @if (ViewData.ModelState["anydeskId"]?.Errors.Any() == true)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @ViewData.ModelState["anydeskId"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                                <small class="form-hint">Your AnyDesk ID for remote access. This is shown to managers and support staff when you request a login via the dashboard widget.</small>
+                            </div>
+
+                            <!-- Avatar Upload -->
+                            <div class="mb-4">
+                                <label class="form-label" for="avatarFile">
+                                    Update Profile Picture
+                                </label>
+                                <input type="file"
+                                       class="form-control @(ViewData.ModelState["avatarFile"]?.Errors.Any() == true ? "is-invalid" : "")"
+                                       id="avatarFile"
+                                       name="avatarFile"
+                                       accept=".jpg,.jpeg,.png,.gif,.webp"
+                                       onchange="previewImage(event)">
+                                @if (ViewData.ModelState["avatarFile"]?.Errors.Any() == true)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @ViewData.ModelState["avatarFile"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                                <small class="form-hint">
+                                    Supported formats: JPEG, PNG, GIF, WebP. Max file size: 5 MB.
+                                </small>
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <label class="form-label small fw-bold">Preview:</label>
+                                    <img id="previewImg" src="" alt="Preview" class="rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="form-footer d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bx bx-save me-1"></i>Save Changes
+                                </button>
+                                <a href="/Profile" class="btn btn-secondary">
+                                    <i class="bx bx-x me-1"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">What can I edit?</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Display Name</strong> - How your name appears to colleagues</li>
+                            <li><strong>Profile Picture</strong> - Your avatar image (optional)</li>
+                            <li><strong>AnyDesk ID</strong> - Used for "Request Login" feature</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.getElementById('imagePreview');
+                    const previewImg = document.getElementById('previewImg');
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+}

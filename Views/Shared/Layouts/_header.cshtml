@@ -210,7 +210,19 @@
                             <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="lh-1">
-                                        <i class="bx bx-user-circle fs-22 text-muted"></i>
+                                        @{
+                                            var currentUser = await ViewContext.HttpContext.RequestServices
+                                                .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<Unified.Models.Identity.AppUser>>()
+                                                .GetUserAsync(User);
+                                        }
+                                        @if (currentUser?.AvatarUrl != null)
+                                        {
+                                            <img src="@currentUser.AvatarUrl" alt="@User.Identity!.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <i class="bx bx-user-circle fs-22 text-muted"></i>
+                                        }
                                     </div>
                                     <div class="d-none d-md-block">
                                         <span class="fw-medium fs-13">@User.Identity!.Name</span>
@@ -274,6 +286,16 @@
                                         </span>
                                     </div>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="/Profile">
+                                        <i class="bx bx-user p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>View Profile
+                                    </a>
+                                </li>
+                                @* <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="/Profile/Edit">
+                                        <i class="bx bx-edit p-1 rounded-circle bg-info-transparent me-2 fs-16"></i>Edit Profile
+                                    </a>
+                                </li> *@
                                 <li class="border-top">
                                     <a class="dropdown-item d-flex align-items-center" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
                                         <i class="fe fe-log-out p-1 rounded-circle bg-danger-transparent me-2 fs-16"></i>Sign Out
