@@ -88,6 +88,7 @@ builder.Services.AddScoped<Unified.Services.PoiSimulationService>();
 builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
+builder.Services.AddScoped<Unified.Services.CsMessagingService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<Unified.Services.TelegramService>();
 builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
@@ -140,6 +141,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 app.MapHub<CsLiveHelpHub>("/hubs/cslivehelp");
+app.MapHub<CsMessagingHub>("/hubs/cs-messaging");
 
 // Seed database
 using (var scope = app.Services.CreateScope())

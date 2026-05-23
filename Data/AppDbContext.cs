@@ -15,6 +15,7 @@ using Unified.Models.CsLiveHelp;
 using Unified.Models.Logging;
 using Unified.Models.Sip;
 using Unified.Models;
+using Unified.Models.CsMessaging;
 
 namespace Unified.Data;
 
@@ -83,6 +84,13 @@ public class AppDbContext : IdentityDbContext<AppUser>
     // SIP (System Improvement Proposals)
     public DbSet<Sip> SipItems => Set<Sip>();
     public DbSet<SipVote> SipVotes => Set<SipVote>();
+
+    // CS Messaging
+    public DbSet<CsConversation> CsConversations => Set<CsConversation>();
+    public DbSet<CsConversationMember> CsConversationMembers => Set<CsConversationMember>();
+    public DbSet<CsMessage> CsMessages => Set<CsMessage>();
+    public DbSet<CsMessageReaction> CsMessageReactions => Set<CsMessageReaction>();
+    public DbSet<CsConversationArchive> CsConversationArchives => Set<CsConversationArchive>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -485,6 +493,69 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<SipVote>()
             .HasIndex(v => new { v.SipId, v.UserId })
             .IsUnique();
+
+        // CS Messaging
+        builder.Entity<CsConversation>()
+            .HasOne(c => c.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsConversation>()
+            .HasIndex(c => c.CreatedByUserId);
+
+        builder.Entity<CsConversationMember>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Members)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CsConversationMember>()
+            .HasOne(m => m.User)
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsConversationMember>()
+            .HasIndex(m => new { m.UserId, m.IsActive });
+
+        builder.Entity<CsConversationMember>()
+            .HasIndex(m => new { m.ConversationId, m.UserId })
+            .IsUnique();
+
+        builder.Entity<CsMessage>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CsMessage>()
+            .HasOne(m => m.AuthorUser)
+            .WithMany()
+            .HasForeignKey(m => m.AuthorUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsMessage>()
+            .HasIndex(m => new { m.ConversationId, m.CreatedAt });
+
+        builder.Entity<CsMessageReaction>()
+            .HasOne(r => r.Message)
+            .WithMany(m => m.Reactions)
+            .HasForeignKey(r => r.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CsMessageReaction>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CsMessageReaction>()
+            .HasIndex(r => new { r.MessageId, r.UserId, r.Emoji })
+            .IsUnique();
+
+        builder.Entity<CsConversationArchive>()
+            .HasIndex(a => new { a.ConversationId, a.CreatedAt });
 
         builder.Entity<AmAuditLog>()
             .HasIndex(a => new { a.UserId, a.Timestamp });

@@ -364,51 +364,51 @@
 - [!] Direct vs. group: two conversation types — 1:1 (direct) or N-person (group); created by inviting members
 
 ### 5a – Data Models & Migration
-- [ ] Create `CsConversation` model: `Id, Name? (group only), IsGroup (bool), CreatedByUserId (FK), CreatedAt, UpdatedAt, IsArchived`
-- [ ] Create `CsConversationMember` model: `Id, ConversationId (FK), UserId (FK), JoinedAt, IsActive` — track membership and join time
-- [ ] Create `CsMessage` model: `Id, ConversationId (FK), AuthorUserId (FK), Body (string, max 5000), CreatedAt, IsEdited, EditedAt?, IsDeleted`
+- [x] Create `CsConversation` model: `Id, Name? (group only), IsGroup (bool), CreatedByUserId (FK), CreatedAt, UpdatedAt, IsArchived`
+- [x] Create `CsConversationMember` model: `Id, ConversationId (FK), UserId (FK), JoinedAt, IsActive` — track membership and join time
+- [x] Create `CsMessage` model: `Id, ConversationId (FK), AuthorUserId (FK), Body (string, max 5000), CreatedAt, IsEdited, EditedAt?, IsDeleted`
 - [ ] Create `CsMessageAttachment` model: `Id, MessageId (FK), FileName (string), FilePath (string), MimeType (string), SizeBytes (long), CreatedAt, ExpiresAt (7-day retention)`
-- [ ] Create `CsConversationArchive` table (mirror of messages for old/archived conversations)
-- [ ] DB indexes on `CsConversation(CreatedByUserId)`, `CsConversationMember(UserId, IsActive)`, `CsMessage(ConversationId, CreatedAt)`
-- [ ] EF Core migration `Phase5_CsMessaging`
+- [x] Create `CsConversationArchive` table (mirror of messages for old/archived conversations)
+- [x] DB indexes on `CsConversation(CreatedByUserId)`, `CsConversationMember(UserId, IsActive)`, `CsMessage(ConversationId, CreatedAt)`
+- [x] EF Core migration `Phase5_CsMessaging`
 
 ### 5b – Backend: Direct & Group Messaging
-- [ ] `GET /CsMessaging/Conversations` — list of user's active conversations (direct + groups); sorted by last message
-- [ ] `GET /CsMessaging/Conversation/{id}` — load conversation detail: members, message thread (keyset-paginated, top 50), unread status
-- [ ] `POST /CsMessaging/StartDirect/{userId}` — initiate 1:1 conversation (or return existing)
-- [ ] `POST /CsMessaging/CreateGroup` — create new group (name, members list); enforce group creation limits (3/5/10 per role); return `ConversationId`
-- [ ] `POST /CsMessaging/AddMessage/{id}` — post message to conversation; parse @mentions, extract attachment refs; broadcast via SignalR
+- [x] `GET /CsMessaging/Conversations` — list of user's active conversations (direct + groups); sorted by last message
+- [x] `GET /CsMessaging/Conversation/{id}` — load conversation detail: members, message thread (keyset-paginated, top 50), unread status
+- [x] `POST /CsMessaging/StartDirect/{userId}` — initiate 1:1 conversation (or return existing)
+- [x] `POST /CsMessaging/CreateGroup` — create new group (name, members list); enforce group creation limits (3/5/10 per role); return `ConversationId`
+- [x] `POST /CsMessaging/AddMessage/{id}` — post message to conversation; parse @mentions, extract attachment refs; broadcast via SignalR
 - [ ] `POST /CsMessaging/UploadAttachment` — multipart file upload; validate MIME type + size (max 5 MB); store and return attachment ref
 - [ ] `POST /CsMessaging/EditMessage/{id}` — edit own message (within 5 min window); mark as edited; broadcast update via SignalR
 - [ ] `POST /CsMessaging/DeleteMessage/{id}` — soft-delete own message (or admin/group creator); broadcast deletion via SignalR
 - [ ] `POST /CsMessaging/AddMember/{conversationId}/{userId}` — add user to group (group creator or manager); re-broadcast conversation state
 - [ ] `POST /CsMessaging/RemoveMember/{conversationId}/{userId}` — remove user from group; broadcast update
-- [ ] `POST /CsMessaging/MarkRead/{conversationId}` — mark all messages in conversation as read (for unread badge tracking)
+- [x] `POST /CsMessaging/MarkRead/{conversationId}` — mark all messages in conversation as read (for unread badge tracking)
 
 ### 5c – Real-Time SignalR Hub (CsMessagingHub)
-- [ ] Create `CsMessagingHub` (SignalR hub)
+- [x] Create `CsMessagingHub` (SignalR hub)
   - Groups: `cs-messaging` (all CS agents), `conv-{conversationId}` (members of each conversation)
 - [ ] Events pushed: `MessageAdded { conversationId, messageId, author, body, mentions[], attachments[], createdAt }`
 - [ ] Events pushed: `MessageUpdated { messageId, body, editedAt }`, `MessageDeleted { messageId }`
 - [ ] Events pushed: `MemberAdded { conversationId, userId, name }`, `MemberRemoved { conversationId, userId }`
 - [ ] Events pushed: `ConversationCreated { conversationId, name, members[] }`
-- [ ] Register hub in `Program.cs` at `/hubs/cs-messaging`
+- [x] Register hub in `Program.cs` at `/hubs/cs-messaging`
 
 ### 5d – Client JS & Real-Time UI
-- [ ] Create `wwwroot/js/cs-messaging.js` — connect to hub, handle all push events (message add/update/delete, member add/remove)
+- [x] Create `wwwroot/js/cs-messaging.js` — connect to hub, handle all push events (message add/update/delete, member add/remove)
 - [ ] Message thread: append/update/remove DOM elements in real time; no page reload required
-- [ ] Unread badge: track unread message count per conversation (via server-side last-read timestamp)
+- [x] Unread badge: track unread message count per conversation (via server-side last-read timestamp)
 - [ ] Typing indicator (optional): show *"Agent X is typing..."* via hub event
 - [ ] @mention autocomplete: as user types `@`, show dropdown of conversation members
 
 ### 5e – Views & UI
-- [ ] `Views/CsMessaging/Index.cshtml` — main messaging hub (sidebar: conversations list, main panel: thread + input form)
-- [ ] `GET /CsMessaging` — controller action rendering Index view
-- [ ] Conversation list: active/inactive badge, unread count, last message preview, last-message timestamp
+- [x] `Views/CsMessaging/Index.cshtml` — main messaging hub (sidebar: conversations list, main panel: thread + input form)
+- [x] `GET /CsMessaging` — controller action rendering Index view
+- [x] Conversation list: active/inactive badge, unread count, last message preview, last-message timestamp
 - [ ] Message thread: author name, timestamp, body (with @mention links), attachment thumbnails, edit/delete buttons (own messages only)
 - [ ] Input form: textarea (max 5000 chars), file upload button, send button; show attachment list before send
 - [ ] Group info modal: name, member list, add/remove member buttons (creator only), archive/leave group buttons
-- [ ] Sidebar: add "Direct Messages" link under CS Support section (visible to all CS roles)
+- [x] Sidebar: add "Direct Messages" link under CS Support section (visible to all CS roles)
 
 ### 5f – Message Archival & File Cleanup
 - [ ] Create `CsMessageArchiveService` (IHostedService) — runs on configurable duty cycle (default: daily)
@@ -419,7 +419,7 @@
 
 ### 5g – Controller & Authorization
 - [ ] `[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]` on `CsMessagingController` — block Account Managers
-- [ ] Server-side validation: user membership in conversation before allowing message post/edit/delete
+- [x] Server-side validation: user membership in conversation before allowing message post/edit/delete
 - [ ] Rate-limiting: max 30 messages per user per minute (prevent chat spam)
 - [ ] Audit log: optional — track group creation, member adds/removes for compliance
 
@@ -443,4 +443,4 @@
 
 ---
 
-*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP planned | Phase 5 CS-to-CS messaging planned | Owner: @Jacquesvdberg92*
+*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP complete | Phase 5 CS-to-CS messaging in progress (emoji, reactions, GIF support live) | Owner: @Jacquesvdberg92*

@@ -121,3 +121,270 @@ pre.work-dist-body {
 :root:not([data-theme-mode="dark"]) .app-sidebar .side-menu__item:hover .side-menu__icon {
     color: var(--primary-color) !important;
 }
+
+/* -- CS Messaging (modern chat UI) -- */
+.cs-chat-wrap {
+    padding-bottom: .75rem;
+}
+
+.cs-chat-shell {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 180px);
+    border-radius: .9rem;
+    overflow: hidden;
+    background: var(--bs-body-bg);
+}
+
+.cs-chat-sidebar {
+    border-right: 1px solid var(--bs-border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--bs-tertiary-bg);
+}
+
+.cs-chat-sidebar-head,
+.cs-chat-sidebar-actions {
+    padding: .9rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.cs-conversation-list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.conversation-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .75rem .9rem;
+    border-bottom: 1px solid rgba(0,0,0,.03);
+    transition: background-color .15s ease;
+}
+
+.conversation-item:hover {
+    background: rgba(92,103,247,.08);
+}
+
+.conversation-item.active {
+    background: rgba(92,103,247,.14);
+}
+
+.conversation-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #5c67f7 0%, #6f42c1 100%);
+    flex: 0 0 34px;
+}
+
+.conversation-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.conversation-title-row {
+    display: flex;
+    justify-content: space-between;
+    gap: .4rem;
+    align-items: center;
+}
+
+.conversation-title {
+    font-size: .86rem;
+    font-weight: 600;
+}
+
+.conversation-time,
+.conversation-preview {
+    font-size: .72rem;
+    color: var(--bs-secondary-color);
+}
+
+.conversation-unread {
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #dc3545;
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 700;
+    padding: 0 .35rem;
+}
+
+.cs-chat-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cs-chat-main-head {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
+}
+
+.cs-message-thread {
+    flex: 1;
+    overflow-y: auto;
+    padding: .9rem 1rem;
+    background: linear-gradient(to bottom, rgba(92,103,247,.05), transparent 35%);
+}
+
+.cs-empty-state {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    color: var(--bs-secondary-color);
+    flex-direction: column;
+}
+
+.cs-empty-state i {
+    font-size: 1.7rem;
+}
+
+.cs-msg-row {
+    display: flex;
+    margin-bottom: .75rem;
+}
+
+.cs-msg-row.mine {
+    justify-content: flex-end;
+}
+
+.cs-msg-row.theirs {
+    justify-content: flex-start;
+}
+
+.cs-msg-bubble {
+    max-width: min(76%, 760px);
+    padding: .55rem .68rem;
+    border-radius: .9rem;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.cs-msg-row.mine .cs-msg-bubble {
+    background: rgba(92,103,247,.12);
+    border-color: rgba(92,103,247,.25);
+}
+
+.cs-msg-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: .6rem;
+    margin-bottom: .2rem;
+}
+
+.cs-msg-author {
+    font-size: .74rem;
+    font-weight: 700;
+}
+
+.cs-msg-time {
+    font-size: .68rem;
+    color: var(--bs-secondary-color);
+}
+
+.cs-msg-body {
+    white-space: pre-wrap;
+    line-height: 1.35;
+}
+
+.cs-msg-gif img {
+    max-height: 260px;
+    width: auto;
+}
+
+.reaction-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+}
+
+.reaction-chip,
+.quick-reaction {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background: #fff;
+    font-size: .74rem;
+    line-height: 1;
+    padding: .25rem .45rem;
+}
+
+.reaction-chip.active {
+    background: rgba(92,103,247,.14);
+    border-color: rgba(92,103,247,.35);
+}
+
+#emojiPickerBody {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+#gifSearchResults .gif-pick {
+    overflow: hidden;
+    border-radius: .45rem;
+}
+
+#gifSearchResults .gif-pick img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+}
+
+#pastedPreviewWrap img {
+    object-fit: cover;
+    max-width: 180px;
+}
+
+.cs-chat-composer {
+    border-top: 1px solid var(--bs-border-color);
+    padding: .75rem 1rem;
+    background: var(--bs-body-bg);
+    position: sticky;
+    bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+    .cs-chat-shell {
+        grid-template-columns: 1fr;
+        min-height: calc(100vh - 160px);
+        position: relative;
+    }
+
+    .cs-chat-sidebar {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: min(88vw, 340px);
+        z-index: 12;
+        transform: translateX(-102%);
+        transition: transform .2s ease;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    }
+
+    .cs-chat-sidebar.show-mobile {
+        transform: translateX(0);
+    }
+
+    .cs-msg-bubble {
+        max-width: 92%;
+    }
+}

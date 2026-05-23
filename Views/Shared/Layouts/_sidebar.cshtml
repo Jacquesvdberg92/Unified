@@ -1,4 +1,10 @@
-            <aside class="app-sidebar sticky" id="sidebar">
+            @using Microsoft.AspNetCore.Identity
+            @using Unified.Models.Identity
+            @using Unified.Services
+            @inject UserManager<AppUser> UserManager
+            @inject CsMessagingService CsMessagingService
+
+                        <aside class="app-sidebar sticky" id="sidebar">
 
                 <!-- Start::main-sidebar-header -->
                 <div class="main-sidebar-header">
@@ -14,6 +20,14 @@
                     <!-- Start::nav -->
                     <nav class="main-menu-container nav nav-pills flex-column sub-open">
                         <ul class="main-menu">
+                            @{
+                                var isChatUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.SwissArmyKnife);
+                                var sidebarChatUserId = isChatUser ? UserManager.GetUserId(User) : null;
+                                var recentChatLimit = 8;
+                                var recentChats = isChatUser && !string.IsNullOrWhiteSpace(sidebarChatUserId)
+                                    ? await CsMessagingService.GetRecentConversationsAsync(sidebarChatUserId!, recentChatLimit)
+                                    : new List<Unified.Models.CsMessaging.CsRecentConversationViewModel>();
+                            }
 
                             @* ── Main (agents & above) ── *@
                             @if (!User.IsInRole("AccountManager"))
@@ -286,6 +300,44 @@
                                 </li>
                             }
 
+                            @* ── Chat ── *@
+                            @if (isChatUser)
+                            {
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="chat">
+                                        <span class="category-name">Chat</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="CsMessaging" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-chat side-menu__icon"></i>
+                                                <span class="side-menu__label">Chat</span>
+                                            </a>
+                                        </li>
+                                        @if (recentChats.Any())
+                                        {
+                                            <li class="slide mt-2 px-3 no-drag" data-no-drag="true">
+                                                <div class="d-flex align-items-center gap-2 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.06em;">
+                                                    <i class="bx bx-time-five"></i>
+                                                    <span>Chat Recent (@recentChatLimit)</span>
+                                                </div>
+                                            </li>
+                                            @foreach (var chat in recentChats)
+                                            {
+                                                <li class="slide no-drag" data-no-drag="true" data-chat-recent-item="true" data-conversation-id="@chat.ConversationId">
+                                                    <a asp-controller="CsMessaging" asp-action="Index" asp-route-conversationId="@chat.ConversationId" class="side-menu__item ps-4">
+                                                        <i class="bx @(chat.IsGroup ? "bx-group" : "bx-user") side-menu__icon"></i>
+                                                        <span class="side-menu__label text-truncate">@chat.DisplayName</span>
+                                                        <span class="badge bg-danger ms-2 sidebar-chat-unread @(chat.UnreadCount > 0 ? "" : "d-none")" data-chat-unread="@chat.ConversationId">@chat.UnreadCount</span>
+                                                    </a>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
                             @* ── System ── *@
                             <li class="slide__category-group">
                                 <div class="slide__category" data-category="system">
@@ -357,6 +409,10 @@
                 li.slide[draggable="true"] {
                     cursor: grab;
                 }
+                li.slide.no-drag,
+                li.slide.no-drag[draggable="true"] {
+                    cursor: default;
+                }
                 li.slide.drag--active {
                     opacity: 0.4;
                 }
@@ -365,12 +421,18 @@
                     outline-offset: -2px;
                     border-radius: 4px;
                 }
+
+                .sidebar-chat-unread {
+                    min-width: 1.25rem;
+                }
             </style>
 
+            <script defer src="https://cdn.jsdelivr.net/npm/%40microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
             <script>
                 (function () {
                     const COLLAPSED_KEY = 'sidebar_collapsed';
                     const ORDER_KEY     = 'sidebar_order';
+                    const isChatUser    = @isChatUser.ToString().ToLowerInvariant();
 
                     /* ── collapsed state ── */
                     function getCollapsed() {
@@ -428,9 +490,15 @@
                         let dragged = null;
 
                         ul.querySelectorAll(':scope > li.slide').forEach(function (li) {
-                            li.setAttribute('draggable', 'true');
+                            const isNoDrag = li.getAttribute('data-no-drag') === 'true' || li.classList.contains('no-drag');
+                            li.setAttribute('draggable', isNoDrag ? 'false' : 'true');
 
                             li.addEventListener('dragstart', function (e) {
+                                if (isNoDrag) {
+                                    e.preventDefault();
+                                    return;
+                                }
+
                                 dragged = li;
                                 li.classList.add('drag--active');
                                 e.dataTransfer.effectAllowed = 'move';
@@ -479,6 +547,48 @@
                         });
                     }
 
+                    async function refreshRecentChatBadges() {
+                        const items = document.querySelectorAll('[data-chat-recent-item="true"]');
+                        if (!items.length) return;
+
+                        try {
+                            const res = await fetch('/CsMessaging/RecentConversations?take=8', {
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            const data = await res.json();
+                            if (!data?.success || !Array.isArray(data.conversations)) return;
+
+                            const byId = new Map(data.conversations.map(c => [String(c.conversationId), c]));
+
+                            items.forEach(function (li) {
+                                const id = li.getAttribute('data-conversation-id') || '';
+                                const row = byId.get(id);
+                                const badge = li.querySelector('.sidebar-chat-unread');
+                                if (!badge) return;
+
+                                const unread = row?.unreadCount || 0;
+                                badge.textContent = String(unread);
+                                badge.classList.toggle('d-none', unread <= 0);
+                            });
+                        } catch {
+                            // ignore sidebar badge refresh failures
+                        }
+                    }
+
+                    function wireSidebarChatRealtime() {
+                        if (!isChatUser) return;
+                        if (typeof window.signalR === 'undefined' || !window.signalR?.HubConnectionBuilder) return;
+
+                        const connection = new window.signalR.HubConnectionBuilder()
+                            .withUrl('/hubs/cs-messaging')
+                            .withAutomaticReconnect()
+                            .build();
+
+                        connection.on('ConversationChanged', refreshRecentChatBadges);
+                        connection.on('ConversationReadUpdated', refreshRecentChatBadges);
+                        connection.start().then(refreshRecentChatBadges).catch(function () {});
+                    }
+
                     /* ── main init ── */
                     function init() {
                         const collapsed = getCollapsed();
@@ -511,6 +621,9 @@
                                 saveCollapsed(list);
                             });
                         });
+
+                        wireSidebarChatRealtime();
+                        refreshRecentChatBadges();
                     }
 
                     if (document.readyState === 'loading') {

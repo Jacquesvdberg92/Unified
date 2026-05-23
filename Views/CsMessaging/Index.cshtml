@@ -1,0 +1,610 @@
+@model Unified.Models.CsMessaging.CsMessagingIndexViewModel
+@using Unified.Models.CsMessaging
+@{
+    ViewData["Title"] = "Direct Messages";
+    var active = Model.ActiveConversation;
+}
+
+<div class="container-fluid cs-chat-wrap" id="csMessagingApp"
+     data-conversations-url="@Url.Action("Conversations", "CsMessaging")"
+     data-conversation-url-base="@Url.Action("Conversation", "CsMessaging", new { id = 0 })"
+     data-start-direct-url="@Url.Action("StartDirect", "CsMessaging")"
+     data-create-group-url="@Url.Action("CreateGroup", "CsMessaging")"
+     data-add-message-url-base="@Url.Action("AddMessage", "CsMessaging", new { id = 0 })"
+     data-toggle-reaction-url-base="@Url.Action("ToggleReaction", "CsMessaging", new { id = 0 })"
+     data-mark-read-url="@Url.Action("MarkRead", "CsMessaging")"
+     data-gif-search-url="@Url.Action("SearchGifs", "CsMessaging")"
+     data-upload-paste-url="@Url.Action("UploadPastedImage", "CsMessaging")"
+     data-emoji-list-url="~/assets/js/full-emoji-list.json"
+     data-active-conversation-id="@(active?.ConversationId)"
+     data-current-user-id="@Model.CurrentUserId">
+
+    @Html.AntiForgeryToken()
+
+    <div class="main-chart-wrapper gap-lg-2 gap-0 mb-2 d-lg-flex cs-chat-shell">
+        <aside class="chat-info border cs-chat-sidebar" id="chatSidebar">
+            <div class="chat-search p-3 border-bottom cs-chat-sidebar-head">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-0"><i class="bx bx-chat me-2"></i>Direct Messages</h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-lg-none" id="closeConversationPane">
+                        <i class="bx bx-x"></i>
+                    </button>
+                </div>
+                <div class="input-group input-group-sm">
+                    <input id="conversationSearch" class="form-control" placeholder="Search conversations..." />
+                    <button aria-label="search" class="btn btn-primary-light" type="button">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs tab-style-6 nav-justified mb-0 border-bottom d-flex gap-2 flex-wrap px-2 pt-2" id="chatSidebarTabs" role="tablist">
+                <li class="nav-item me-0" role="presentation">
+                    <button class="nav-link active" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent-tab-pane" type="button" role="tab" aria-controls="recent-tab-pane" aria-selected="true">
+                        Recent
+                        <span class="badge bg-primary1 rounded-pill float-end shadow-sm" id="recentCountBadge">@Model.Conversations.Sum(c => c.UnreadCount)</span>
+                    </button>
+                </li>
+                <li class="nav-item me-0" role="presentation">
+                    <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups-tab-pane" type="button" role="tab" aria-controls="groups-tab-pane" aria-selected="false">
+                        Groups
+                        <span class="badge bg-primary3 rounded-pill float-end shadow-sm" id="groupsCountBadge">@Model.Conversations.Where(c => c.IsGroup).Sum(c => c.UnreadCount)</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts-tab-pane" type="button" role="tab" aria-controls="contacts-tab-pane" aria-selected="false">
+                        Contacts
+                        <span class="badge bg-primary2 rounded-pill float-end shadow-sm" id="contactsCountBadge">@Model.EligibleUsers.Count</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="chatSidebarTabContent">
+                <div class="tab-pane fade show active" id="recent-tab-pane" role="tabpanel" aria-labelledby="recent-tab" tabindex="0">
+                    <div class="cs-conversation-list" id="conversationList">
+                        @foreach (var conv in Model.Conversations)
+                        {
+                            <button type="button"
+                                    class="conversation-item @(active?.ConversationId == conv.ConversationId ? "active" : "")"
+                                    data-conversation-id="@conv.ConversationId"
+                                    data-search-text="@($"{conv.DisplayName} {conv.LastMessagePreview}".ToLowerInvariant())">
+                                <span class="conversation-avatar">@conv.DisplayName[..1].ToUpperInvariant()</span>
+                                <span class="conversation-body">
+                                    <span class="conversation-title-row">
+                                        <span class="conversation-title">@conv.DisplayName</span>
+                                        <span class="conversation-time">@(conv.LastMessageAt?.ToLocalTime().ToString("t"))</span>
+                                    </span>
+                                    <span class="conversation-preview text-truncate">@conv.LastMessagePreview</span>
+                                </span>
+                                @if (conv.UnreadCount > 0)
+                                {
+                                    <span class="conversation-unread">@conv.UnreadCount</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="groups-tab-pane" role="tabpanel" aria-labelledby="groups-tab" tabindex="0">
+                    <div class="group-create-panel p-2 border-bottom">
+                        <label class="form-label small mb-1">Create new group</label>
+                        <input id="groupName" class="form-control form-control-sm mb-2" placeholder="Group name" />
+                        <select id="groupMembers" class="form-select form-select-sm mb-2" multiple size="4">
+                            @foreach (var user in Model.EligibleUsers)
+                            {
+                                <option value="@user.UserId">@user.DisplayName</option>
+                            }
+                        </select>
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100" id="createGroupBtn">Create group</button>
+                    </div>
+                    <div class="cs-conversation-list" id="groupConversationList">
+                        @foreach (var conv in Model.Conversations.Where(c => c.IsGroup))
+                        {
+                            <button type="button"
+                                    class="conversation-item @(active?.ConversationId == conv.ConversationId ? "active" : "")"
+                                    data-conversation-id="@conv.ConversationId"
+                                    data-search-text="@($"{conv.DisplayName} {conv.LastMessagePreview}".ToLowerInvariant())">
+                                <span class="conversation-avatar">@conv.DisplayName[..1].ToUpperInvariant()</span>
+                                <span class="conversation-body">
+                                    <span class="conversation-title-row">
+                                        <span class="conversation-title">@conv.DisplayName</span>
+                                        <span class="conversation-time">@(conv.LastMessageAt?.ToLocalTime().ToString("t"))</span>
+                                    </span>
+                                    <span class="conversation-preview text-truncate">@conv.LastMessagePreview</span>
+                                </span>
+                                @if (conv.UnreadCount > 0)
+                                {
+                                    <span class="conversation-unread">@conv.UnreadCount</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="contacts-tab-pane" role="tabpanel" aria-labelledby="contacts-tab" tabindex="0">
+                    <div class="cs-conversation-list contacts-list-wrap">
+                        <ul class="list-unstyled mb-0" id="contactsList">
+                            @foreach (var user in Model.EligibleUsers)
+                            {
+                                <li>
+                                    <button type="button" class="contact-item" data-user-id="@user.UserId" data-search-text="@user.DisplayName.ToLowerInvariant()">
+                                        <span class="conversation-avatar">@user.DisplayName[..1].ToUpperInvariant()</span>
+                                        <span class="conversation-body">
+                                            <span class="conversation-title">@user.DisplayName</span>
+                                            <span class="conversation-preview">Start direct chat</span>
+                                        </span>
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="main-chat-area border cs-chat-main">
+            <header class="d-flex align-items-center border-bottom main-chat-head flex-wrap cs-chat-main-head" id="chatHeader">
+                <div class="d-flex align-items-center gap-2 flex-fill">
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-lg-none" id="openConversationPane">
+                        <i class="bx bx-menu"></i>
+                    </button>
+                    <span class="avatar avatar-md online me-2 d-none d-sm-inline-flex">
+                        <span class="avatar-initial rounded-circle bg-primary text-white" id="chatAvatarInitial">@((active?.DisplayName ?? "C")[..1].ToUpperInvariant())</span>
+                    </span>
+                    <div>
+                        <div class="fw-semibold" id="chatTitle">@(active?.DisplayName ?? "Select a conversation")</div>
+                        <div class="text-muted small" id="chatMembers">
+                            @if (active is not null)
+                            {
+                                @string.Join(", ", active.Members.Select(m => m.DisplayName))
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+            </header>
+
+            <div class="chat-content cs-message-thread" id="messageThread">
+                @if (active is null)
+                {
+                    <div class="cs-empty-state">
+                        <i class="bx bx-message-rounded-dots"></i>
+                        <p class="mb-0">Choose a conversation from the left to start chatting.</p>
+                    </div>
+                }
+                else
+                {
+                    foreach (var msg in active.Messages)
+                    {
+                        var mine = msg.AuthorUserId == Model.CurrentUserId;
+                        <div class="cs-msg-row @(mine ? "mine" : "theirs")" data-message-id="@msg.MessageId">
+                            <div class="cs-msg-bubble">
+                                <div class="cs-msg-meta">
+                                    <span class="cs-msg-author">@msg.AuthorName</span>
+                                    <span class="cs-msg-time">@msg.CreatedAt.ToLocalTime().ToString("g")</span>
+                                    @if (msg.IsMine)
+                                    {
+                                        <span class="cs-msg-status" title="@(msg.IsReadByAllOthers ? "Read" : "Sent")">@(msg.IsReadByAllOthers ? "✓✓" : "✓")</span>
+                                    }
+                                </div>
+                                @if (msg.IsDeleted)
+                                {
+                                    <div class="text-muted fst-italic">Message deleted</div>
+                                }
+                                else
+                                {
+                                    <div class="cs-msg-body">@msg.Body</div>
+                                    @if (!string.IsNullOrWhiteSpace(msg.GifUrl))
+                                    {
+                                        <div class="cs-msg-gif mt-1">
+                                            <img src="@msg.GifUrl" alt="GIF" class="img-fluid rounded border" />
+                                        </div>
+                                    }
+                                }
+                                <div class="reaction-container mt-2">
+                                    @foreach (var reaction in msg.Reactions)
+                                    {
+                                        <button type="button"
+                                                class="reaction-chip @(reaction.ReactedByCurrentUser ? "active" : "")"
+                                                data-message-id="@msg.MessageId"
+                                                data-emoji="@reaction.Emoji">
+                                            @reaction.Emoji <span>@reaction.Count</span>
+                                        </button>
+                                    }
+                                    <button type="button" class="quick-reaction" data-message-id="@msg.MessageId" data-emoji="+" title="Add reaction">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <footer class="chat-footer cs-chat-composer">
+                <input type="file" id="attachmentInput" class="d-none" accept="image/png,image/jpeg,image/jpg,image/webp" />
+                <button type="button" aria-label="attachment" class="btn btn-primary1-light me-2 btn-icon btn-send" id="openAttachmentBtn">
+                    <i class="ri-attachment-2"></i>
+                </button>
+                <button type="button" aria-label="emoji" class="btn btn-icon me-2 btn-primary2 emoji-picker" id="openEmojiPickerBtn">
+                    <i class="ri-emotion-line"></i>
+                </button>
+                <button type="button" aria-label="gif" class="btn btn-icon me-2 btn-primary3-light" id="openGifPickerBtn">
+                    <i class="ri-movie-2-line"></i>
+                </button>
+                <div class="position-relative flex-fill">
+                    <textarea id="messageBody" class="form-control chat-message-space" rows="1" maxlength="5000" placeholder="Type your message here..."></textarea>
+                    <div id="mentionSuggestions" class="cs-mention-suggestions d-none"></div>
+                </div>
+                <button type="button" aria-label="send" class="btn btn-primary ms-2 btn-icon btn-send" id="sendMessageBtn">
+                    <i class="ri-send-plane-2-line"></i>
+                </button>
+                <span class="text-muted small align-self-center ms-2 d-none d-md-inline" id="pasteHint">Paste screenshot with Ctrl+V</span>
+                <div id="pastedPreviewWrap" class="mt-2 d-none w-100">
+                    <div class="small text-muted mb-1">Attachment preview</div>
+                    <div class="d-flex align-items-start gap-2">
+                        <img id="pastedPreviewImg" class="rounded border" alt="Attachment preview" />
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="clearPastedPreviewBtn">Remove</button>
+                    </div>
+                </div>
+            </footer>
+        </section>
+    </div>
+    <div id="emojiPickerPopover" class="cs-emoji-popover d-none" role="dialog" aria-label="Choose emoji">
+        <div class="cs-emoji-popover-head d-flex align-items-center justify-content-between px-2 py-1 border-bottom">
+            <small class="text-muted">Choose emoji</small>
+            <button type="button" class="btn btn-sm btn-link text-muted p-0" id="closeEmojiPickerBtn" aria-label="Close emoji picker">
+                <i class="bx bx-x fs-5"></i>
+            </button>
+        </div>
+        <div class="cs-emoji-popover-search p-2 border-bottom">
+            <input id="emojiSearchInput" class="form-control form-control-sm" placeholder="Search emoji..." />
+        </div>
+        <div class="cs-emoji-popover-body" id="emojiPickerBody"></div>
+    </div>
+
+    <div class="modal fade" id="gifPickerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title mb-0">Search GIFs</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group input-group-sm mb-3">
+                        <input id="gifSearchInput" class="form-control" placeholder="Search GIFs..." />
+                        <button type="button" class="btn btn-primary" id="gifSearchBtn">Search</button>
+                    </div>
+                    <div id="gifSearchResults" class="row g-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .cs-chat-wrap {
+            --chat-surface: #fff;
+            --chat-muted: #8f9bb3;
+        }
+
+        .cs-chat-shell {
+            min-height: 70vh;
+        }
+
+        .chat-info {
+            width: 100%;
+            max-width: 360px;
+            border-radius: .75rem;
+            overflow: hidden;
+            background: var(--chat-surface);
+        }
+
+        .main-chat-area {
+            flex: 1;
+            border-radius: .75rem;
+            overflow: hidden;
+            background: var(--chat-surface);
+            display: flex;
+            flex-direction: column;
+            min-height: 70vh;
+        }
+
+        .main-chat-head {
+            padding: .9rem 1rem;
+            background: #fff;
+        }
+
+        #chatAvatarInitial {
+            width: 2.2rem;
+            height: 2.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .cs-conversation-list {
+            max-height: calc(70vh - 285px);
+            overflow-y: auto;
+            padding: .25rem;
+        }
+
+        .tab-style-6 .nav-link {
+            font-size: .8rem;
+            border-radius: .5rem;
+            padding: .5rem .55rem;
+        }
+
+        .tab-style-6 .badge {
+            font-size: .65rem;
+        }
+
+        .group-create-panel {
+            background: rgba(79, 70, 229, .03);
+        }
+
+        .contacts-list-wrap {
+            padding: .5rem;
+        }
+
+        .contact-item {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            text-align: left;
+            border-radius: .6rem;
+            padding: .6rem;
+            transition: background-color .2s ease;
+        }
+
+        .contact-item:hover {
+            background: rgba(110, 95, 255, .09);
+        }
+
+        .conversation-item {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            text-align: left;
+            border-radius: .6rem;
+            padding: .6rem;
+            transition: background-color .2s ease;
+        }
+
+        .conversation-item:hover,
+        .conversation-item.active {
+            background: rgba(110, 95, 255, .09);
+        }
+
+        .conversation-avatar {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(110, 95, 255, .15);
+            color: #4b3ecc;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .conversation-title-row {
+            display: flex;
+            justify-content: space-between;
+            gap: .6rem;
+        }
+
+        .conversation-title {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .conversation-time,
+        .conversation-preview {
+            color: var(--chat-muted);
+            font-size: .75rem;
+        }
+
+        .conversation-unread {
+            margin-left: .4rem;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 999px;
+            background: #4f46e5;
+            color: #fff;
+            font-size: .68rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 .25rem;
+        }
+
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: linear-gradient(180deg, #f8f9fd 0%, #ffffff 100%);
+        }
+
+        .cs-msg-row {
+            margin-bottom: .75rem;
+            display: flex;
+        }
+
+        .cs-msg-row.mine {
+            justify-content: flex-end;
+        }
+
+        .cs-msg-bubble {
+            max-width: min(80%, 720px);
+            border-radius: .75rem;
+            border: 1px solid rgba(0, 0, 0, .06);
+            background: #fff;
+            padding: .65rem .75rem;
+        }
+
+        .cs-msg-row.mine .cs-msg-bubble {
+            background: #8a83f6;
+            color: #fff;
+            border-color: rgba(138, 131, 246, .45);
+        }
+
+        .cs-msg-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .45rem;
+            font-size: .72rem;
+            margin-bottom: .35rem;
+            opacity: .85;
+        }
+
+        .cs-msg-status {
+            margin-left: auto;
+            letter-spacing: -.08em;
+            font-weight: 700;
+            opacity: .95;
+        }
+
+        .reaction-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+        }
+
+        .reaction-chip,
+        .quick-reaction {
+            border: 1px solid rgba(0, 0, 0, .12);
+            background: rgba(255, 255, 255, .95);
+            border-radius: 999px;
+            padding: .15rem .45rem;
+            font-size: .8rem;
+            line-height: 1.2;
+        }
+
+        .reaction-chip.active {
+            border-color: rgba(79, 70, 229, .5);
+            background: rgba(79, 70, 229, .12);
+        }
+
+        .chat-footer {
+            border-top: 1px solid rgba(0, 0, 0, .07);
+            padding: .75rem;
+            display: grid;
+            grid-template-columns: auto auto auto minmax(0, 1fr) auto auto;
+            align-items: center;
+            column-gap: .5rem;
+            row-gap: .5rem;
+            background: #fff;
+        }
+
+        .chat-message-space {
+            min-height: 40px;
+            max-height: 140px;
+            resize: none;
+            border-radius: 999px;
+            padding: .5rem .95rem;
+        }
+
+        #pastedPreviewWrap {
+            grid-column: 1 / -1;
+            margin-top: .25rem !important;
+            padding-top: .35rem;
+            border-top: 1px dashed rgba(0, 0, 0, .08);
+        }
+
+        #pastedPreviewWrap .d-flex {
+            flex-wrap: wrap;
+        }
+
+        #pastedPreviewImg {
+            max-height: 110px;
+            max-width: min(100%, 240px);
+            width: auto;
+            object-fit: contain;
+        }
+
+        .cs-mention-suggestions {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(100% + .25rem);
+            z-index: 1080;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .1);
+            border-radius: .5rem;
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .mention-option {
+            display: block;
+            width: 100%;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            padding: .4rem .65rem;
+        }
+
+        .mention-option:hover,
+        .mention-option.active {
+            background: rgba(13, 110, 253, .08);
+        }
+
+        .cs-emoji-popover {
+            position: fixed;
+            z-index: 1085;
+            width: min(360px, calc(100vw - 2rem));
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, .1);
+            border-radius: .5rem;
+            box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .2);
+        }
+
+        .cs-emoji-popover-body {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: .5rem;
+        }
+
+        .cs-emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+            gap: .3rem;
+        }
+
+        .emoji-pick {
+            min-width: 32px;
+            height: 32px;
+            line-height: 1;
+            padding: 0;
+            font-size: 1.1rem;
+        }
+
+        @@media (max-width: 991.98px) {
+            .chat-info {
+                max-width: 100%;
+            }
+
+            .main-chat-area {
+                min-height: 65vh;
+            }
+
+            .chat-footer {
+                grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+            }
+
+            #pasteHint {
+                display: none !important;
+            }
+        }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script defer src="~/js/cs-messaging.js"></script>
+}
