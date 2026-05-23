@@ -165,6 +165,80 @@ public class CsMessagingController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditMessage(int id, [FromBody] EditMessageInputModel input)
+    {
+        var userId = _users.GetUserId(User)!;
+        var result = await _svc.EditMessageAsync(id, userId, input.Body);
+        if (!result.Success || result.Message is null)
+            return BadRequest(new { success = false, error = result.Error ?? "Failed to edit message." });
+
+        await _hub.Clients.Group($"conv-{result.Message.ConversationId}").SendAsync("MessageEdited", new
+        {
+            conversationId = result.Message.ConversationId,
+            message = result.Message
+        });
+
+        return Json(new { success = true, message = result.Message });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteMessage(int id)
+    {
+        var userId = _users.GetUserId(User)!;
+        var result = await _svc.DeleteMessageAsync(id, userId);
+        if (!result.Success)
+            return BadRequest(new { success = false, error = result.Error ?? "Failed to delete message." });
+
+        await _hub.Clients.Group($"conv-{result.ConversationId}").SendAsync("MessageDeleted", new
+        {
+            conversationId = result.ConversationId,
+            messageId = id
+        });
+
+        return Json(new { success = true });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddMember(int id, [FromBody] AddMemberInputModel input)
+    {
+        var requestingUserId = _users.GetUserId(User)!;
+        var result = await _svc.AddMemberAsync(id, requestingUserId, input.UserId);
+        if (!result.Success || result.Member is null)
+            return BadRequest(new { success = false, error = result.Error ?? "Failed to add member." });
+
+        await _hub.Clients.Group($"conv-{id}").SendAsync("MemberAdded", new
+        {
+            conversationId = id,
+            member = result.Member
+        });
+        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
+
+        return Json(new { success = true, member = result.Member });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveMember(int id, string userId)
+    {
+        var requestingUserId = _users.GetUserId(User)!;
+        var result = await _svc.RemoveMemberAsync(id, requestingUserId, userId);
+        if (!result.Success)
+            return BadRequest(new { success = false, error = result.Error ?? "Failed to remove member." });
+
+        await _hub.Clients.Group($"conv-{id}").SendAsync("MemberRemoved", new
+        {
+            conversationId = id,
+            userId
+        });
+        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
+
+        return Json(new { success = true });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> MarkRead(int conversationId)
     {
         var userId = _users.GetUserId(User)!;

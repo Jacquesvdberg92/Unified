@@ -327,6 +327,135 @@ public class CsMessagingService
         return true;
     }
 
+    public async Task<(bool Success, string? Error, CsMessageViewModel? Message)> EditMessageAsync(int messageId, string userId, string newBody)
+    {
+        var cleanBody = (newBody ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(cleanBody))
+            return (false, "Message body cannot be empty.", null);
+
+        if (cleanBody.Length > 5000)
+            return (false, "Message exceeds 5000 characters.", null);
+
+        var message = await _db.CsMessages
+            .FirstOrDefaultAsync(m => m.Id == messageId && !m.IsDeleted);
+
+        if (message is null)
+            return (false, "Message not found.", null);
+
+        if (!string.Equals(message.AuthorUserId, userId, StringComparison.Ordinal))
+            return (false, "You can only edit your own messages.", null);
+
+        var editWindow = TimeSpan.FromMinutes(15);
+        if (DateTime.UtcNow - message.CreatedAt > editWindow)
+            return (false, "The edit window (15 min) has passed.", null);
+
+        message.Body = cleanBody;
+        message.IsEdited = true;
+        message.EditedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        var saved = await _db.CsMessages
+            .Include(m => m.AuthorUser)
+            .Include(m => m.Reactions)
+            .FirstAsync(m => m.Id == messageId);
+
+        var activeMembers = await _db.CsConversationMembers
+            .Where(m => m.ConversationId == saved.ConversationId && m.IsActive)
+            .ToListAsync();
+
+        return (true, null, ToMessageViewModel(saved, userId, activeMembers));
+    }
+
+    public async Task<(bool Success, string? Error, int ConversationId)> DeleteMessageAsync(int messageId, string userId)
+    {
+        var message = await _db.CsMessages
+            .FirstOrDefaultAsync(m => m.Id == messageId && !m.IsDeleted);
+
+        if (message is null)
+            return (false, "Message not found.", 0);
+
+        if (!string.Equals(message.AuthorUserId, userId, StringComparison.Ordinal))
+            return (false, "You can only delete your own messages.", 0);
+
+        message.IsDeleted = true;
+        message.Body = string.Empty;
+        message.GifUrl = null;
+
+        await _db.SaveChangesAsync();
+        return (true, null, message.ConversationId);
+    }
+
+    public async Task<(bool Success, string? Error, CsConversationMemberViewModel? Member)> AddMemberAsync(int conversationId, string requestingUserId, string targetUserId)
+    {
+        var conversation = await _db.CsConversations
+            .Include(c => c.Members)
+            .FirstOrDefaultAsync(c => c.Id == conversationId && !c.IsArchived && c.IsGroup);
+
+        if (conversation is null)
+            return (false, "Group conversation not found.", null);
+
+        if (!string.Equals(conversation.CreatedByUserId, requestingUserId, StringComparison.Ordinal))
+            return (false, "Only the group creator can add members.", null);
+
+        var eligible = await GetEligibleUsersAsync(requestingUserId);
+        if (!eligible.Any(u => u.UserId == targetUserId))
+            return (false, "User is not eligible for CS messaging.", null);
+
+        var existing = conversation.Members.FirstOrDefault(m => m.UserId == targetUserId);
+        if (existing is not null)
+        {
+            if (existing.IsActive)
+                return (false, "User is already a member.", null);
+
+            existing.IsActive = true;
+            existing.JoinedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            _db.CsConversationMembers.Add(new CsConversationMember
+            {
+                ConversationId = conversationId,
+                UserId = targetUserId,
+                JoinedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+        }
+
+        await _db.SaveChangesAsync();
+
+        var user = await _users.FindByIdAsync(targetUserId);
+        return (true, null, new CsConversationMemberViewModel
+        {
+            UserId = targetUserId,
+            DisplayName = user?.DisplayName ?? user?.UserName ?? targetUserId
+        });
+    }
+
+    public async Task<(bool Success, string? Error)> RemoveMemberAsync(int conversationId, string requestingUserId, string targetUserId)
+    {
+        var conversation = await _db.CsConversations
+            .Include(c => c.Members)
+            .FirstOrDefaultAsync(c => c.Id == conversationId && !c.IsArchived && c.IsGroup);
+
+        if (conversation is null)
+            return (false, "Group conversation not found.");
+
+        if (!string.Equals(conversation.CreatedByUserId, requestingUserId, StringComparison.Ordinal))
+            return (false, "Only the group creator can remove members.");
+
+        if (string.Equals(targetUserId, requestingUserId, StringComparison.Ordinal))
+            return (false, "You cannot remove yourself from a group you created.");
+
+        var member = conversation.Members.FirstOrDefault(m => m.UserId == targetUserId && m.IsActive);
+        if (member is null)
+            return (false, "User is not an active member of this group.");
+
+        member.IsActive = false;
+        await _db.SaveChangesAsync();
+        return (true, null);
+    }
+
     public async Task<List<CsRecentConversationViewModel>> GetRecentConversationsAsync(string userId, int take = 8)
     {
         take = Math.Clamp(take, 1, 20);
@@ -432,6 +561,7 @@ public class CsMessagingService
         return new CsMessageViewModel
         {
             MessageId = message.Id,
+            ConversationId = message.ConversationId,
             AuthorUserId = message.AuthorUserId,
             AuthorName = message.AuthorUser?.DisplayName ?? message.AuthorUser?.UserName ?? message.AuthorUserId,
             Body = message.Body,

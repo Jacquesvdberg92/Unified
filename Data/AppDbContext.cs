@@ -504,6 +504,12 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<CsConversation>()
             .HasIndex(c => c.CreatedByUserId);
 
+        builder.Entity<CsConversation>()
+            .HasIndex(c => new { c.IsArchived, c.UpdatedAt });
+
+        builder.Entity<CsConversation>()
+            .HasIndex(c => new { c.IsGroup, c.IsArchived, c.UpdatedAt });
+
         builder.Entity<CsConversationMember>()
             .HasOne(m => m.Conversation)
             .WithMany(c => c.Members)

@@ -37,6 +37,7 @@ public class CsConversationMemberViewModel
 public class CsMessageViewModel
 {
     public int MessageId { get; set; }
+    public int ConversationId { get; set; }
     public string AuthorUserId { get; set; } = string.Empty;
     public string AuthorName { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
@@ -86,4 +87,14 @@ public class AddMessageInputModel
 public class ToggleReactionInputModel
 {
     public string Emoji { get; set; } = string.Empty;
+}
+
+public class EditMessageInputModel
+{
+    public string Body { get; set; } = string.Empty;
+}
+
+public class AddMemberInputModel
+{
+    public string UserId { get; set; } = string.Empty;
 }

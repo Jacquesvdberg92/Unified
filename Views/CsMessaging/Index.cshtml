@@ -15,6 +15,10 @@
      data-mark-read-url="@Url.Action("MarkRead", "CsMessaging")"
      data-gif-search-url="@Url.Action("SearchGifs", "CsMessaging")"
      data-upload-paste-url="@Url.Action("UploadPastedImage", "CsMessaging")"
+     data-edit-message-url-base="@Url.Action("EditMessage", "CsMessaging", new { id = 0 })"
+     data-delete-message-url-base="@Url.Action("DeleteMessage", "CsMessaging", new { id = 0 })"
+     data-add-member-url-base="@Url.Action("AddMember", "CsMessaging", new { id = 0 })"
+     data-remove-member-url-base="@Url.Action("RemoveMember", "CsMessaging", new { id = 0 })"
      data-emoji-list-url="~/assets/js/full-emoji-list.json"
      data-active-conversation-id="@(active?.ConversationId)"
      data-current-user-id="@Model.CurrentUserId">
@@ -86,15 +90,30 @@
                 </div>
                 <div class="tab-pane fade" id="groups-tab-pane" role="tabpanel" aria-labelledby="groups-tab" tabindex="0">
                     <div class="group-create-panel p-2 border-bottom">
-                        <label class="form-label small mb-1">Create new group</label>
-                        <input id="groupName" class="form-control form-control-sm mb-2" placeholder="Group name" />
-                        <select id="groupMembers" class="form-select form-select-sm mb-2" multiple size="4">
-                            @foreach (var user in Model.EligibleUsers)
-                            {
-                                <option value="@user.UserId">@user.DisplayName</option>
-                            }
-                        </select>
-                        <button type="button" class="btn btn-outline-primary btn-sm w-100" id="createGroupBtn">Create group</button>
+                        <label class="form-label small mb-1">
+                            <strong>Create new group</strong>
+                        </label>
+                        <input id="groupName" class="form-control form-control-sm mb-2" placeholder="Group name (required)" />
+                        <div class="group-members-selector mb-2">
+                            <label class="form-label small mb-1" for="groupMembersContainer">
+                                Members <span class="badge bg-secondary">optional on create</span>
+                            </label>
+                            <div id="groupMembersContainer" class="group-members-list bg-light rounded p-2" style="max-height: 160px; overflow-y: auto; border: 1px solid rgba(0, 0, 0, .1);">
+                                @foreach (var user in Model.EligibleUsers)
+                                {
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input group-member-checkbox" type="checkbox" value="@user.UserId" id="groupMember_@user.UserId" />
+                                        <label class="form-check-label small" for="groupMember_@user.UserId">
+                                            @user.DisplayName
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <small class="text-muted d-block mt-1">✓ Click checkboxes to add members to your group</small>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100" id="createGroupBtn" data-bs-toggle="tooltip" data-bs-title="Create a group with these members">
+                            <i class="bx bx-plus me-1"></i>Create group
+                        </button>
                     </div>
                     <div class="cs-conversation-list" id="groupConversationList">
                         @foreach (var conv in Model.Conversations.Where(c => c.IsGroup))
@@ -151,15 +170,20 @@
                     </span>
                     <div>
                         <div class="fw-semibold" id="chatTitle">@(active?.DisplayName ?? "Select a conversation")</div>
-                        <div class="text-muted small" id="chatMembers">
-                            @if (active is not null)
-                            {
-                                @string.Join(", ", active.Members.Select(m => m.DisplayName))
-                            }
+                                <div class="text-muted small" id="chatMembers">
+                                    @if (active is not null)
+                                    {
+                                        @string.Join(", ", active.Members.Select(m => m.DisplayName))
+                                    }
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
+                        @if (active?.CanManageMembers == true)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="manageGroupBtn" data-bs-toggle="modal" data-bs-target="#groupInfoModal">
+                                <i class="bx bx-group me-1"></i>Manage
+                            </button>
+                        }
             </header>
 
             <div class="chat-content cs-message-thread" id="messageThread">
@@ -217,6 +241,14 @@
                 }
             </div>
 
+            <div id="pastedPreviewWrap" class="cs-attachment-preview-card d-none">
+                <div class="small text-muted mb-1">Attachment preview</div>
+                <div class="d-flex align-items-start gap-2">
+                    <img id="pastedPreviewImg" class="rounded border" alt="Attachment preview" />
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="clearPastedPreviewBtn">Remove</button>
+                </div>
+            </div>
+
             <footer class="chat-footer cs-chat-composer">
                 <input type="file" id="attachmentInput" class="d-none" accept="image/png,image/jpeg,image/jpg,image/webp" />
                 <button type="button" aria-label="attachment" class="btn btn-primary1-light me-2 btn-icon btn-send" id="openAttachmentBtn">
@@ -236,13 +268,6 @@
                     <i class="ri-send-plane-2-line"></i>
                 </button>
                 <span class="text-muted small align-self-center ms-2 d-none d-md-inline" id="pasteHint">Paste screenshot with Ctrl+V</span>
-                <div id="pastedPreviewWrap" class="mt-2 d-none w-100">
-                    <div class="small text-muted mb-1">Attachment preview</div>
-                    <div class="d-flex align-items-start gap-2">
-                        <img id="pastedPreviewImg" class="rounded border" alt="Attachment preview" />
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="clearPastedPreviewBtn">Remove</button>
-                    </div>
-                </div>
             </footer>
         </section>
     </div>
@@ -276,6 +301,32 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="groupInfoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title mb-0" id="groupInfoModalTitle">Manage Group</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="small text-muted mb-2 text-uppercase fw-semibold">Current Members</h6>
+                    <ul class="list-unstyled mb-3" id="groupMemberList"></ul>
+                    <h6 class="small text-muted mb-2 text-uppercase fw-semibold">Add Member</h6>
+                    <div class="input-group input-group-sm">
+                        <select id="addMemberSelect" class="form-select">
+                            <option value="">Select user...</option>
+                            @foreach (var user in Model.EligibleUsers)
+                            {
+                                <option value="@user.UserId">@user.DisplayName</option>
+                            }
+                        </select>
+                        <button type="button" class="btn btn-primary" id="addMemberBtn">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @section Scripts {
@@ -339,6 +390,33 @@
 
         .group-create-panel {
             background: rgba(79, 70, 229, .03);
+        }
+
+        .group-members-selector {
+            position: relative;
+        }
+
+        .group-members-list {
+            border-radius: 0.375rem;
+        }
+
+        .group-members-list .form-check {
+            margin-bottom: 0.5rem;
+        }
+
+        .group-members-list .form-check:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-members-list .form-check-label {
+            cursor: pointer;
+            user-select: none;
+            padding-left: 0.25rem;
+        }
+
+        .group-members-selector small {
+            font-style: italic;
+            opacity: 0.9;
         }
 
         .contacts-list-wrap {
@@ -471,6 +549,35 @@
             opacity: .95;
         }
 
+        .cs-msg-actions {
+            display: inline-flex;
+            gap: .15rem;
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .cs-msg-row:hover .cs-msg-actions { opacity: 1; }
+
+        .btn-msg-edit,
+        .btn-msg-delete {
+            background: none;
+            border: none;
+            padding: 0 3px;
+            cursor: pointer;
+            font-size: .8rem;
+            color: rgba(255, 255, 255, .7);
+            line-height: 1;
+        }
+
+        .cs-msg-row.theirs .btn-msg-edit,
+        .cs-msg-row.theirs .btn-msg-delete {
+            color: rgba(0, 0, 0, .4);
+        }
+
+        .btn-msg-edit:hover { color: #fff; }
+        .btn-msg-delete:hover { color: #fca5a5; }
+        .cs-msg-edited { font-size: .68rem; opacity: .8; }
+
         .reaction-container {
             display: flex;
             flex-wrap: wrap;
@@ -511,14 +618,15 @@
             padding: .5rem .95rem;
         }
 
-        #pastedPreviewWrap {
-            grid-column: 1 / -1;
-            margin-top: .25rem !important;
-            padding-top: .35rem;
-            border-top: 1px dashed rgba(0, 0, 0, .08);
+        .cs-attachment-preview-card {
+            margin: .5rem .75rem 0;
+            padding: .6rem .75rem;
+            border: 1px dashed rgba(0, 0, 0, .12);
+            border-radius: .6rem;
+            background: rgba(79, 70, 229, .03);
         }
 
-        #pastedPreviewWrap .d-flex {
+        .cs-attachment-preview-card .d-flex {
             flex-wrap: wrap;
         }
 
@@ -598,6 +706,10 @@
 
             .chat-footer {
                 grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+            }
+
+            .cs-attachment-preview-card {
+                margin: .5rem;
             }
 
             #pasteHint {

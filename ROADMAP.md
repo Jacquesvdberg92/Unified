@@ -348,12 +348,19 @@
 
 ---
 
-## Phase 5 – CS-to-CS Direct Messaging & Group Chat
+## Phase 5 – CS-to-CS Direct Messaging & Group Chat `[~ IN PROGRESS — LIMITED SCOPE]`
 
 > Real-time direct messaging between CS agents and private group chats.  
 > Messages persist in DB with configurable archival (60-day or 300-message cap per conversation).  
 > File/image sharing supported (7-day retention). Group creation limits: 3 per agent, 5 per TL, 10 per manager.  
 > @mentions trigger notifications (Phase 3). Built on SignalR for real-time push.
+> 
+> **Known Limitations (To Be Addressed):**
+> - **Group management after creation is deferred** — members cannot be added/removed from groups after creation; group info modal not yet implemented
+> - **Message editing/deletion deferred** — messages cannot be edited or deleted after send
+> - **File attachments deferred** — only images/GIFs via paste or search; no file upload dialog yet
+> - **Mention notifications deferred** — Phase 3 (Notification System) is blocked, so @mention push notifications not yet working
+> - **Message archival service deferred** — background cleanup service not yet implemented
 
 ### Architecture Decisions
 - [!] Real-time: **SignalR** — extend existing hub pattern from Phase 1d for message push
@@ -378,37 +385,50 @@
 - [x] `POST /CsMessaging/StartDirect/{userId}` — initiate 1:1 conversation (or return existing)
 - [x] `POST /CsMessaging/CreateGroup` — create new group (name, members list); enforce group creation limits (3/5/10 per role); return `ConversationId`
 - [x] `POST /CsMessaging/AddMessage/{id}` — post message to conversation; parse @mentions, extract attachment refs; broadcast via SignalR
-- [ ] `POST /CsMessaging/UploadAttachment` — multipart file upload; validate MIME type + size (max 5 MB); store and return attachment ref
-- [ ] `POST /CsMessaging/EditMessage/{id}` — edit own message (within 5 min window); mark as edited; broadcast update via SignalR
-- [ ] `POST /CsMessaging/DeleteMessage/{id}` — soft-delete own message (or admin/group creator); broadcast deletion via SignalR
-- [ ] `POST /CsMessaging/AddMember/{conversationId}/{userId}` — add user to group (group creator or manager); re-broadcast conversation state
-- [ ] `POST /CsMessaging/RemoveMember/{conversationId}/{userId}` — remove user from group; broadcast update
+- [x] `POST /CsMessaging/UploadPastedImage` — paste/clipboard image upload; validate MIME type + size (max 5 MB); store under `/uploads/cs-messages/pasted/{userId}/` *(file upload dialog still deferred)*
+- [x] `POST /CsMessaging/ToggleReaction` — add/remove emoji reaction on a message; broadcast `MessageReactionUpdated` via SignalR
+- [x] `GET /CsMessaging/SearchGifs` — Tenor GIF search proxy; returns preview URLs for inline GIF sending
+- [ ] `POST /CsMessaging/UploadAttachment` — multipart file upload dialog; validate MIME type + size (max 5 MB); store and return attachment ref *(deferred)*
+- [ ] `POST /CsMessaging/EditMessage/{id}` — edit own message (within 5 min window); mark as edited; broadcast update via SignalR *(deferred)*
+- [ ] `POST /CsMessaging/DeleteMessage/{id}` — soft-delete own message (or admin/group creator); broadcast deletion via SignalR *(deferred)*
+- [ ] `POST /CsMessaging/AddMember/{conversationId}/{userId}` — add user to group (group creator or manager); re-broadcast conversation state *(deferred)*
+- [ ] `POST /CsMessaging/RemoveMember/{conversationId}/{userId}` — remove user from group; broadcast update *(deferred)*
 - [x] `POST /CsMessaging/MarkRead/{conversationId}` — mark all messages in conversation as read (for unread badge tracking)
 
 ### 5c – Real-Time SignalR Hub (CsMessagingHub)
 - [x] Create `CsMessagingHub` (SignalR hub)
   - Groups: `cs-messaging` (all CS agents), `conv-{conversationId}` (members of each conversation)
-- [ ] Events pushed: `MessageAdded { conversationId, messageId, author, body, mentions[], attachments[], createdAt }`
-- [ ] Events pushed: `MessageUpdated { messageId, body, editedAt }`, `MessageDeleted { messageId }`
-- [ ] Events pushed: `MemberAdded { conversationId, userId, name }`, `MemberRemoved { conversationId, userId }`
-- [ ] Events pushed: `ConversationCreated { conversationId, name, members[] }`
+- [x] Events pushed: `MessageAdded { conversationId, message }` — broadcast on new message
+- [x] Events pushed: `MessageReactionUpdated { conversationId, messageId, emoji, count, reactedByCurrentUser, actorUserId }` — broadcast on reaction toggle
+- [x] Events pushed: `ConversationChanged { conversationId }` — broadcast to refresh sidebar on new message / new conversation
+- [x] Events pushed: `ConversationReadUpdated { conversationId, readerUserId }` — broadcast on mark-read
+- [ ] Events pushed: `MessageUpdated { messageId, body, editedAt }`, `MessageDeleted { messageId }` *(deferred — edit/delete not yet implemented)*
+- [ ] Events pushed: `MemberAdded { conversationId, userId, name }`, `MemberRemoved { conversationId, userId }` *(deferred — group management not yet implemented)*
+- [ ] Events pushed: `ConversationCreated { conversationId, name, members[] }` *(partial — ConversationChanged used instead)*
 - [x] Register hub in `Program.cs` at `/hubs/cs-messaging`
 
 ### 5d – Client JS & Real-Time UI
-- [x] Create `wwwroot/js/cs-messaging.js` — connect to hub, handle all push events (message add/update/delete, member add/remove)
-- [ ] Message thread: append/update/remove DOM elements in real time; no page reload required
+- [x] Create `wwwroot/js/cs-messaging.js` — connect to hub, handle all push events (message add, reaction update, conversation changed/read)
+- [x] Message thread: append new message DOM elements in real time via `MessageAdded` event; no page reload required
 - [x] Unread badge: track unread message count per conversation (via server-side last-read timestamp)
-- [ ] Typing indicator (optional): show *"Agent X is typing..."* via hub event
-- [ ] @mention autocomplete: as user types `@`, show dropdown of conversation members
+- [x] @mention autocomplete: as user types `@`, show dropdown of conversation members (client-side filtering of member list)
+- [x] Emoji reactions: reaction picker popover on messages; toggle reactions; live count updates via `MessageReactionUpdated`
+- [x] GIF picker: modal with Tenor search; inline GIF sending via URL in message body
+- [x] Paste-to-send images: clipboard paste captures image, uploads via `UploadPastedImage`, previews before send
+- [ ] Typing indicator (optional): show *"Agent X is typing..."* via hub event *(deferred)*
+- [ ] Update/remove message DOM elements in real time for edit/delete events *(deferred — depends on edit/delete backend)*
 
 ### 5e – Views & UI
 - [x] `Views/CsMessaging/Index.cshtml` — main messaging hub (sidebar: conversations list, main panel: thread + input form)
 - [x] `GET /CsMessaging` — controller action rendering Index view
 - [x] Conversation list: active/inactive badge, unread count, last message preview, last-message timestamp
-- [ ] Message thread: author name, timestamp, body (with @mention links), attachment thumbnails, edit/delete buttons (own messages only)
-- [ ] Input form: textarea (max 5000 chars), file upload button, send button; show attachment list before send
-- [ ] Group info modal: name, member list, add/remove member buttons (creator only), archive/leave group buttons
-- [x] Sidebar: add "Direct Messages" link under CS Support section (visible to all CS roles)
+- [x] **Group creation UI improved** — replaced native multi-select with clear checkbox list (no CTRL/Cmd required); added labels and helpful instructions
+- [x] Message thread: author name, timestamp, body (with @mention highlighting), emoji reactions, inline GIF/image support
+- [x] Input form: textarea (max 5000 chars), emoji picker, GIF picker, paste-to-send image; send button; pasted image preview before send
+- [ ] Edit/delete buttons on own messages *(deferred — depends on EditMessage/DeleteMessage backend)*
+- [ ] File upload button in input form *(deferred — UploadAttachment endpoint not yet implemented)*
+- [ ] **Group info modal deferred** — name, member list, add/remove member buttons (creator only), archive/leave group buttons *(depends on backend add/remove endpoints)*
+- [x] Sidebar: "Direct Messages" link under CS Support section (visible to all CS roles) with recent conversation list and unread badges
 
 ### 5f – Message Archival & File Cleanup
 - [ ] Create `CsMessageArchiveService` (IHostedService) — runs on configurable duty cycle (default: daily)
@@ -418,16 +438,16 @@
 - [ ] Register archive service in `Program.cs`
 
 ### 5g – Controller & Authorization
-- [ ] `[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]` on `CsMessagingController` — block Account Managers
+- [x] `[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]` on `CsMessagingController` — block Account Managers
 - [x] Server-side validation: user membership in conversation before allowing message post/edit/delete
-- [ ] Rate-limiting: max 30 messages per user per minute (prevent chat spam)
-- [ ] Audit log: optional — track group creation, member adds/removes for compliance
+- [ ] Rate-limiting: max 30 messages per user per minute (prevent chat spam) *(deferred)*
+- [ ] Audit log: optional — track group creation, member adds/removes for compliance *(deferred)*
 
 ### 5h – @Mention & Notification Integration (Phase 3 Dependency)
-- [ ] Parse message body for `@{displayName}` syntax (case-insensitive matching to user list)
-- [ ] For each @mention, trigger `NotificationService` (Phase 3) — create notification for mentioned user
-- [ ] Notification type: "Mentioned in Direct Message" or "Mentioned in Group: {groupName}"
-- [ ] Render @mentions in message thread as links (or highlighted spans) pointing to that user's profile
+- [x] Parse message body for `@{displayName}` syntax (client-side autocomplete + insertion; stored in message body)
+- [ ] For each @mention, trigger `NotificationService` (Phase 3) — create notification for mentioned user *(blocked on Phase 3)*
+- [ ] Notification type: "Mentioned in Direct Message" or "Mentioned in Group: {groupName}" *(blocked on Phase 3)*
+- [ ] Render @mentions in message thread as links (or highlighted spans) pointing to that user's profile *(partial — @mention text is present, link rendering deferred)*
 
 ---
 
@@ -443,4 +463,4 @@
 
 ---
 
-*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP complete | Phase 5 CS-to-CS messaging in progress (emoji, reactions, GIF support live) | Owner: @Jacquesvdberg92*
+*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP complete | Phase 5 CS-to-CS messaging in progress (emoji, reactions, GIF, direct messaging live; group management & file attachments deferred) | Owner: @Jacquesvdberg92*

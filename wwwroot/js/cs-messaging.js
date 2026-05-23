@@ -26,7 +26,6 @@
     const startDirectUserEl = document.getElementById('startDirectUser');
     const startDirectBtn = document.getElementById('startDirectBtn');
     const groupNameEl = document.getElementById('groupName');
-    const groupMembersEl = document.getElementById('groupMembers');
     const createGroupBtn = document.getElementById('createGroupBtn');
     const sendMessageBtn = document.getElementById('sendMessageBtn');
 
@@ -57,18 +56,25 @@
         markRead: app.dataset.markReadUrl,
         gifSearch: app.dataset.gifSearchUrl,
         uploadPaste: app.dataset.uploadPasteUrl,
-        emojiList: app.dataset.emojiListUrl
+        emojiList: app.dataset.emojiListUrl,
+        editMessageBase: app.dataset.editMessageUrlBase,
+        deleteMessageBase: app.dataset.deleteMessageUrlBase,
+        addMemberBase: app.dataset.addMemberUrlBase,
+        removeMemberBase: app.dataset.removeMemberUrlBase
     };
 
     let activeConversationId = parseInt(app.dataset.activeConversationId || '0', 10) || 0;
     const currentUserId = app.dataset.currentUserId || '';
     let activeConversationMembers = [];
+    let activeConversationCanManage = false;
     let reactionPickerTargetMessageId = 0;
     let pastedImageUrl = '';
     let sendingMessage = false;
     let mentionCandidates = [];
     let mentionState = null;
     let emojiPickMode = 'compose';
+    let activeConversationCache = new Map();
+    let markReadTimerId = 0;
     let emojiSet = ['😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😢', '😡', '👍', '👏', '🙌', '🔥', '❤️', '💯', '🎉', '🙏', '👀', '🤝', '✅', '❌', '👑'];
     let emojiCatalog = emojiSet.map(e => ({ emoji: e, search: e.toLowerCase() }));
     const maxEmojiCount = 800;
@@ -137,7 +143,39 @@
         return btn;
     }
 
+    function cacheConversations(conversations) {
+        activeConversationCache = new Map();
+        (conversations || []).forEach(c => {
+            if (c && c.conversationId) {
+                activeConversationCache.set(c.conversationId, { ...c });
+            }
+        });
+    }
+
+    function getCachedConversations() {
+        return Array.from(activeConversationCache.values())
+            .sort((a, b) => {
+                const aTime = a.lastMessageAt ? Date.parse(a.lastMessageAt) : 0;
+                const bTime = b.lastMessageAt ? Date.parse(b.lastMessageAt) : 0;
+                return bTime - aTime;
+            });
+    }
+
+    function updateConversationListItemSnapshot(conversationId, patch) {
+        if (!conversationId || !activeConversationCache.has(conversationId)) return;
+
+        const current = activeConversationCache.get(conversationId);
+        activeConversationCache.set(conversationId, {
+            ...current,
+            ...patch
+        });
+
+        renderConversations(getCachedConversations());
+    }
+
     function renderConversations(conversations) {
+        cacheConversations(conversations);
+
         if (conversationListEl) conversationListEl.innerHTML = '';
         if (groupConversationListEl) groupConversationListEl.innerHTML = '';
 
@@ -173,6 +211,7 @@
             userId: m.userId || '',
             displayName: m.displayName || ''
         }));
+        activeConversationCanManage = !!detail.canManageMembers;
 
         chatMembersEl.textContent = activeConversationMembers.map(m => m.displayName).join(', ');
 
@@ -230,12 +269,20 @@
             ? `<span class="cs-msg-status" title="${m.isReadByAllOthers ? 'Read' : 'Sent'}">${m.isReadByAllOthers ? '✓✓' : '✓'}</span>`
             : '';
 
+        const actionsHtml = (mine && !m.isDeleted)
+            ? `<span class="cs-msg-actions ms-1">` +
+              `<button type="button" class="btn-msg-edit" data-message-id="${m.messageId}" title="Edit"><i class="bx bx-edit-alt"></i></button>` +
+              `<button type="button" class="btn-msg-delete" data-message-id="${m.messageId}" title="Delete"><i class="bx bx-trash"></i></button>` +
+              `</span>`
+            : '';
+
         row.innerHTML =
             `<div class="cs-msg-bubble">` +
                 `<div class="cs-msg-meta">` +
                     `<span class="cs-msg-author">${escapeHtml(m.authorName || 'User')}</span>` +
                     `<span class="cs-msg-time">${escapeHtml(dateText)}</span>` +
                     statusHtml +
+                    actionsHtml +
                 `</div>` +
                 bodyHtml +
                 `<div class="reaction-container mt-2">` +
@@ -247,10 +294,103 @@
         return row;
     }
 
+    function getMessageRow(messageId) {
+        if (!messageId) return null;
+        return messageThreadEl.querySelector(`.cs-msg-row[data-message-id="${messageId}"]`);
+    }
+
+    function setMessageStatus(row, isRead) {
+        if (!row || !row.classList.contains('mine')) return;
+
+        const statusEl = row.querySelector('.cs-msg-status');
+        if (!statusEl) return;
+
+        statusEl.title = isRead ? 'Read' : 'Sent';
+        statusEl.textContent = isRead ? '✓✓' : '✓';
+    }
+
+    function applyReactionUpdate(evt) {
+        if (!evt || !evt.messageId || !evt.emoji) return;
+
+        const row = getMessageRow(evt.messageId);
+        if (!row) return;
+
+        const container = row.querySelector('.reaction-container');
+        if (!container) return;
+
+        const selector = `.reaction-chip[data-message-id="${evt.messageId}"][data-emoji="${CSS.escape(evt.emoji)}"]`;
+        const chip = container.querySelector(selector);
+
+        if ((evt.count || 0) <= 0) {
+            if (chip) chip.remove();
+            return;
+        }
+
+        const reactedByCurrentUser = evt.actorUserId === currentUserId
+            ? !!evt.reactedByCurrentUser
+            : !!chip?.classList.contains('active');
+
+        if (chip) {
+            chip.classList.toggle('active', reactedByCurrentUser);
+            const countEl = chip.querySelector('span');
+            if (countEl) countEl.textContent = String(evt.count);
+            return;
+        }
+
+        const insertBefore = container.querySelector('.quick-reaction');
+        const newChip = document.createElement('button');
+        newChip.type = 'button';
+        newChip.className = `reaction-chip${reactedByCurrentUser ? ' active' : ''}`;
+        newChip.dataset.messageId = String(evt.messageId);
+        newChip.dataset.emoji = evt.emoji;
+        newChip.innerHTML = `${escapeHtml(evt.emoji)} <span>${evt.count}</span>`;
+
+        if (insertBefore) {
+            container.insertBefore(newChip, insertBefore);
+        } else {
+            container.appendChild(newChip);
+        }
+    }
+
+    function markMineAsReadForDirectConversation(readerUserId) {
+        if (!readerUserId || readerUserId === currentUserId) return;
+        if (activeConversationMembers.length !== 2) return;
+
+        messageThreadEl.querySelectorAll('.cs-msg-row.mine').forEach(row => {
+            setMessageStatus(row, true);
+        });
+    }
+
+    function scheduleMarkRead(conversationId, delayMs) {
+        if (!conversationId) return;
+
+        if (markReadTimerId) {
+            window.clearTimeout(markReadTimerId);
+        }
+
+        markReadTimerId = window.setTimeout(async function () {
+            markReadTimerId = 0;
+            await postJson(urls.markRead, { conversationId });
+        }, Math.max(0, delayMs || 0));
+    }
+
     async function refreshConversations() {
         const data = await getJson(urls.conversations);
         if (!data.success) return;
         renderConversations(data.conversations || []);
+    }
+
+    async function safeJoinConversation(id) {
+        if (!connection || !id) return;
+
+        const state = String(connection.state || '').toLowerCase();
+        if (state !== 'connected') return;
+
+        try {
+            await connection.invoke('JoinConversation', id);
+        } catch {
+            // No-op, conversation remains usable without immediate group join.
+        }
     }
 
     async function loadConversation(id) {
@@ -265,8 +405,9 @@
         });
 
         renderMessages(data.detail);
-        await postJson(urls.markRead, { conversationId: id });
-        await connection.invoke('JoinConversation', id);
+        updateConversationListItemSnapshot(id, { unreadCount: 0 });
+        scheduleMarkRead(id, 0);
+        await safeJoinConversation(id);
 
         hideMentionSuggestions();
 
@@ -304,9 +445,18 @@
                 return false;
             }
 
+            if (data.message) {
+                const preview = (data.message.body || '').trim();
+                const previewText = preview || (data.message.gifUrl ? 'GIF' : 'Message');
+                updateConversationListItemSnapshot(activeConversationId, {
+                    unreadCount: 0,
+                    lastMessagePreview: previewText.length > 80 ? `${previewText.slice(0, 80)}…` : previewText,
+                    lastMessageAt: data.message.createdAt || new Date().toISOString()
+                });
+            }
+
             messageBodyEl.value = '';
             clearPastedPreview();
-            await refreshConversations();
             return true;
         } finally {
             sendingMessage = false;
@@ -342,9 +492,22 @@
     }
 
     async function createGroup() {
-        const members = Array.from(groupMembersEl.selectedOptions).map(o => o.value);
+        const groupName = (groupNameEl.value || '').trim();
+        if (!groupName) {
+            toast('Group name is required.', false);
+            return;
+        }
+
+        const memberCheckboxes = document.querySelectorAll('.group-member-checkbox:checked');
+        const members = Array.from(memberCheckboxes).map(cb => cb.value);
+
+        if (!members.length) {
+            toast('Please select at least one member.', false);
+            return;
+        }
+
         const data = await postJson(urls.createGroup, {
-            name: groupNameEl.value || '',
+            name: groupName,
             memberUserIds: members
         });
 
@@ -354,10 +517,11 @@
         }
 
         groupNameEl.value = '';
-        Array.from(groupMembersEl.options).forEach(o => o.selected = false);
+        document.querySelectorAll('.group-member-checkbox').forEach(cb => cb.checked = false);
 
         await refreshConversations();
         await loadConversation(data.conversationId);
+        toast('Group created successfully.', true);
     }
 
     async function toggleReaction(messageId, emoji) {
@@ -366,6 +530,110 @@
             toast(data.error || 'Failed to update reaction.', false);
             return;
         }
+    }
+
+    async function editMessage(messageId, newBody) {
+        const data = await postJson(withId(urls.editMessageBase, messageId), { body: newBody });
+        if (!data.success) {
+            toast(data.error || 'Failed to edit message.', false);
+            return;
+        }
+    }
+
+    async function deleteMessage(messageId) {
+        const data = await postJson(withId(urls.deleteMessageBase, messageId), {});
+        if (!data.success) {
+            toast(data.error || 'Failed to delete message.', false);
+        }
+    }
+
+    async function addMember(conversationId, userId) {
+        const data = await postJson(withId(urls.addMemberBase, conversationId), { userId });
+        if (!data.success) {
+            toast(data.error || 'Failed to add member.', false);
+            return null;
+        }
+        return data.member;
+    }
+
+    async function removeMember(conversationId, userId) {
+        const form = new URLSearchParams();
+        form.append('userId', userId);
+        const res = await fetch(withId(urls.removeMemberBase, conversationId) + '?' + form.toString(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeaders()
+            }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            toast(data.error || 'Failed to remove member.', false);
+        }
+        return data.success;
+    }
+
+    function applyMessageEdit(message) {
+        const row = getMessageRow(message.messageId);
+        if (!row) return;
+
+        const bodyEl = row.querySelector('.cs-msg-body');
+        if (bodyEl) {
+            bodyEl.textContent = message.body || '';
+        }
+
+        const metaEl = row.querySelector('.cs-msg-meta');
+        if (metaEl && message.isEdited) {
+            let editedTag = metaEl.querySelector('.cs-msg-edited');
+            if (!editedTag) {
+                editedTag = document.createElement('span');
+                editedTag.className = 'cs-msg-edited text-muted ms-1';
+                editedTag.style.fontSize = '.7rem';
+                editedTag.textContent = '(edited)';
+                const timeEl = metaEl.querySelector('.cs-msg-time');
+                if (timeEl) {
+                    timeEl.after(editedTag);
+                } else {
+                    metaEl.appendChild(editedTag);
+                }
+            }
+        }
+    }
+
+    function applyMessageDelete(messageId) {
+        const row = getMessageRow(messageId);
+        if (!row) return;
+
+        const bubble = row.querySelector('.cs-msg-bubble');
+        if (!bubble) return;
+
+        const bodyEl = bubble.querySelector('.cs-msg-body');
+        if (bodyEl) {
+            const deleted = document.createElement('div');
+            deleted.className = 'text-muted fst-italic';
+            deleted.textContent = 'Message deleted';
+            bodyEl.replaceWith(deleted);
+        }
+
+        const gifEl = bubble.querySelector('.cs-msg-gif');
+        if (gifEl) gifEl.remove();
+
+        const actionsEl = row.querySelector('.cs-msg-actions');
+        if (actionsEl) actionsEl.remove();
+    }
+
+    function renderGroupMemberList(members, canManage) {
+        const listEl = document.getElementById('groupMemberList');
+        if (!listEl) return;
+
+        listEl.innerHTML = members.map(m => {
+            const removeBtn = canManage
+                ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-member ms-2" data-user-id="${escapeAttribute(m.userId)}"><i class="bx bx-minus"></i></button>`
+                : '';
+            return `<li class="d-flex align-items-center justify-content-between mb-1" data-member-user-id="${escapeAttribute(m.userId)}">` +
+                `<span>${escapeHtml(m.displayName || m.userId)}</span>${removeBtn}</li>`;
+        }).join('');
     }
 
     async function searchGifs() {
@@ -722,31 +990,84 @@
 
     if (connection) {
         connection.on('MessageAdded', async function (evt) {
-            if (!evt || evt.conversationId !== activeConversationId) return;
-            if (evt.message) {
+            if (!evt) return;
+
+            const isIncomingForActive = evt.conversationId === activeConversationId && evt.message?.authorUserId !== currentUserId;
+            if (evt.conversationId === activeConversationId && evt.message) {
                 messageThreadEl.appendChild(renderMessageCard(evt.message));
                 messageThreadEl.scrollTop = messageThreadEl.scrollHeight;
             }
-            await refreshConversations();
+
+            const preview = (evt.message?.body || '').trim();
+            const previewText = preview || (evt.message?.gifUrl ? 'GIF' : 'Message');
+            const existing = activeConversationCache.get(evt.conversationId);
+            const nextUnread = evt.message?.authorUserId === currentUserId
+                ? (existing?.unreadCount || 0)
+                : (evt.conversationId === activeConversationId ? 0 : ((existing?.unreadCount || 0) + 1));
+
+            updateConversationListItemSnapshot(evt.conversationId, {
+                unreadCount: nextUnread,
+                lastMessagePreview: previewText.length > 80 ? `${previewText.slice(0, 80)}…` : previewText,
+                lastMessageAt: evt.message?.createdAt || new Date().toISOString()
+            });
+
+            if (isIncomingForActive) {
+                scheduleMarkRead(evt.conversationId, 120);
+            }
         });
 
         connection.on('MessageReactionUpdated', async function (evt) {
             if (!evt || evt.conversationId !== activeConversationId) return;
-            await loadConversation(activeConversationId);
+            applyReactionUpdate(evt);
         });
 
         connection.on('ConversationReadUpdated', async function (evt) {
             if (!evt || evt.conversationId !== activeConversationId) return;
-            await loadConversation(activeConversationId);
+            markMineAsReadForDirectConversation(evt.readerUserId);
         });
 
         connection.on('ConversationChanged', async function () {
             await refreshConversations();
         });
 
+        connection.on('MessageEdited', function (evt) {
+            if (!evt || evt.conversationId !== activeConversationId) return;
+            if (evt.message) applyMessageEdit(evt.message);
+        });
+
+        connection.on('MessageDeleted', function (evt) {
+            if (!evt || evt.conversationId !== activeConversationId) return;
+            applyMessageDelete(evt.messageId);
+        });
+
+        connection.on('MemberAdded', function (evt) {
+            if (!evt || evt.conversationId !== activeConversationId) return;
+            if (evt.member && !activeConversationMembers.some(m => m.userId === evt.member.userId)) {
+                activeConversationMembers.push({ userId: evt.member.userId, displayName: evt.member.displayName });
+                chatMembersEl.textContent = activeConversationMembers.map(m => m.displayName).join(', ');
+                renderGroupMemberList(activeConversationMembers, activeConversationCanManage);
+            }
+        });
+
+        connection.on('MemberRemoved', function (evt) {
+            if (!evt || evt.conversationId !== activeConversationId) return;
+            activeConversationMembers = activeConversationMembers.filter(m => m.userId !== evt.userId);
+            chatMembersEl.textContent = activeConversationMembers.map(m => m.displayName).join(', ');
+            renderGroupMemberList(activeConversationMembers, activeConversationCanManage);
+            const listItem = document.querySelector(`#groupMemberList li[data-member-user-id="${CSS.escape(evt.userId)}"]`);
+            if (listItem) listItem.remove();
+        });
+
+        connection.onreconnected(async function () {
+            if (activeConversationId) {
+                await safeJoinConversation(activeConversationId);
+            }
+            await refreshConversations();
+        });
+
         connection.start().then(async function () {
             if (activeConversationId) {
-                await connection.invoke('JoinConversation', activeConversationId);
+                await safeJoinConversation(activeConversationId);
             }
         }).catch(function () {
             toast('Realtime chat connection failed.', false);
@@ -950,7 +1271,7 @@
     });
 
     if (sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', sendMessage);
+        sendMessageBtn.addEventListener('click', function () { sendMessage(); });
     }
 
     if (startDirectBtn) {
@@ -1031,7 +1352,120 @@
         });
     }
 
+    // ── Inline edit / delete on message thread ──────────────────────────────
+
+    messageThreadEl.addEventListener('click', async function (e) {
+        // Edit button
+        const editBtn = e.target.closest('.btn-msg-edit');
+        if (editBtn) {
+            const messageId = parseInt(editBtn.dataset.messageId || '0', 10);
+            if (!messageId) return;
+
+            const row = getMessageRow(messageId);
+            if (!row) return;
+
+            // If already in edit mode, do nothing
+            if (row.querySelector('.inline-edit-form')) return;
+
+            const bodyEl = row.querySelector('.cs-msg-body');
+            if (!bodyEl) return;
+
+            const originalText = bodyEl.textContent || '';
+            const editHtml =
+                `<form class="inline-edit-form d-flex gap-1 mt-1">` +
+                    `<input type="text" class="form-control form-control-sm inline-edit-input" value="${escapeAttribute(originalText)}" />` +
+                    `<button type="submit" class="btn btn-sm btn-primary">Save</button>` +
+                    `<button type="button" class="btn btn-sm btn-secondary btn-cancel-edit">Cancel</button>` +
+                `</form>`;
+            bodyEl.insertAdjacentHTML('afterend', editHtml);
+            const input = row.querySelector('.inline-edit-input');
+            if (input) { input.focus(); input.select(); }
+            return;
+        }
+
+        // Cancel inline edit
+        const cancelBtn = e.target.closest('.btn-cancel-edit');
+        if (cancelBtn) {
+            const form = cancelBtn.closest('.inline-edit-form');
+            if (form) form.remove();
+            return;
+        }
+
+        // Delete button
+        const deleteBtn = e.target.closest('.btn-msg-delete');
+        if (deleteBtn) {
+            const messageId = parseInt(deleteBtn.dataset.messageId || '0', 10);
+            if (!messageId) return;
+
+            if (!window.confirm('Delete this message?')) return;
+            await deleteMessage(messageId);
+            return;
+        }
+    });
+
+    messageThreadEl.addEventListener('submit', async function (e) {
+        const form = e.target.closest('.inline-edit-form');
+        if (!form) return;
+        e.preventDefault();
+
+        const row = form.closest('.cs-msg-row');
+        const messageId = row ? parseInt(row.dataset.messageId || '0', 10) : 0;
+        if (!messageId) return;
+
+        const input = form.querySelector('.inline-edit-input');
+        const newBody = (input?.value || '').trim();
+        if (!newBody) { toast('Message cannot be empty.', false); return; }
+
+        await editMessage(messageId, newBody);
+        form.remove();
+    });
+
+    // ── Group management modal ───────────────────────────────────────────────
+
+    const groupInfoModalEl = document.getElementById('groupInfoModal');
+    if (groupInfoModalEl) {
+        groupInfoModalEl.addEventListener('show.bs.modal', function () {
+            renderGroupMemberList(activeConversationMembers, activeConversationCanManage);
+        });
+
+        groupInfoModalEl.addEventListener('click', async function (e) {
+            // Remove member
+            const removeBtn = e.target.closest('.btn-remove-member');
+            if (removeBtn) {
+                const userId = removeBtn.dataset.userId || '';
+                if (!userId || !activeConversationId) return;
+
+                if (!window.confirm('Remove this member from the group?')) return;
+                await removeMember(activeConversationId, userId);
+                return;
+            }
+        });
+
+        const addMemberBtn = document.getElementById('addMemberBtn');
+        const addMemberSelect = document.getElementById('addMemberSelect');
+        if (addMemberBtn && addMemberSelect) {
+            addMemberBtn.addEventListener('click', async function () {
+                const userId = addMemberSelect.value || '';
+                if (!userId || !activeConversationId) {
+                    toast('Please select a user.', false);
+                    return;
+                }
+
+                const member = await addMember(activeConversationId, userId);
+                if (member) {
+                    toast(`${member.displayName} added to the group.`, true);
+                    addMemberSelect.value = '';
+                    renderGroupMemberList(activeConversationMembers, activeConversationCanManage);
+                }
+            });
+        }
+    }
+
     loadEmojiSetAsync().then(function () {
         renderEmojiPicker();
     });
+
+    if (activeConversationId) {
+        loadConversation(activeConversationId);
+    }
 })();
