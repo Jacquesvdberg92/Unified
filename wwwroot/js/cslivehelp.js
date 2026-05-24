@@ -311,6 +311,106 @@
     connection.onreconnecting(() => showToastMsg('Board reconnecting\u2026', false));
     connection.onreconnected(() => showToastMsg('Board reconnected.', true));
 
+    // ── Notification Events ──────────────────────────────────────────────────
+
+    /**
+     * Handle request notifications (new request, escalation, etc.)
+     */
+    connection.on('RequestNotification', function (data) {
+        if (typeof NotificationManager === 'undefined') {
+            console.warn('NotificationManager not available');
+            return;
+        }
+
+        const contextType = data.contextType || 'Board';
+        const notificationTitle = data.type === 'newRequest' ? 'New Request' : 
+                                  data.type === 'escalated' ? 'Request Escalated' : 'Request Update';
+        const notificationMessage = data.brandName ? `${data.brandName} - ${data.requestType}` : 'New request created';
+
+        // Determine if notification should be triggered based on page context and mute settings
+        const shouldNotify = !NotificationManager.isMuted(contextType);
+
+        if (shouldNotify) {
+            NotificationManager.handleNotification({
+                type: data.type,
+                contextType: contextType,
+                contextId: data.requestId,
+                title: notificationTitle,
+                message: notificationMessage,
+                sound: true,
+                visual: true,
+                toast: true,
+                callback: function (result) {
+                    console.log(`[CsLiveHelp] ${notificationTitle}:`, data, 'Sound played:', result.playedSound);
+                }
+            });
+        }
+    });
+
+    /**
+     * Handle comment notifications
+     */
+    connection.on('CommentNotification', function (data) {
+        if (typeof NotificationManager === 'undefined') {
+            console.warn('NotificationManager not available');
+            return;
+        }
+
+        const contextType = data.contextType || 'Board';
+        const notificationTitle = 'New Comment';
+        const notificationMessage = `${data.author} commented on request #${data.requestId}`;
+
+        const shouldNotify = !NotificationManager.isMuted(contextType, data.requestId);
+
+        if (shouldNotify) {
+            NotificationManager.handleNotification({
+                type: 'comment',
+                contextType: contextType,
+                contextId: data.requestId,
+                title: notificationTitle,
+                message: notificationMessage,
+                sound: true,
+                visual: true,
+                toast: true,
+                callback: function (result) {
+                    console.log(`[CsLiveHelp] Comment from ${data.author}:`, data, 'Sound played:', result.playedSound);
+                }
+            });
+        }
+    });
+
+    /**
+     * Handle mention notifications (internal comments with mentions)
+     */
+    connection.on('MentionNotification', function (data) {
+        if (typeof NotificationManager === 'undefined') {
+            console.warn('NotificationManager not available');
+            return;
+        }
+
+        const contextType = data.contextType || 'RequestsAllBrands';
+        const notificationTitle = 'You were mentioned';
+        const notificationMessage = `${data.author} mentioned you in request #${data.requestId}`;
+
+        const shouldNotify = !NotificationManager.isMuted(contextType);
+
+        if (shouldNotify) {
+            NotificationManager.handleNotification({
+                type: 'mention',
+                contextType: contextType,
+                contextId: data.requestId,
+                title: notificationTitle,
+                message: notificationMessage,
+                sound: true,
+                visual: true,
+                toast: true,
+                callback: function (result) {
+                    console.log(`[CsLiveHelp] Mention from ${data.author}:`, data, 'Sound played:', result.playedSound);
+                }
+            });
+        }
+    });
+
     connection.start()
         .catch(err => console.warn('[CsLiveHelp] SignalR connection failed:', err));
 

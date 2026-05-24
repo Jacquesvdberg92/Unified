@@ -1035,6 +1035,11 @@ function checkHoriMenu() {
   let mainContainer1 = document.querySelector(".main-sidebar");
   let slideLeft = document.querySelector(".slide-left");
   let slideRight = document.querySelector(".slide-right");
+
+  if (!menuNav || !mainContainer1 || !slideLeft || !slideRight) {
+    return;
+  }
+
   let marginLeftValue = Math.ceil(
     Number(window.getComputedStyle(menuNav).marginLeft.split("px")[0])
   );

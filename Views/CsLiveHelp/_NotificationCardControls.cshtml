@@ -1,0 +1,37 @@
+@{
+    // Notification Card Controls Partial
+    // Usage: Include in card templates as @Html.PartialAsync("_NotificationCardControls", new { RequestId = Model.Id, PageContext = "Requests" })
+
+    var requestId = ViewData["RequestId"] as string;
+    var pageContext = ViewData["PageContext"] as string ?? "Board";
+    var showClear = ViewData.ContainsKey("ShowClear") ? (bool)ViewData["ShowClear"] : true;
+}
+
+@if (!string.IsNullOrEmpty(requestId))
+{
+    <div class="notification-card-controls d-flex gap-1 align-items-center mt-2 pt-2 border-top small"
+         data-notification-context="@pageContext"
+         data-notification-id="@requestId">
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary notification-card-mute-btn"
+                data-notification-mute-btn="@pageContext"
+                data-notification-context-id="@requestId"
+                title="Mute notifications for this request"
+                aria-label="Mute notifications for request @requestId">
+            <i class="ri-notification-2-line"></i>
+            <span class="ms-1 d-none d-lg-inline">Mute notifications</span>
+        </button>
+        @if (showClear)
+        {
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    data-notification-clear-context="@pageContext"
+                    data-notification-clear-id="@requestId"
+                    title="Clear notifications for this request"
+                    aria-label="Clear notifications for request @requestId">
+                <i class="ri-delete-bin-line"></i>
+                <span class="ms-1 d-none d-lg-inline">Clear</span>
+            </button>
+        }
+    </div>
+}

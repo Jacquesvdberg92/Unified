@@ -1,0 +1,406 @@
+@using Unified.Models.Identity
+@model AppUser
+
+@{
+    ViewData["Title"] = "Notification Preferences";
+    Layout = "_Layout";
+}
+
+<div class="container-xl">
+    <!-- Page Header -->
+    <div class="page-header d-print-none mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Notification Preferences
+                </h2>
+            </div>
+            <div class="col-auto">
+                <a href="/Profile" class="btn btn-secondary">
+                    <i class="ri-arrow-left-line me-1"></i>Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-12 col-lg-8 offset-lg-2">
+                <!-- Audio Notification Card -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="ri-volume-up-line me-2"></i>Audio Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Enable Audio Notifications</label>
+                                <p class="text-muted small mb-0">Play a sound when you receive new messages</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="audioNotificationsEnabled" 
+                                           data-pref="audioNotificationsEnabled" 
+                                           onchange="saveNotificationPreference('audioNotificationsEnabled', this.checked)">
+                                    <label class="form-check-label" for="audioNotificationsEnabled"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Volume Level</label>
+                                <p class="text-muted small mb-0">Adjust the volume for notification sounds</p>
+                            </div>
+                            <div class="col-auto" style="width: 200px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ri-volume-mute-line"></i>
+                                    <input type="range" class="form-range" id="audioVolume" 
+                                           min="0" max="100" value="50"
+                                           data-pref="audioVolume"
+                                           onchange="saveNotificationPreference('audioVolume', this.value)">
+                                    <i class="ri-volume-up-line"></i>
+                                </div>
+                            </div>
+                            <div class="col-auto ms-2">
+                                <span id="volumeDisplay" class="badge bg-primary">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <button type="button" class="btn btn-sm btn-primary" id="testAudioBtn" onclick="testNotificationSound()">
+                                    <i class="ri-play-line me-1"></i>Test Sound
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Notification Card -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="ri-notification-line me-2"></i>Visual Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Desktop Notifications</label>
+                                <p class="text-muted small mb-0">Show desktop notifications for new messages</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="desktopNotificationsEnabled" 
+                                           data-pref="desktopNotificationsEnabled" 
+                                           onchange="saveNotificationPreference('desktopNotificationsEnabled', this.checked)">
+                                    <label class="form-check-label" for="desktopNotificationsEnabled"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Toast Notifications</label>
+                                <p class="text-muted small mb-0">Show toast messages in the corner of your screen</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="toastNotificationsEnabled" 
+                                           data-pref="toastNotificationsEnabled" 
+                                           onchange="saveNotificationPreference('toastNotificationsEnabled', this.checked)">
+                                    <label class="form-check-label" for="toastNotificationsEnabled"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <label class="form-label mb-0">Badge Notifications</label>
+                                <p class="text-muted small mb-0">Show unread count badges on the bell icon</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="badgeNotificationsEnabled" 
+                                           data-pref="badgeNotificationsEnabled" 
+                                           onchange="saveNotificationPreference('badgeNotificationsEnabled', this.checked)">
+                                    <label class="form-check-label" for="badgeNotificationsEnabled"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Filters Card -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="ri-filter-line me-2"></i>Notification Types
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Messages</label>
+                                <p class="text-muted small mb-0">Notify when you receive new messages</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notifyOnMessages" 
+                                           data-pref="notifyOnMessages" 
+                                           onchange="saveNotificationPreference('notifyOnMessages', this.checked)">
+                                    <label class="form-check-label" for="notifyOnMessages"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <label class="form-label mb-0">Mentions</label>
+                                <p class="text-muted small mb-0">Notify when someone mentions you</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notifyOnMentions" 
+                                           data-pref="notifyOnMentions" 
+                                           onchange="saveNotificationPreference('notifyOnMentions', this.checked)">
+                                    <label class="form-check-label" for="notifyOnMentions"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <label class="form-label mb-0">System Notifications</label>
+                                <p class="text-muted small mb-0">Notify about system alerts and updates</p>
+                            </div>
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notifyOnSystemAlerts" 
+                                           data-pref="notifyOnSystemAlerts" 
+                                           onchange="saveNotificationPreference('notifyOnSystemAlerts', this.checked)">
+                                    <label class="form-check-label" for="notifyOnSystemAlerts"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="card">
+                    <div class="card-body">
+                        <div id="preferencesStatus" class="alert alert-info d-none">
+                            <i class="ri-information-line me-2"></i>
+                            <span id="statusMessage">Preferences saved successfully.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize preferences on page load
+        async function initializePreferences() {
+            try {
+                const response = await fetch('/api/notification-preferences/user-settings', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                console.log('Content-Type:', response.headers.get('content-type'));
+
+                // Get response text first to see what we're actually getting
+                const responseText = await response.text();
+                console.log('Raw response length:', responseText.length);
+                console.log('Raw response:', responseText.substring(0, 300));
+
+                if (!response.ok) {
+                    console.error('API Error status:', response.status);
+                    showStatus(`API Error: ${response.status}`, 'danger');
+                    return;
+                }
+
+                // Now parse as JSON
+                if (!responseText || responseText.trim() === '') {
+                    console.log('Empty response, using defaults');
+                    return;
+                }
+
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response was:', responseText.substring(0, 300));
+                    showStatus('Invalid response format from server', 'danger');
+                    return;
+                }
+
+                if (!result.success || !result.data) {
+                    console.log('No user settings found, using defaults', result);
+                    return;
+                }
+
+                const settings = result.data;
+                console.log('Loaded preferences:', settings);
+
+                // Map API properties to UI element IDs
+                const propertyMap = {
+                    'audioNotificationsEnabled': 'audioNotificationsEnabled',
+                    'audioVolume': 'audioVolume',
+                    'desktopNotificationsEnabled': 'desktopNotificationsEnabled',
+                    'toastNotificationsEnabled': 'toastNotificationsEnabled',
+                    'badgeNotificationsEnabled': 'badgeNotificationsEnabled',
+                    'notifyOnMessages': 'notifyOnMessages',
+                    'notifyOnMentions': 'notifyOnMentions',
+                    'notifyOnSystemAlerts': 'notifyOnSystemAlerts'
+                };
+
+                // Apply loaded preferences to UI
+                Object.entries(propertyMap).forEach(([apiKey, elementId]) => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        console.log(`Setting ${elementId} to ${settings[apiKey]}`);
+                        if (element.type === 'checkbox') {
+                            element.checked = settings[apiKey] === true || settings[apiKey] === 'true';
+                        } else if (element.type === 'range') {
+                            element.value = settings[apiKey] || 50;
+                            updateVolumeDisplay(element.value);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing preferences:', error);
+                showStatus('Failed to load preferences: ' + error.message, 'danger');
+            }
+        }
+
+        // Save a single preference
+        async function saveNotificationPreference(key, value) {
+            try {
+                // Convert values to appropriate types
+                let finalValue = value;
+                if (key === 'audioVolume') {
+                    finalValue = parseInt(value, 10);
+                } else if (typeof value === 'string' && (value === 'true' || value === 'false')) {
+                    finalValue = value === 'true';
+                }
+
+                console.log(`Saving preference: ${key} = ${finalValue}`);
+
+                const response = await fetch('/api/notification-preferences/user-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        [key]: finalValue
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response content-type:', response.headers.get('content-type'));
+
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+
+                if (!responseText || responseText.trim() === '') {
+                    showStatus('Empty response from server', 'danger');
+                    console.error('Empty response');
+                    return;
+                }
+
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response was:', responseText.substring(0, 200));
+                    showStatus('Invalid response from server. Check browser console.', 'danger');
+                    return;
+                }
+
+                console.log('Parsed response:', responseData);
+
+                if (!response.ok) {
+                    const errorMessage = responseData?.message || responseData?.error || `Server error: ${response.status}`;
+                    showStatus(errorMessage, 'danger');
+                    console.error('Failed to save preference:', response.status, responseData);
+                    return;
+                }
+
+                // Update UI
+                if (key === 'audioVolume') {
+                    updateVolumeDisplay(value);
+                }
+
+                showStatus('Preference saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving preference:', error);
+                showStatus('Error: ' + error.message, 'danger');
+            }
+        }
+
+        // Update volume display
+        function updateVolumeDisplay(value) {
+            const volumeDisplay = document.getElementById('volumeDisplay');
+            if (volumeDisplay) {
+                volumeDisplay.textContent = value + '%';
+            }
+        }
+
+        // Test notification sound
+        function testNotificationSound() {
+            console.log('Testing notification sound...');
+            if (typeof NotificationSounds !== 'undefined') {
+                NotificationSounds.notify('notification').then(success => {
+                    if (success) {
+                        showStatus('Sound test played successfully', 'success');
+                    } else {
+                        showStatus('Sound test completed (may have used fallback)', 'info');
+                    }
+                }).catch(error => {
+                    console.error('Sound test error:', error);
+                    showStatus('Sound test failed', 'danger');
+                });
+            } else {
+                showStatus('Notification system not loaded', 'warning');
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('preferencesStatus');
+            const messageSpan = document.getElementById('statusMessage');
+
+            if (statusDiv && messageSpan) {
+                statusDiv.className = `alert alert-${type}`;
+                messageSpan.textContent = message;
+                statusDiv.classList.remove('d-none');
+
+                setTimeout(() => {
+                    statusDiv.classList.add('d-none');
+                }, 3000);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializePreferences);
+    </script>
+}

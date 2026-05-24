@@ -1,0 +1,186 @@
+/* Notification System Styles */
+
+/* Notification Glow Effect */
+@keyframes notification-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+    }
+}
+
+.notification-glow {
+    animation: notification-glow 2s ease-out;
+    border: 1px solid rgba(13, 110, 253, 0.5) !important;
+}
+
+/* Notification Bell States */
+.notification-bell-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+[data-notification-bell].has-notifications {
+    color: #dc3545;
+}
+
+[data-notification-bell].has-notifications .header-link-icon {
+    animation: bell-shake 0.5s ease-in-out;
+}
+
+@keyframes bell-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+/* Card Level Indicators */
+.notification-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1;
+    }
+    50% { 
+        opacity: 0.7;
+    }
+}
+
+/* Page Level Indicators */
+.page-notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+[data-page-notifications].has-notifications {
+    border: 2px solid #ffc107;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* Mute Control Buttons */
+.notification-mute-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.notification-mute-btn:hover {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.notification-mute-btn.is-muted {
+    background-color: #e7f1ff;
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.notification-mute-btn i {
+    font-size: 16px;
+}
+
+/* Notification Control Panel */
+.notification-control-panel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.notification-control-panel label {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+/* Notification Settings */
+.notification-settings-dropdown {
+    min-width: 220px;
+}
+
+.notification-settings-item {
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.notification-settings-item:last-child {
+    border-bottom: none;
+}
+
+.notification-settings-item label {
+    margin-bottom: 0;
+    flex: 1;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.notification-settings-item input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Notification Toast Customizations */
+.notification-toast {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification-toast.sound-played {
+    border-left: 4px solid #28a745;
+}
+
+.notification-toast.no-sound {
+    border-left: 4px solid #ffc107;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    [data-notification-bell] {
+        display: none !important;
+    }
+
+    .notification-control-panel {
+        flex-wrap: wrap;
+    }
+
+    .notification-mute-btn {
+        width: 36px;
+        height: 36px;
+    }
+}

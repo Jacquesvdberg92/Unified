@@ -51,4 +51,84 @@ public class CsLiveHelpHub : Hub
 
         await base.OnConnectedAsync();
     }
+
+    /// <summary>
+    /// Broadcast notification with metadata for sound and visual indicators.
+    /// Used by controllers to trigger client-side notifications.
+    /// </summary>
+    public async Task NotifyNewRequest(string requestId, string brandName, string requestType, string actorName)
+    {
+        await Clients.Group("cs-board").SendAsync("RequestNotification", new
+        {
+            type = "newRequest",
+            requestId,
+            brandName,
+            requestType,
+            actor = actorName,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Broadcast comment notification with metadata.
+    /// </summary>
+    public async Task NotifyCommentAdded(string requestId, string author, string contextType = "Board")
+    {
+        // Send to CS board for comment on picked requests
+        await Clients.Group("cs-board").SendAsync("CommentNotification", new
+        {
+            type = "comment",
+            requestId,
+            author,
+            contextType,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Broadcast comment notification to specific AM (for their own requests).
+    /// </summary>
+    public async Task NotifyCommentToAm(string userId, string requestId, string author)
+    {
+        await Clients.Group($"am-{userId}").SendAsync("CommentNotification", new
+        {
+            type = "comment",
+            requestId,
+            author,
+            contextType = "Requests",
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Broadcast request escalation notification.
+    /// </summary>
+    public async Task NotifyRequestEscalated(string requestId, string brandName, string actor)
+    {
+        await Clients.Group("cs-board").SendAsync("RequestNotification", new
+        {
+            type = "escalated",
+            requestId,
+            brandName,
+            actor,
+            contextType = "RequestsAllBrands",
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    /// <summary>
+    /// Broadcast internal-only comment notification (for internal teams).
+    /// </summary>
+    public async Task NotifyInternalComment(string requestId, string author, string teamId = null)
+    {
+        await Clients.Group("cs-board").SendAsync("CommentNotification", new
+        {
+            type = "internalComment",
+            requestId,
+            author,
+            teamId,
+            contextType = "RequestsAllBrands",
+            timestamp = DateTime.UtcNow
+        });
+    }
 }

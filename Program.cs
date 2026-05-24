@@ -136,6 +136,9 @@ app.UseMiddleware<ActivityLoggingMiddleware>();
 app.UseAuthorization();
 app.UseSession();
 
+// Map controllers with attribute routing (for API)
+app.MapControllers();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

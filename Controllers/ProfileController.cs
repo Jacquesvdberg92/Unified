@@ -58,6 +58,21 @@ public class ProfileController : Controller
     }
 
     /// <summary>
+    /// GET /Profile/Notifications - View notification preferences
+    /// </summary>
+    [HttpGet("/Profile/Notifications")]
+    public async Task<IActionResult> Notifications()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        return View(user);
+    }
+
+    /// <summary>
     /// POST /Profile/UpdateProfile - Update profile information and avatar
     /// </summary>
     [HttpPost("/Profile/UpdateProfile")]

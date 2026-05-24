@@ -73,6 +73,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<CsRequestComment>    CsRequestComments    => Set<CsRequestComment>();
     public DbSet<CsRequestArchive>    CsRequestArchives    => Set<CsRequestArchive>();
     public DbSet<AmAuditLog>          AmAuditLogs          => Set<AmAuditLog>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<UserNotificationSettings> UserNotificationSettings => Set<UserNotificationSettings>();
 
     // Activity + Error logging
     public DbSet<ActivityLog>         ActivityLogs         => Set<ActivityLog>();

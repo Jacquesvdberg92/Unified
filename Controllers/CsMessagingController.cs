@@ -130,12 +130,19 @@ public class CsMessagingController : Controller
         if (!result.Success || result.Message is null)
             return BadRequest(new { success = false, error = result.Error ?? "Failed to post message." });
 
+        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Message added to conversation {id} by user {userId}");
+
         await _hub.Clients.Group($"conv-{id}").SendAsync("MessageAdded", new
         {
             conversationId = id,
             message = result.Message
         });
+
+        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Broadcast MessageAdded to group conv-{id}");
+
         await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
+
+        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Broadcast ConversationChanged to cs-messaging group");
 
         return Json(new { success = true, message = result.Message });
     }

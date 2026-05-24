@@ -992,8 +992,11 @@
         connection.on('MessageAdded', async function (evt) {
             if (!evt) return;
 
+            console.log(`[SignalR] MessageAdded event received:`, evt);
+
             const isIncomingForActive = evt.conversationId === activeConversationId && evt.message?.authorUserId !== currentUserId;
             if (evt.conversationId === activeConversationId && evt.message) {
+                console.log(`[SignalR] Rendering message for active conversation`, evt.conversationId);
                 messageThreadEl.appendChild(renderMessageCard(evt.message));
                 messageThreadEl.scrollTop = messageThreadEl.scrollHeight;
             }
@@ -1005,6 +1008,7 @@
                 ? (existing?.unreadCount || 0)
                 : (evt.conversationId === activeConversationId ? 0 : ((existing?.unreadCount || 0) + 1));
 
+            console.log(`[SignalR] Updating conversation list for conv-${evt.conversationId}, unread: ${nextUnread}`);
             updateConversationListItemSnapshot(evt.conversationId, {
                 unreadCount: nextUnread,
                 lastMessagePreview: previewText.length > 80 ? `${previewText.slice(0, 80)}…` : previewText,
@@ -1013,6 +1017,21 @@
 
             if (isIncomingForActive) {
                 scheduleMarkRead(evt.conversationId, 120);
+            }
+
+            // Trigger notification for incoming messages when not viewing that conversation
+            if (typeof NotificationManager !== 'undefined' && evt.message?.authorUserId !== currentUserId && evt.conversationId !== activeConversationId) {
+                const authorName = evt.message?.authorUser?.displayName || 'Someone';
+                NotificationManager.handleNotification({
+                    type: 'newMessage',
+                    contextType: 'CsMessaging',
+                    contextId: String(evt.conversationId),
+                    title: `New message from ${authorName}`,
+                    message: previewText.length > 60 ? `${previewText.slice(0, 60)}…` : previewText,
+                    sound: true,
+                    visual: true,
+                    toast: true
+                });
             }
         });
 
