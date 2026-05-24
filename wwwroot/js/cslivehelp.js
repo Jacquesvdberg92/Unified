@@ -110,13 +110,26 @@
     const hasAnyBoardColumn = !!document.querySelector('[id^="col-"]');
     const hasEscalatedColumn = !!document.getElementById('col-Escalated');
 
+    /**
+     * Map status to the correct column for display.
+     * On AM Requests page: Escalated → InProgress (no separate Escalated column)
+     * On CS Board and All Brands: status → status (all columns exist)
+     * 
+     * If the column doesn't exist, log a warning (helps catch stale state or bugs).
+     */
     function statusColumn(status) {
-        // On the AM Requests page there is no Escalated or OnGoing column —
-        // map both to InProgress so the card stays visible.
-        if (!document.getElementById('col-' + status)) {
-            if (document.getElementById('col-InProgress')) return 'InProgress';
+        // On the AM Requests page (Requests.cshtml), there is no separate Escalated column.
+        // Escalated cards should appear in the "In Progress / Escalated" column.
+        // Note: OnGoing status also doesn't exist on AM page, but is rarely emitted for AM cards.
+        const mappedStatus = (!hasEscalatedColumn && status === 'Escalated') ? 'InProgress' : status;
+
+        const colEl = document.getElementById('col-' + mappedStatus);
+        if (!colEl && hasAnyBoardColumn) {
+            // The column element is missing; warn for debugging
+            console.warn('[CsLiveHelp] Column col-' + mappedStatus + ' not found (status=' + status + ')');
         }
-        return status;
+
+        return mappedStatus;
     }
 
     // ── SignalR connection ───────────────────────────────────────────────────
@@ -134,13 +147,48 @@
         return false;
     }
 
-    const connection = new signalR.HubConnectionBuilder()
+     const connection = new signalR.HubConnectionBuilder()
         .withUrl('/hubs/cslivehelp')
         .withAutomaticReconnect()
         .build();
 
     // Expose so simulation panel JS (Board.cshtml) can register SimulationStep
     window.csHub = connection;
+
+    // ── Connection state tracking for debugging and recovery ──────────────────
+
+    window.csConnectionState = {
+        isConnected: false,
+        attemptedCount: 0,
+        lastError: null,
+        connectedAt: null,
+        disconnectedAt: null
+    };
+
+    connection.onreconnecting((err) => {
+        window.csConnectionState.lastError = err?.message || 'Unknown error';
+        window.csConnectionState.attemptedCount++;
+        const msg = `Board reconnecting (attempt ${window.csConnectionState.attemptedCount})…`;
+        console.warn('[CsLiveHelp]', msg, err);
+        showToastMsg(msg, false);
+    });
+
+    connection.onreconnected(() => {
+        window.csConnectionState.isConnected = true;
+        window.csConnectionState.connectedAt = new Date();
+        window.csConnectionState.attemptedCount = 0;
+        window.csConnectionState.lastError = null;
+        console.log('[CsLiveHelp] SignalR connection restored');
+        showToastMsg('Board reconnected.', true);
+        // Optionally: fetch updated card state here if needed (uncomment if desired)
+    });
+
+    connection.onclose((err) => {
+        window.csConnectionState.isConnected = false;
+        window.csConnectionState.disconnectedAt = new Date();
+        window.csConnectionState.lastError = err?.message || 'Unknown error';
+        console.warn('[CsLiveHelp] SignalR connection closed:', err);
+    });
 
     // ── Event: CardStatusChanged ─────────────────────────────────────────────
 
@@ -265,64 +313,169 @@
 
     // ── Event: CommentAdded ──────────────────────────────────────────────────
 
+    /**
+     * Hardened thread body detection that tries all known modal patterns.
+     * Returns the thread-body element if found, or null.
+     * Works across all three pages: Board, Requests, and RequestsAllBrands.
+     * 
+     * NOTE: Do NOT rely on visibility checks (offsetParent). The thread body
+     * may be inside a hidden modal, but we still need to append comments to it.
+     */
+    function findThreadBodyElement(requestId) {
+        // Pattern 1: CS Board comment modal with .thread-body (csCommentModal-{id} .thread-body)
+        let threadBody = document.querySelector('#csCommentModal-' + requestId + ' .thread-body');
+        if (threadBody) return threadBody;
+
+        // Pattern 2: Internal board comment modal with .thread-body (intCommentModal-{id} .thread-body)
+        threadBody = document.querySelector('#intCommentModal-' + requestId + ' .thread-body');
+        if (threadBody) return threadBody;
+
+        // Pattern 3: AM Requests comment modal with .thread-body (commentModal-{id} .thread-body)
+        threadBody = document.querySelector('#commentModal-' + requestId + ' .thread-body');
+        if (threadBody) return threadBody;
+
+        // Pattern 4: Internal board comment modal with .border.rounded fallback (intCommentModal-{id} .modal-body .border.rounded)
+        threadBody = document.querySelector('#intCommentModal-' + requestId + ' .modal-body .border.rounded');
+        if (threadBody) return threadBody;
+
+        // Pattern 5: Fallback "No comments yet" placeholder as <p id="threadBody-{id}">
+        threadBody = document.getElementById('threadBody-' + requestId);
+        if (threadBody && (threadBody.tagName === 'P' || threadBody.tagName === 'DIV')) return threadBody;
+
+        // Pattern 6: If no .thread-body exists, look for .modal-body directly
+        // This is a fallback for modals that may not have a dedicated thread container yet
+        const modal = document.getElementById('csCommentModal-' + requestId) 
+            || document.getElementById('commentModal-' + requestId)
+            || document.getElementById('intCommentModal-' + requestId);
+
+        if (modal) {
+            const modalBody = modal.querySelector('.modal-body');
+            if (modalBody) {
+                // Create a thread body if one doesn't exist
+                threadBody = document.createElement('div');
+                threadBody.className = 'thread-body mb-3 border rounded p-2 small';
+                threadBody.style.cssText = 'max-height:260px;overflow-y:auto';
+                threadBody.id = 'threadBody-' + requestId;
+
+                // Insert before the textarea or at the start of modal-body
+                const textarea = modalBody.querySelector('textarea');
+                if (textarea) {
+                    modalBody.insertBefore(threadBody, textarea.parentElement);
+                } else {
+                    modalBody.insertBefore(threadBody, modalBody.firstChild);
+                }
+                return threadBody;
+            }
+        }
+
+        return null;
+    }
+
     connection.on('CommentAdded', function (data) {
-        const card = cardEl(data.requestId);
+        const requestId = data.requestId;
+
+        // Update card comment count badge (supports both .comment-count and .int-comment-count)
+        const card = cardEl(requestId);
         if (card) {
-            const countBadge = card.querySelector('.comment-count');
+            // Try both selectors: .comment-count (Board/Requests) and .int-comment-count (Internal)
+            let countBadge = card.querySelector('.comment-count');
+            if (!countBadge) countBadge = card.querySelector('.int-comment-count');
+
             if (countBadge) {
+                // Badge exists: increment it
                 const n = parseInt(countBadge.textContent, 10) || 0;
                 countBadge.textContent = n + 1;
+                // Show comment count link if it was hidden (no previous comments)
+                const countBtn = card.querySelector('.comment-count-btn');
+                if (!countBtn) {
+                    // For internal cards that may not have comment-count-btn initially
+                    const commentBtn = card.querySelector('[data-bs-target*="CommentModal"]');
+                    if (commentBtn) commentBtn.style.display = '';
+                }
+                if (countBtn) countBtn.style.display = '';
+            } else {
+                // Badge doesn't exist: first comment being added
+                // Need to create the comment count button and badge
+                const cardBody = card.querySelector('.card-body') || card;
+                if (cardBody) {
+                    // Find where to insert (after description/assignment info, before timestamp)
+                    let insertAfter = cardBody.querySelector('[style*="font-size:.72rem"]');
+                    if (!insertAfter) insertAfter = cardBody.querySelector('.text-muted');
+
+                    if (!insertAfter) {
+                        // If no timestamp found, insert at the end of card body
+                        insertAfter = cardBody.lastElementChild;
+                    }
+
+                    if (insertAfter) {
+                        const buttonDiv = document.createElement('div');
+                        buttonDiv.className = 'mt-1';
+                        const targetModalId = card.querySelector('[data-bs-target*="CommentModal"]')?.getAttribute('data-bs-target') || '#commentModal-' + requestId;
+                        buttonDiv.innerHTML = '<button class="btn btn-link btn-sm p-0 text-muted comment-count-btn" style="font-size:.72rem" data-bs-toggle="modal" data-bs-target="' + targetModalId + '" title="View thread"><i class="bx bx-comment me-1"></i><span class="comment-count">1</span> comment(s) — View thread</button>';
+
+                        insertAfter.parentElement.insertBefore(buttonDiv, insertAfter);
+                        console.log('[CsLiveHelp] Created comment count button for first comment on request', requestId);
+                    }
+                }
             }
-            // Show comment count link if it was hidden (no previous comments)
-            const countBtn = card.querySelector('.comment-count-btn');
-            if (countBtn) countBtn.style.display = '';
         }
 
-        // Target both CS board thread modals (#threadModal-N) and AM comment modals (#commentModal-N .thread-body).
-        // When there are no prior comments the AM page renders a bare <p id="threadBody-N">
-        // instead of a div.thread-body, so we fall back to that element and upgrade it.
-        let threadBody = document.querySelector('#threadModal-' + data.requestId + ' .thread-body')
-                      ?? document.querySelector('#commentModal-' + data.requestId + ' .thread-body')
-                      ?? document.querySelector('#csCommentModal-' + data.requestId + ' .thread-body')
-                      ?? document.querySelector('#intCommentModal-' + data.requestId + ' .modal-body .border.rounded');
+        // Find or create thread body element
+        let threadBody = findThreadBodyElement(requestId);
 
         if (!threadBody) {
-            // Fallback: "No comments yet" placeholder — replace with a proper thread container
-            const placeholder = document.getElementById('threadBody-' + data.requestId);
-            if (placeholder) {
-                const wrap = document.createElement('div');
-                wrap.className = 'thread-body mb-3 border rounded p-2';
-                wrap.style.cssText = 'max-height:260px;overflow-y:auto';
-                wrap.id = 'threadBody-' + data.requestId;
-                placeholder.replaceWith(wrap);
-                threadBody = wrap;
-            }
+            // If findThreadBodyElement() failed to create one (no modal in DOM yet),
+            // we'll just skip this comment. It will appear when the modal is opened.
+            console.debug('[CsLiveHelp] CommentAdded: thread body not available yet for request', requestId, '(modal may not be open)');
+            return;
         }
 
-        if (threadBody) {
-            const emptyP = threadBody.querySelector('p.text-muted');
-            if (emptyP) emptyP.remove();
-            const dt = new Date(data.createdAt);
-            const ts = isNaN(dt.getTime()) ? '' : dt.toLocaleString();
-            const div = document.createElement('div');
-            div.className = 'mb-2 p-2 rounded ' + (data.isSystem ? 'bg-warning bg-opacity-10' : 'bg-light');
-            div.innerHTML =
-                '<div class="d-flex justify-content-between mb-1">' +
-                    '<strong class="small">' + escHtml(data.author) + '</strong>' +
-                    '<span class="text-muted small">' + escHtml(ts) + '</span>' +
-                '</div>' +
-                '<p class="mb-0 small">' + escHtml(data.body) +
-                (data.isSystem ? ' <span class="badge bg-warning text-dark ms-1">System</span>' : '') + '</p>' +
-                (data.imagePath ? '<div class="mt-2"><a href="' + escHtml(data.imagePath) + '" target="_blank" rel="noopener"><img src="' + escHtml(data.imagePath) + '" alt="Attachment" class="img-fluid rounded" style="max-height:180px"></a></div>' : '');
-            threadBody.appendChild(div);
-            threadBody.scrollTop = threadBody.scrollHeight;
+        // Ensure threadBody is a proper element (not a string or phantom)
+        if (!threadBody.appendChild) {
+            console.warn('[CsLiveHelp] CommentAdded: thread body is not a valid element for request', requestId);
+            return;
         }
+
+        // Upgrade placeholder if this is the first real comment
+        if (threadBody.tagName === 'P') {
+            const wrap = document.createElement('div');
+            wrap.className = 'thread-body mb-3 border rounded p-2 small';
+            wrap.style.cssText = 'max-height:260px;overflow-y:auto';
+            wrap.id = 'threadBody-' + requestId;
+            threadBody.replaceWith(wrap);
+            threadBody = wrap;
+        }
+
+        // Remove "No comments yet" placeholder if present
+        const emptyP = threadBody.querySelector('p.text-muted');
+        if (emptyP) emptyP.remove();
+
+        // Build and append comment HTML
+        const dt = new Date(data.createdAt);
+        const ts = isNaN(dt.getTime()) ? '(timestamp unavailable)' : dt.toLocaleString();
+        const div = document.createElement('div');
+        div.className = 'mb-2 p-2 rounded ' + (data.isSystem ? 'bg-warning bg-opacity-10' : 'bg-light');
+        div.innerHTML =
+            '<div class="d-flex justify-content-between mb-1">' +
+                '<strong class="small">' + escHtml(data.author) + '</strong>' +
+                '<span class="text-muted small">' + escHtml(ts) + '</span>' +
+            '</div>' +
+            '<p class="mb-0 small">' + escHtml(data.body) +
+            (data.isSystem ? ' <span class="badge bg-warning text-dark ms-1">System</span>' : '') + '</p>';
+
+        // Add image/attachment if provided
+        if (data.imagePath) {
+            div.innerHTML +=
+                '<div class="mt-2"><a href="' + escHtml(data.imagePath) + '" target="_blank" rel="noopener">' +
+                '<img src="' + escHtml(data.imagePath) + '" alt="Attachment" class="img-fluid rounded" style="max-height:180px" />' +
+                '</a></div>';
+        }
+
+        threadBody.appendChild(div);
+        threadBody.scrollTop = threadBody.scrollHeight;
+
+        console.log('[CsLiveHelp] Comment added to request', requestId, '— author:', data.author);
     });
-
-    // ── Connection lifecycle ─────────────────────────────────────────────────
-
-    connection.onreconnecting(() => showToastMsg('Board reconnecting\u2026', false));
-    connection.onreconnected(() => showToastMsg('Board reconnected.', true));
 
     // ── Notification Events ──────────────────────────────────────────────────
 
@@ -331,7 +484,7 @@
      */
     connection.on('RequestNotification', function (data) {
         if (typeof NotificationManager === 'undefined') {
-            console.warn('NotificationManager not available');
+            console.log('[CsLiveHelp] NotificationManager not available; skipping notification');
             return;
         }
 
@@ -346,22 +499,26 @@
             ? `${data.brandName}${data.requestType ? ` - ${data.requestType}` : ''}`
             : 'New request created';
 
-        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
+        const shouldNotify = !NotificationManager.isMuted?.(contextType, contextId);
 
         if (shouldNotify) {
-            NotificationManager.handleNotification({
-                type: data.type,
-                contextType: contextType,
-                contextId: contextId,
-                title: notificationTitle,
-                message: notificationMessage,
-                sound: true,
-                visual: true,
-                toast: true,
-                callback: function (result) {
-                    console.log(`[CsLiveHelp] ${notificationTitle}:`, data, 'Sound played:', result.playedSound);
-                }
-            });
+            try {
+                NotificationManager.handleNotification({
+                    type: data.type,
+                    contextType: contextType,
+                    contextId: contextId,
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    sound: true,
+                    visual: true,
+                    toast: true,
+                    callback: function (result) {
+                        console.log(`[CsLiveHelp] ${notificationTitle}:`, data, 'Sound played:', result.playedSound);
+                    }
+                });
+            } catch (err) {
+                console.warn('[CsLiveHelp] NotificationManager.handleNotification failed:', err);
+            }
         }
     });
 
@@ -370,7 +527,7 @@
      */
     connection.on('CommentNotification', function (data) {
         if (typeof NotificationManager === 'undefined') {
-            console.warn('NotificationManager not available');
+            console.log('[CsLiveHelp] NotificationManager not available; skipping notification');
             return;
         }
 
@@ -382,22 +539,26 @@
         const notificationTitle = 'New Comment';
         const notificationMessage = `${data.author} commented on request #${contextId}`;
 
-        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
+        const shouldNotify = !NotificationManager.isMuted?.(contextType, contextId);
 
         if (shouldNotify) {
-            NotificationManager.handleNotification({
-                type: 'comment',
-                contextType: contextType,
-                contextId: contextId,
-                title: notificationTitle,
-                message: notificationMessage,
-                sound: true,
-                visual: true,
-                toast: true,
-                callback: function (result) {
-                    console.log(`[CsLiveHelp] Comment from ${data.author}:`, data, 'Sound played:', result.playedSound);
-                }
-            });
+            try {
+                NotificationManager.handleNotification({
+                    type: 'comment',
+                    contextType: contextType,
+                    contextId: contextId,
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    sound: true,
+                    visual: true,
+                    toast: true,
+                    callback: function (result) {
+                        console.log(`[CsLiveHelp] Comment from ${data.author}:`, data, 'Sound played:', result.playedSound);
+                    }
+                });
+            } catch (err) {
+                console.warn('[CsLiveHelp] NotificationManager.handleNotification failed:', err);
+            }
         }
     });
 
@@ -406,7 +567,7 @@
      */
     connection.on('MentionNotification', function (data) {
         if (typeof NotificationManager === 'undefined') {
-            console.warn('NotificationManager not available');
+            console.log('[CsLiveHelp] NotificationManager not available; skipping notification');
             return;
         }
 
@@ -418,27 +579,40 @@
         const notificationTitle = 'You were mentioned';
         const notificationMessage = `${data.author} mentioned you in request #${contextId}`;
 
-        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
+        const shouldNotify = !NotificationManager.isMuted?.(contextType, contextId);
 
         if (shouldNotify) {
-            NotificationManager.handleNotification({
-                type: 'mention',
-                contextType: contextType,
-                contextId: contextId,
-                title: notificationTitle,
-                message: notificationMessage,
-                sound: true,
-                visual: true,
-                toast: true,
-                callback: function (result) {
-                    console.log(`[CsLiveHelp] Mention from ${data.author}:`, data, 'Sound played:', result.playedSound);
-                }
-            });
+            try {
+                NotificationManager.handleNotification({
+                    type: 'mention',
+                    contextType: contextType,
+                    contextId: contextId,
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    sound: true,
+                    visual: true,
+                    toast: true,
+                    callback: function (result) {
+                        console.log(`[CsLiveHelp] Mention from ${data.author}:`, data, 'Sound played:', result.playedSound);
+                    }
+                });
+            } catch (err) {
+                console.warn('[CsLiveHelp] NotificationManager.handleNotification failed:', err);
+            }
         }
     });
 
     connection.start()
-        .catch(err => console.warn('[CsLiveHelp] SignalR connection failed:', err));
+        .then(() => {
+            window.csConnectionState.isConnected = true;
+            window.csConnectionState.connectedAt = new Date();
+            console.log('[CsLiveHelp] SignalR connection established');
+        })
+        .catch(err => {
+            window.csConnectionState.isConnected = false;
+            window.csConnectionState.lastError = err?.message || 'Connection failed';
+            console.error('[CsLiveHelp] SignalR connection failed:', err);
+        });
 
     // Copy client ID helper for CS/internal cards
     document.addEventListener('click', async function (e) {
@@ -475,16 +649,35 @@
     // commentModal-* (reply form). On success the SignalR events update the DOM;
     // we just close the modal and show a toast.
 
+    /**
+     * Set up AJAX handling for a form element.
+     * Prevents duplicate submissions by disabling the button during the request.
+     * Uses a flag to track if a submission is already in flight.
+     */
     function ajaxFormSetup(formEl, modalEl) {
         if (formEl.dataset.ajaxWired) return;
         formEl.dataset.ajaxWired = '1';
+        formEl.dataset.isSubmitting = '0';
+
         formEl.addEventListener('submit', async function (e) {
             e.preventDefault();
+
+            // Prevent duplicate submissions
+            if (formEl.dataset.isSubmitting === '1') {
+                console.warn('[CsLiveHelp] Form submission already in progress');
+                return;
+            }
+
+            formEl.dataset.isSubmitting = '1';
 
             const fd   = new FormData(formEl);
             const url  = formEl.action || formEl.getAttribute('action');
             const btn  = formEl.querySelector('[type="submit"]');
-            if (btn) { btn.disabled = true; }
+            const originalText = btn?.innerHTML;
+            if (btn) { 
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Submitting…';
+            }
 
             try {
                 const res = await fetch(url, {
@@ -504,13 +697,20 @@
                     }
                     formEl.reset();
                     showToastMsg(data.message ?? 'Done.', true);
+                    console.log('[CsLiveHelp] Form submitted successfully:', url);
                 } else {
                     showToastMsg(data.error ?? 'An error occurred. Please try again.', false);
+                    console.warn('[CsLiveHelp] Form submission error:', data);
                 }
-            } catch (_) {
+            } catch (err) {
                 showToastMsg('Network error. Please try again.', false);
+                console.error('[CsLiveHelp] Form submission network error:', err);
             } finally {
-                if (btn) { btn.disabled = false; }
+                formEl.dataset.isSubmitting = '0';
+                if (btn) { 
+                    btn.disabled = false;
+                    if (originalText) btn.innerHTML = originalText;
+                }
             }
         });
     }
@@ -604,43 +804,29 @@
 
         cleanupStaleModalState();
 
-        // ── Refresh AM comment thread on open ─────────────────────────────
-        // For AM Requests page (commentModal-*), fetch fresh thread HTML
-        // so newly added CS comments appear without page refresh
-        if (modal.id.startsWith('commentModal-')) {
-            const requestId = modal.dataset.requestId;
-            if (requestId) {
-                let threadBody = modal.querySelector('#threadBody-' + requestId);
-                if (threadBody) {
-                    fetch('/CsLiveHelp/AmCommentThread/' + requestId, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(function (res) {
-                        if (!res.ok) return;
-                        return res.text();
-                    })
-                    .then(function (html) {
-                        if (!html) return;
-                        // If the current element is a <p> placeholder (no comments yet),
-                        // replace it with a proper scrollable thread container.
-                        if (threadBody.tagName === 'P') {
-                            const wrap = document.createElement('div');
-                            wrap.className = 'thread-body mb-3 border rounded p-2';
-                            wrap.style.cssText = 'max-height:260px;overflow-y:auto';
-                            wrap.id = 'threadBody-' + requestId;
-                            wrap.innerHTML = html;
-                            threadBody.replaceWith(wrap);
-                            threadBody = wrap;
-                        } else {
-                            threadBody.innerHTML = html;
-                        }
-                        threadBody.scrollTop = threadBody.scrollHeight;
-                    })
-                    .catch(function () {
-                        // keep existing thread on error
-                    });
-                }
-            }
+        // DO NOT FETCH THREAD CONTENT — it causes race conditions and loading loops
+        // The thread is already rendered in the initial HTML from the server.
+        // SignalR CommentAdded events will append new comments to the existing thread.
+        // Fetching creates a race condition where the element gets replaced mid-operation.
+    }, false);
+
+    // Use 'hide.bs.modal' (fires BEFORE aria-hidden applied) not 'hidden.bs.modal' (fires AFTER)
+    // This ensures we clear focus and prevent accessibility violations
+    document.addEventListener('hide.bs.modal', function (e) {
+        const modal = e.target;
+        if (!modal?.id) return;
+
+        const isCommentModal = modal.id.startsWith('commentModal-')
+            || modal.id.startsWith('csCommentModal-')
+            || modal.id.startsWith('intCommentModal-');
+
+        if (!isCommentModal) return;
+
+        // Clear focus BEFORE Bootstrap applies aria-hidden
+        // This prevents the accessibility violation
+        const focusedEl = modal.querySelector(':focus');
+        if (focusedEl) {
+            focusedEl.blur();
         }
     });
 

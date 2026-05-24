@@ -313,12 +313,12 @@ let headerToggleBtn, WindowPreSize;
 (() => {
   let html = document.querySelector("html");
   headerToggleBtn = document.querySelector(".sidemenu-toggle");
-  headerToggleBtn.addEventListener("click", toggleSidemenu);
+  headerToggleBtn?.addEventListener("click", toggleSidemenu);
   let mainContent = document.querySelector(".main-content");
   if (window.innerWidth <= 992) {
-    mainContent.addEventListener("click", menuClose);
+    mainContent?.addEventListener("click", menuClose);
   } else {
-    mainContent.removeEventListener("click", menuClose);
+    mainContent?.removeEventListener("click", menuClose);
   }
 
   WindowPreSize = [window.innerWidth];
@@ -328,9 +328,9 @@ let headerToggleBtn, WindowPreSize;
     window.innerWidth >= 992
   ) {
     clearNavDropdown();
-    mainContent.addEventListener("click", clearNavDropdown);
+    mainContent?.addEventListener("click", clearNavDropdown);
   } else {
-    mainContent.removeEventListener("click", clearNavDropdown);
+    mainContent?.removeEventListener("click", clearNavDropdown);
   }
 
   window.addEventListener("resize", ResizeMenu);
@@ -877,6 +877,10 @@ function clearNavDropdown() {
 function switcherArrowFn() {
   let slideLeft = document.querySelector(".slide-left");
   let slideRight = document.querySelector(".slide-right");
+
+  if (!slideLeft || !slideRight) {
+    return;
+  }
 
   // used to remove is-expanded class and remove class on clicking arrow buttons
   function slideClick() {

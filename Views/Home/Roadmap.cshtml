@@ -31,6 +31,14 @@
                     <!-- Technical View -->
                     <div id="technicalView">
 
+                    <div class="alert alert-success mb-4" role="alert">
+                        <i class="bx bx-check-double me-2"></i>
+                        <strong>Current status:</strong> Core roadmap scope is delivered.
+                        Active focus is now <strong>Finance workflow uplift</strong> (working hours + payslip flow discovery)
+                        and continuous <strong>UI polish &amp; bug fixes</strong>.
+                        <a asp-controller="Sip" asp-action="Index" class="alert-link ms-1">Use SIP</a> to log improvements and bugs.
+                    </div>
+
                     <!-- Phase 0 -->
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
@@ -50,8 +58,7 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-shield me-1"></i>Phase 1 – New Roles
-                            <span class="badge bg-success ms-2">Complete through 1c</span>
-                            <span class="badge bg-warning text-dark ms-1">1d in progress</span>
+                            <span class="badge bg-success ms-2">Complete</span>
                         </h6>
 
                         <p class="fw-semibold mb-2">1a – Role Constants &amp; Seeding</p>
@@ -78,8 +85,20 @@
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to <code>[Authorize]</code> on <code>ScheduleController</code></li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to <code>[Authorize]</code> on <code>AttendanceReportController</code></li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Finance added to Admin role dropdown</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Deferred</span>Define additional Finance data requirements for Phase 2 <em>(needs input from owner)</em></li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-warning text-dark">In Progress</span>Finance workflow uplift discovery: map working-hours and payslip flow with Finance owner, then implement targeted UX improvements</li>
                         </ul>
+                    </div>
+
+                    <div class="mb-5">
+                        <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
+                            <i class="bx bx-infinite me-1"></i>Continuous Track – UI Polish &amp; Bug Fixes
+                            <span class="badge bg-info text-dark ms-2">Ongoing</span>
+                        </h6>
+                        <p class="text-muted small mb-2">This is a continuous stream and intentionally does not have a fixed end date.</p>
+                        <div class="progress" role="progressbar" aria-label="UI polish and bug fixes" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Continuous ongoing work">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 100%;">∞ Ongoing</div>
+                        </div>
+                        <small class="text-muted d-block mt-2">Found an issue or improvement idea? Submit it in <a asp-controller="Sip" asp-action="Index">SIP</a>.</small>
                     </div>
 
                     <!-- Phase 1d – CS Live Help Overhaul -->
@@ -307,16 +326,16 @@
                     <div class="mb-5">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-bell me-1"></i>Phase 3 – Notification System
-                            <span class="badge bg-secondary ms-2">Not Started</span>
-                            <span class="badge bg-danger ms-1">Needs Detail</span>
+                            <span class="badge bg-warning text-dark ms-2">Partially Complete</span>
+                            <span class="badge bg-danger ms-1">Remaining scope pending</span>
                         </h6>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-info text-dark">Decided</span>Real-time via SignalR (reuse hub pattern from Phase 1d)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Real-time via SignalR is active (live notifications hooked through existing hubs + notification manager)</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span><code>Notification</code> model + EF migration + <code>NotificationService</code></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Bell icon in navbar with live unread badge</li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Audio alert on notification receive</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Bell icon in navbar with live unread badge</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>Audio alerts on notification receive</li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-danger">Blocked</span>Define notification types, events, and sound levels <em>(needs owner decision)</em></li>
-                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>User preferences page (per-type + audio toggle)</li>
+                            <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-success">Done</span>User preferences page (per-type + audio toggle) at <code>/Profile/Notifications</code></li>
                             <li class="list-group-item d-flex align-items-center gap-2 px-0"><span class="badge bg-secondary">Todo</span>Admin broadcast to all connected clients</li>
                         </ul>
                     </div>
@@ -552,6 +571,22 @@
                         <!-- Coming Soon -->
                         <div class="row g-3 mb-5">
                             <div class="col-md-6">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="bx bx-calculator text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <span>Finance Workflow Uplift</span>
+                                            <span class="badge bg-warning text-dark ms-auto">In Discovery</span>
+                                        </h6>
+                                        <p class="card-text small text-muted mb-2">Next focus: map the finance workflow around working hours and payslip format, then streamline the flow.</p>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" style="width: 15%;"></div>
+                                        </div>
+                                        <small class="text-warning fw-semibold d-block mt-2">15% — Requirements discovery in progress</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="card border-success h-100">
                                     <div class="card-body">
                                         <h6 class="card-title d-flex align-items-center">
@@ -600,18 +635,18 @@
                                     </div>
                                 </div>
                             <div class="col-md-6">
-                                <div class="card border-info h-100">
+                                <div class="card border-success h-100">
                                     <div class="card-body">
                                         <h6 class="card-title d-flex align-items-center">
-                                            <i class="bx bx-bell text-info me-2" style="font-size: 1.5rem;"></i>
+                                            <i class="bx bx-bell text-success me-2" style="font-size: 1.5rem;"></i>
                                             <span>Smart Notifications</span>
-                                            <span class="badge bg-info text-dark ms-auto">Future</span>
+                                            <span class="badge bg-success ms-auto">Complete</span>
                                         </h6>
                                         <p class="card-text small text-muted mb-2">Stay connected with real-time notifications when important things happen.</p>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-info" style="width: 0%;"></div>
+                                            <div class="progress-bar bg-success" style="width: 100%;"></div>
                                         </div>
-                                        <small class="text-muted d-block mt-2">On the horizon...</small>
+                                        <small class="text-success fw-semibold d-block mt-2">100% Done ✓</small>
                                     </div>
                                 </div>
                             </div>
@@ -635,15 +670,15 @@
                                 <div class="card border-warning h-100">
                                     <div class="card-body">
                                         <h6 class="card-title d-flex align-items-center">
-                                            <i class="bx bx-chat text-warning me-2" style="font-size: 1.5rem;"></i>
-                                            <span>Team Chat</span>
-                                            <span class="badge bg-warning text-dark ms-auto">In Progress</span>
+                                            <i class="bx bx-infinite text-warning me-2" style="font-size: 1.5rem;"></i>
+                                            <span>UI Polish &amp; Bug Fixes</span>
+                                            <span class="badge bg-info text-dark ms-auto">Continuous</span>
                                         </h6>
-                                        <p class="card-text small text-muted mb-2">Real-time direct messaging, group chats, GIFs, emojis, and reactions working. Group member management coming next.</p>
+                                        <p class="card-text small text-muted mb-2">Continuous quality track for iterative visual improvements, UX tweaks, and bug fixing.</p>
                                         <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-warning" style="width: 60%;"></div>
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 100%;">∞</div>
                                         </div>
-                                        <small class="text-warning fw-semibold d-block mt-2">60% Done — Core features live</small>
+                                        <small class="text-info fw-semibold d-block mt-2">∞ Ongoing — no fixed end date</small>
                                     </div>
                                 </div>
                             </div>
@@ -651,8 +686,8 @@
 
                         <div class="alert alert-success mt-4 mb-0" role="alert">
                             <i class="bx bx-heart-circle me-2"></i>
-                                <strong>We're making great progress!</strong> We've completed the foundation, customer support system, and SIP suggestion workflow. 
-                                Team Chat is now live with direct messaging, groups, and real-time features — group member management coming next.
+                                <strong>Roadmap delivery is in a strong place.</strong> Main remaining active work is Finance workflow uplift and continuous UI/bug-fix iteration.
+                                Please submit ideas and issues through <a asp-controller="Sip" asp-action="Index" class="alert-link">SIP</a>.
                             </div>
 
                     </div>
@@ -661,7 +696,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2026-05 — Phase 1d–1f complete | Phase 2 AnyDesk + Telegram complete | Phase 4 SIP complete | Phase 5 CS messaging planned</strong>
+                        Last updated: <strong>2026-05 — Core roadmap delivered | Phase 3 notifications partially live | Active focus: Finance workflow uplift + continuous UI polish &amp; bug fixes | Use SIP for improvements</strong>
                     </div>
 
                 </div>

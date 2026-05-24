@@ -244,9 +244,19 @@ public class EmailTemplateService
         var doc = await _db.BrandDocuments.FindAsync(docId);
         if (doc == null) return (null, null);
 
-        var filePath = Path.Combine(webRootPath, "uploads", "brand-docs",
-                                    doc.BrandId.ToString(), doc.StoredName);
-        return File.Exists(filePath) ? (doc, filePath) : (doc, null);
+        var safeStoredName = Path.GetFileName(doc.StoredName);
+        var safeOriginalName = Path.GetFileName(doc.OriginalName);
+
+        var candidatePaths = new[]
+        {
+            Path.Combine(webRootPath, "uploads", "brand-docs", doc.BrandId.ToString(), safeStoredName),
+            Path.Combine(webRootPath, "uploads", "brand-docs", doc.BrandId.ToString(), safeOriginalName),
+            Path.Combine(webRootPath, "uploads", "brand-docs", safeStoredName),
+            Path.Combine(webRootPath, "uploads", "brand-docs", safeOriginalName)
+        };
+
+        var existingPath = candidatePaths.FirstOrDefault(File.Exists);
+        return existingPath != null ? (doc, existingPath) : (doc, null);
     }
 
     // ── Token substitution ────────────────────────────────────────────────

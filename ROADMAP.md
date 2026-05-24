@@ -64,7 +64,10 @@
 - [x] Add `Finance` to `[Authorize]` on `ScheduleController`
 - [x] Add `Finance` to `[Authorize]` on `AttendanceReportController`
 - [x] Add `Finance` to Admin `PopulateRolesAndTeams` dropdown
-- [ ] Define additional Finance data requirements for Phase 2 *(needs detail from owner — deferred)*
+- [~] Define additional Finance data requirements for workflow improvements *(active discovery)*
+  - Known needs today: working hours view + payslip-style summary
+  - Current blocker: no mapped day-to-day finance workflow yet
+  - Next step: capture workflow and pain points with Finance owner, then implement targeted UX improvements
 
 ---
 
@@ -274,12 +277,12 @@
 
 ---
 
-## Phase 3 – Notification System
+## Phase 3 – Notification System `[~ PARTIAL IMPLEMENTATION LIVE]`
 
 > Details to be provided by owner. Outline only – refine before implementation.
 
 ### 3a – Infrastructure
-- [ ] Confirm real-time transport: **SignalR** (reuse hub pattern from Phase 1d) *(confirm with owner)*
+- [x] Confirm real-time transport: **SignalR** (implemented via existing hubs + client notification manager)
 - [ ] Create `Notification` model: `Id, UserId, Title, Body, Link, IsRead, CreatedAt, Type`
 - [ ] Create EF Core migration for `Notifications` table
 - [ ] Create `NotificationService` (create, mark-read, get-unread)
@@ -287,13 +290,13 @@
 - [ ] Register hub in `Program.cs`
 
 ### 3b – Client UI
-- [ ] Bell icon in navbar with live unread badge (SignalR-driven)
-- [ ] Notification dropdown panel (list recent, mark-as-read)
-- [ ] Audio alert on receive (`new Audio(...).play()`)
+- [x] Bell icon in navbar with live unread badge (client-side live updates wired)
+- [x] Notification dropdown panel (recent list rendering implemented)
+- [x] Audio alert on receive (`notification-manager.js` + notification sounds)
 - [ ] Define notification types and sound levels *(needs owner decision)*
 
 ### 3c – Preferences & Admin Broadcast
-- [ ] User notification preferences page (per-type + audio toggle)
+- [x] User notification preferences page (per-type + audio toggle) at `/Profile/Notifications`
 - [ ] Admin "Send System Notification" broadcast to all connected clients
 
 ---
@@ -460,7 +463,10 @@
 - [ ] Write unit tests for `CsRequestArchiveService`, `TelegramService`, `NotificationService`
 - [ ] Update `DEMO_SEED_PLAN.md` with seed data for `CsRequestType` lookup table
 - [ ] Load/performance test CS Live Help board at simulated high volume before go-live
+- [~] Finance workflow uplift (working hours + payslip workflow discovery and implementation)
+- [~] UI polish & bug fixes (continuous stream, no fixed completion date)
+- [x] Point users to SIP for enhancement requests and bug reports
 
 ---
 
-*Last updated: 2025-06 — Phase 1d bug fixing complete | Phase 1e AM registration flow complete | Phase 1f activity logging complete | Phase 4 SIP complete | Phase 5 CS-to-CS messaging in progress (emoji, reactions, GIF, direct messaging live; group management & file attachments deferred) | Owner: @Jacquesvdberg92*
+*Last updated: 2026-05 — Major roadmap scope delivered; Phase 3 notifications partially live (bell, sounds, preferences) with full notification center still pending. Active tracks: Finance workflow uplift and continuous UI polish/bug fixing. Use SIP for new improvements and bug reports. | Owner: @Jacquesvdberg92*

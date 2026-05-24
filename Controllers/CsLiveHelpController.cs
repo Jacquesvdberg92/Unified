@@ -514,12 +514,7 @@ public class CsLiveHelpController : Controller
 
         var agent = await _users.GetUserAsync(User);
         var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
-        var recipients = await _svc.ResolveRecipientsAsync(id, null);
-
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
@@ -789,26 +784,17 @@ public class CsLiveHelpController : Controller
         var brand = await _db.Brands.FindAsync(brandId);
         var rtype = await _db.CsRequestTypes.FindAsync(requestTypeId);
         var payload = new { id = req.Id, brandName = brand?.Name, requestType = rtype?.Name, status = "Open", isInternal = true };
-        var recipients = await _svc.ResolveRecipientsAsync(req.Id, null);
-
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardAdded", payload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
-
-        if (recipients.AllUniqueAgentIds.Any())
+        await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+        await _hub.Clients.Group("cs-board").SendAsync("RequestNotification", new
         {
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("RequestNotification", new
-            {
-                type = "newRequest",
-                requestId = req.Id.ToString(),
-                brandName = brand?.Name,
-                requestType = rtype?.Name,
-                actor = User.Identity?.Name ?? "System",
-                contextType = "RequestsAllBrands",
-                timestamp = DateTime.UtcNow
-            });
-        }
+            type = "newRequest",
+            requestId = req.Id.ToString(),
+            brandName = brand?.Name,
+            requestType = rtype?.Name,
+            actor = User.Identity?.Name ?? "System",
+            contextType = "RequestsAllBrands",
+            timestamp = DateTime.UtcNow
+        });
 
         TempData["Success"] = "Internal request created.";
         return RedirectToAction(nameof(RequestsAllBrands));
@@ -880,11 +866,7 @@ public class CsLiveHelpController : Controller
         var agent = await _users.GetUserAsync(User);
         var commentPayload = new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow };
         var recipients = await _svc.ResolveRecipientsAsync(id, mentionNames);
-
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
 
         if (recipients.MentionedUserIds.Any())
         {
@@ -1003,12 +985,7 @@ public class CsLiveHelpController : Controller
 
         var agent = await _users.GetUserAsync(User);
         var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
-        var recipients = await _svc.ResolveRecipientsAsync(id, null);
-
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         return Json(new { success = true });
     }
@@ -1028,12 +1005,7 @@ public class CsLiveHelpController : Controller
 
         var agent = await _users.GetUserAsync(User);
         var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
-        var recipients = await _svc.ResolveRecipientsAsync(id, null);
-
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
+        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         TempData["Success"] = $"Card status updated to {status}.";
         return RedirectToAction(nameof(RequestsAllBrands));

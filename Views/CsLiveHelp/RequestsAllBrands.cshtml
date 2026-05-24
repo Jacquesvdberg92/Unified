@@ -321,162 +321,39 @@
 
 @section Scripts {
     <script>
-        // Mark description required only when IsOther type is selected
+        // Modal form interactivity: show description field only for "Other" type
         document.getElementById('intReqType')?.addEventListener('change', function () {
             const opt = this.options[this.selectedIndex];
             const isOther = opt.dataset.isother === 'true';
-            const ta   = document.getElementById('intDescription');
+            const ta = document.getElementById('intDescription');
             const hint = document.getElementById('intDescHint');
-            if (ta)   ta.required = isOther;
+            if (ta) ta.required = isOther;
             if (hint) hint.textContent = isOther
                 ? '(required for this type — max 500 chars)'
                 : '(optional — max 500 chars)';
         });
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script>
-    // Fix duplication bug: tell shared cslivehelp.js to use the internal card partial
-    window.csCardPartialUrl = '/CsLiveHelp/InternalCardPartial/';
-    </script>
-    <script>
-    (function () {
-        'use strict';
 
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-
-        function showToastMsg(msg, success) {
-            if (typeof showToast === 'function') { showToast(msg, success); return; }
-            console[success ? 'info' : 'warn']('[AllBrands]', msg);
-        }
-
-        // ── Filter ────────────────────────────────────────────────────────
-        const brandSel    = document.getElementById('allBrandsBrandFilter');
-        const clientInput = document.getElementById('allBrandsClientIdFilter');
-        const applyBtn    = document.getElementById('allBrandsFilterApply');
-        const clearBtn    = document.getElementById('allBrandsFilterClear');
-
-        function applyFilter() {
-            const brandId = brandSel?.value ?? '';
-            const query   = (clientInput?.value ?? '').toLowerCase().trim();
-            document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
-                const matchBrand  = !brandId || String(card.dataset.brandId) === brandId;
-                const matchClient = !query   || (card.dataset.clientId ?? '').includes(query);
-                card.style.display = (matchBrand && matchClient) ? '' : 'none';
-            });
-        }
-        applyBtn?.addEventListener('click', applyFilter);
-        clientInput?.addEventListener('keydown', function (e) { if (e.key === 'Enter') applyFilter(); });
-        clearBtn?.addEventListener('click', function () {
-            if (brandSel)    brandSel.value    = '';
-            if (clientInput) clientInput.value = '';
-            document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
-                card.style.display = '';
-            });
-        });
-
-        // ── Column count helper ───────────────────────────────────────────
-        function updateColCount(status) {
-            const col   = document.getElementById('col-' + status);
-            const badge = document.getElementById('count-' + status);
-            if (col && badge) badge.textContent = col.querySelectorAll('[data-card-id]').length;
-        }
-
-        function removeEmptyHint(col) {
-            col?.querySelectorAll('.empty-col-hint').forEach(el => el.remove());
-        }
-
-        function addEmptyHintIfEmpty(col) {
-            if (col && col.querySelectorAll('[data-card-id]').length === 0 && !col.querySelector('.empty-col-hint')) {
-                const p = document.createElement('p');
-                p.className = 'text-muted small text-center mt-3 empty-col-hint';
-                p.textContent = 'None';
-                col.appendChild(p);
-            }
-        }
-
-        const badgeClass = {
-            Open:       'bg-secondary',
-            InProgress: 'bg-warning text-dark',
-            OnGoing:    'bg-warning text-dark',
-            Escalated:  'bg-danger',
-            Completed:  'bg-success'
-        };
-
-        document.querySelectorAll('.kanban-col').forEach(function (col) {
-            Sortable.create(col, {
-                group:      'int-kanban',
-                animation:  150,
-                ghostClass: 'sortable-ghost',
-                dragClass:  'sortable-drag',
-                filter:     'button, a, input, textarea',
-                preventOnFilter: false,
-                onEnd: async function (evt) {
-                    const card      = evt.item;
-                    const cardId    = card.dataset.cardId;
-                    const newStatus = evt.to.dataset.status;
-                    const oldStatus = evt.from.dataset.status;
-
-                    if (!cardId || !newStatus || newStatus === oldStatus) return;
-
-                    removeEmptyHint(evt.to);
-
-                    try {
-                        const fd = new FormData();
-                        fd.append('status', newStatus);
-                        fd.append('__RequestVerificationToken', token);
-
-                        const res = await fetch(`/CsLiveHelp/InternalUpdateStatusJson/${cardId}`, {
-                            method: 'POST',
-                            body:   fd,
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                        });
-
-                        if (res.ok) {
-                            const badge = card.querySelector('.badge');
-                            if (badge && badgeClass[newStatus]) {
-                                badge.className = 'badge ' + badgeClass[newStatus];
-                                badge.textContent = newStatus;
-                            }
-                            addEmptyHintIfEmpty(evt.from);
-                            updateColCount(newStatus);
-                            updateColCount(oldStatus);
-                            showToastMsg('Card moved to ' + newStatus, true);
-                        } else {
-                            evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
-                            showToastMsg('Failed to update card status.', false);
-                        }
-                    } catch (_) {
-                        evt.from.insertBefore(card, evt.from.children[evt.oldIndex] ?? null);
-                        showToastMsg('Network error — card move reverted.', false);
-                    }
-                }
-            });
-        });
-
-        // Highlight drop target while dragging
-        document.addEventListener('dragover', function (e) {
-            const col = e.target.closest('.kanban-col');
-            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
-            if (col) col.classList.add('drag-over');
-        });
-        document.addEventListener('dragleave', function (e) {
-            if (!e.relatedTarget?.closest('.kanban-col'))
-                document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
-        });
-        document.addEventListener('drop', function () {
-            document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
-        });
-    })();
-    </script>
     <style>
-        .sortable-ghost  { opacity: .4; background: #e8f4ff; border: 2px dashed #0d6efd !important; }
-        .sortable-drag   { box-shadow: 0 6px 20px rgba(0,0,0,.2); }
-        .kanban-col      { transition: background .15s; }
+        .sortable-ghost { opacity: .4; background: #e8f4ff; border: 2px dashed #0d6efd !important; }
+        .sortable-drag { box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+        .kanban-col { transition: background .15s; }
         .kanban-col .card { cursor: grab; }
         .kanban-col .card:active { cursor: grabbing; }
-        .drag-over       { background: rgba(13,110,253,.06) !important; border: 2px dashed #0d6efd; border-radius: .375rem; }
+        .drag-over { background: rgba(13,110,253,.06) !important; border: 2px dashed #0d6efd; border-radius: .375rem; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+
+    @* Configure card partial URL for internal page *@
+    <script>
+        window.csCardPartialUrl = '/CsLiveHelp/InternalCardPartial/';
+    </script>
+
+    @* Load shared SignalR client first *@
     <script src="~/js/cslivehelp-mentions.js"></script>
     <script src="~/js/cslivehelp.js"></script>
+
+    @* Load internal-page-specific logic after shared client is ready *@
+    <script src="~/js/cslivehelp-internal.js"></script>
 }

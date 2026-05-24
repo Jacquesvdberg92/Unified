@@ -126,6 +126,106 @@
                                 </li>
                             } @* end !AccountManager *@
 
+                            @* ── CS Support ── *@
+                            @if (User.IsInRole("AccountManager") || User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                            {
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="cs-support">
+                                        <span class="category-name">CS Support</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        @if (User.IsInRole("AccountManager"))
+                                        {
+                                            <li class="slide d-flex align-items-center">
+                                                <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item flex-grow-1">
+                                                    <i class="bx bx-support side-menu__icon"></i>
+                                                    <span class="side-menu__label">CS Live Help</span>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        data-notification-mute-btn="Requests"
+                                                        title="Mute/unmute Requests notifications"
+                                                        aria-label="Mute/unmute Requests notifications"
+                                                        aria-pressed="false">
+                                                    <i class="ri-notification-2-line"></i>
+                                                </button>
+                                            </li>
+                                        }
+                                        @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                        {
+                                            <li class="slide d-flex align-items-center">
+                                                <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item flex-grow-1">
+                                                    <i class="bx bx-support side-menu__icon"></i>
+                                                    <span class="side-menu__label">CS Live Help</span>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        data-notification-mute-btn="Board"
+                                                        title="Mute/unmute Board notifications"
+                                                        aria-label="Mute/unmute Board notifications"
+                                                        aria-pressed="false">
+                                                    <i class="ri-notification-2-line"></i>
+                                                </button>
+                                            </li>
+                                            <li class="slide">
+                                                <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
+                                                    <i class="bx bx-globe side-menu__icon"></i>
+                                                    <span class="side-menu__label">
+                                                        @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                                        {
+                                                            <text>Requests All Brands</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>Requests All Brands</text>
+                                                        }
+                                                    </span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
+                            @* ── Chat ── *@
+                            @if (isChatUser)
+                            {
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="chat">
+                                        <span class="category-name">Chat</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="CsMessaging" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-chat side-menu__icon"></i>
+                                                <span class="side-menu__label">Chat</span>
+                                            </a>
+                                        </li>
+                                        @if (recentChats.Any())
+                                        {
+                                            <li class="slide mt-2 px-3 no-drag" data-no-drag="true">
+                                                <div class="d-flex align-items-center gap-2 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.06em;">
+                                                    <i class="bx bx-time-five"></i>
+                                                    <span>Chat Recent (@recentChatLimit)</span>
+                                                </div>
+                                            </li>
+                                            @foreach (var chat in recentChats)
+                                            {
+                                                <li class="slide no-drag" data-no-drag="true" data-chat-recent-item="true" data-conversation-id="@chat.ConversationId">
+                                                    <a asp-controller="CsMessaging" asp-action="Index" asp-route-conversationId="@chat.ConversationId" class="side-menu__item ps-4">
+                                                        <i class="bx @(chat.IsGroup ? "bx-group" : "bx-user") side-menu__icon"></i>
+                                                        <span class="side-menu__label text-truncate">@chat.DisplayName</span>
+                                                        <span class="badge bg-danger ms-2 sidebar-chat-unread @(chat.UnreadCount > 0 ? "" : "d-none")" data-chat-unread="@chat.ConversationId">@chat.UnreadCount</span>
+                                                    </a>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
                             @* ── Management (TL / BM) ── *@
                             @if (User.IsInRole("BrandManager") || User.IsInRole("TeamLeader"))
                             {
@@ -250,106 +350,6 @@
                                                 <span class="side-menu__label">Telegram Bot</span>
                                             </a>
                                         </li>
-                                    </ul>
-                                </li>
-                            }
-
-                            @* ── CS Support ── *@
-                            @if (User.IsInRole("AccountManager") || User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
-                            {
-                                <li class="slide__category-group">
-                                    <div class="slide__category" data-category="cs-support">
-                                        <span class="category-name">CS Support</span>
-                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
-                                    </div>
-                                    <ul class="category-items">
-                                        @if (User.IsInRole("AccountManager"))
-                                        {
-                                            <li class="slide d-flex align-items-center">
-                                                <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item flex-grow-1">
-                                                    <i class="bx bx-support side-menu__icon"></i>
-                                                    <span class="side-menu__label">CS Live Help</span>
-                                                </a>
-                                                <button type="button"
-                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
-                                                        data-notification-mute-btn="Requests"
-                                                        title="Mute/unmute Requests notifications"
-                                                        aria-label="Mute/unmute Requests notifications"
-                                                        aria-pressed="false">
-                                                    <i class="ri-notification-2-line"></i>
-                                                </button>
-                                            </li>
-                                        }
-                                        @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
-                                        {
-                                            <li class="slide d-flex align-items-center">
-                                                <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item flex-grow-1">
-                                                    <i class="bx bx-support side-menu__icon"></i>
-                                                    <span class="side-menu__label">CS Live Help</span>
-                                                </a>
-                                                <button type="button"
-                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
-                                                        data-notification-mute-btn="Board"
-                                                        title="Mute/unmute Board notifications"
-                                                        aria-label="Mute/unmute Board notifications"
-                                                        aria-pressed="false">
-                                                    <i class="ri-notification-2-line"></i>
-                                                </button>
-                                            </li>
-                                            <li class="slide">
-                                                <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
-                                                    <i class="bx bx-globe side-menu__icon"></i>
-                                                    <span class="side-menu__label">
-                                                        @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
-                                                        {
-                                                            <text>Requests All Brands</text>
-                                                        }
-                                                        else
-                                                        {
-                                                            <text>Requests All Brands</text>
-                                                        }
-                                                    </span>
-                                                </a>
-                                            </li>
-                                        }
-                                    </ul>
-                                </li>
-                            }
-
-                            @* ── Chat ── *@
-                            @if (isChatUser)
-                            {
-                                <li class="slide__category-group">
-                                    <div class="slide__category" data-category="chat">
-                                        <span class="category-name">Chat</span>
-                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
-                                    </div>
-                                    <ul class="category-items">
-                                        <li class="slide">
-                                            <a asp-controller="CsMessaging" asp-action="Index" class="side-menu__item">
-                                                <i class="bx bx-chat side-menu__icon"></i>
-                                                <span class="side-menu__label">Chat</span>
-                                            </a>
-                                        </li>
-                                        @if (recentChats.Any())
-                                        {
-                                            <li class="slide mt-2 px-3 no-drag" data-no-drag="true">
-                                                <div class="d-flex align-items-center gap-2 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.06em;">
-                                                    <i class="bx bx-time-five"></i>
-                                                    <span>Chat Recent (@recentChatLimit)</span>
-                                                </div>
-                                            </li>
-                                            @foreach (var chat in recentChats)
-                                            {
-                                                <li class="slide no-drag" data-no-drag="true" data-chat-recent-item="true" data-conversation-id="@chat.ConversationId">
-                                                    <a asp-controller="CsMessaging" asp-action="Index" asp-route-conversationId="@chat.ConversationId" class="side-menu__item ps-4">
-                                                        <i class="bx @(chat.IsGroup ? "bx-group" : "bx-user") side-menu__icon"></i>
-                                                        <span class="side-menu__label text-truncate">@chat.DisplayName</span>
-                                                        <span class="badge bg-danger ms-2 sidebar-chat-unread @(chat.UnreadCount > 0 ? "" : "d-none")" data-chat-unread="@chat.ConversationId">@chat.UnreadCount</span>
-                                                    </a>
-                                                </li>
-                                            }
-                                        }
                                     </ul>
                                 </li>
                             }
