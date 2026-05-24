@@ -980,13 +980,16 @@
             `</div>`;
     }
 
+    const sharedConnection = window.UnifiedLiveNotifications?.connection || null;
     const hasSignalR = typeof window.signalR !== 'undefined' && window.signalR?.HubConnectionBuilder;
-    const connection = hasSignalR
-        ? new window.signalR.HubConnectionBuilder()
-            .withUrl('/hubs/cs-messaging')
-            .withAutomaticReconnect()
-            .build()
-        : null;
+    const connection = sharedConnection
+        ? sharedConnection
+        : (hasSignalR
+            ? new window.signalR.HubConnectionBuilder()
+                .withUrl('/hubs/cs-messaging')
+                .withAutomaticReconnect()
+                .build()
+            : null);
 
     if (connection) {
         connection.on('MessageAdded', async function (evt) {
@@ -1017,21 +1020,6 @@
 
             if (isIncomingForActive) {
                 scheduleMarkRead(evt.conversationId, 120);
-            }
-
-            // Trigger notification for incoming messages when not viewing that conversation
-            if (typeof NotificationManager !== 'undefined' && evt.message?.authorUserId !== currentUserId && evt.conversationId !== activeConversationId) {
-                const authorName = evt.message?.authorUser?.displayName || 'Someone';
-                NotificationManager.handleNotification({
-                    type: 'newMessage',
-                    contextType: 'CsMessaging',
-                    contextId: String(evt.conversationId),
-                    title: `New message from ${authorName}`,
-                    message: previewText.length > 60 ? `${previewText.slice(0, 60)}…` : previewText,
-                    sound: true,
-                    visual: true,
-                    toast: true
-                });
             }
         });
 
@@ -1084,13 +1072,20 @@
             await refreshConversations();
         });
 
-        connection.start().then(async function () {
+        const state = String(connection.state || '').toLowerCase();
+        if (state === 'connected') {
             if (activeConversationId) {
-                await safeJoinConversation(activeConversationId);
+                safeJoinConversation(activeConversationId);
             }
-        }).catch(function () {
-            toast('Realtime chat connection failed.', false);
-        });
+        } else if (!sharedConnection) {
+            connection.start().then(async function () {
+                if (activeConversationId) {
+                    await safeJoinConversation(activeConversationId);
+                }
+            }).catch(function () {
+                toast('Realtime chat connection failed.', false);
+            });
+        }
     }
 
     if (chatSidebarEl) {
