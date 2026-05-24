@@ -144,6 +144,8 @@
         const modalEl = document.getElementById(targetId);
         if (!modalEl) return;
 
+        modalEl.dataset.dynamicPartialModal = '1';
+
         const bodyEl = modalEl.querySelector('.modal-body');
         if (bodyEl) {
             bodyEl.innerHTML = `<div class="text-center py-4">
@@ -164,9 +166,12 @@
         }
     });
 
-    // ── Reset modal body when closed ──────────────────────────────────────────
+    // ── Reset modal body when closed (dynamic partial modals only) ───────────
     document.addEventListener('hidden.bs.modal', function (e) {
-        const bodyEl = e.target.querySelector('.modal-body');
+        const modalEl = e.target;
+        if (modalEl.dataset.dynamicPartialModal !== '1') return;
+
+        const bodyEl = modalEl.querySelector('.modal-body');
         if (bodyEl) {
             bodyEl.innerHTML = `<div class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
