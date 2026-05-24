@@ -1,0 +1,1786 @@
+Utils.ts:190 [2026-05-24T12:00:12.689Z] Information: Normalizing '/hubs/cslivehelp' to 'https://localhost:7004/hubs/cslivehelp'.
+defaultmenu.js:900 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
+    at switcherArrowFn (defaultmenu.js:900:13)
+    at defaultmenu.js:337:3
+    at defaultmenu.js:411:3
+switcherArrowFn @ defaultmenu.js:900
+(anonymous) @ defaultmenu.js:337
+(anonymous) @ defaultmenu.js:411
+Utils.ts:190 [2026-05-24T12:00:12.780Z] Information: Normalizing '/hubs/cs-messaging' to 'https://localhost:7004/hubs/cs-messaging'.
+FetchHttpClient.ts:110  POST https://localhost:7004/hubs/cs-messaging/negotiate?negotiateVersion=1 403 (Forbidden)
+async @ FetchHttpClient.ts:110
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+gt @ HubConnection.ts:201
+baseUrl @ HubConnection.ts:189
+(anonymous) @ live-notifications.js:95
+(anonymous) @ live-notifications.js:102
+Utils.ts:184 [2026-05-24T12:00:12.845Z] Error: Failed to complete negotiation with the server: Error: <!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
+
+    <head>
+
+        <!-- META DATA -->
+		<meta charset="UTF-8">
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="Description" content="Unified — Internal operations tool">
+
+		<!-- TITLE -->
+		<title>Error — Unified</title>
+
+		<!-- FAVICON -->
+		<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+        <!-- BOOTSTRAP CSS -->
+	    <link  id="style" href="/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- STYLES CSS -->
+        <link href="/assets/css/styles.css" rel="stylesheet">
+
+        <!-- ICONS CSS -->
+        <link href="/assets/CSS/icons.css" rel="stylesheet">
+        
+        
+        <!-- NODE WAVES CSS -->
+        <link href="/assets/libs/node-waves/waves.min.css" rel="stylesheet"> 
+
+        <!-- SIMPLEBAR CSS -->
+        <link rel="stylesheet" href="/assets/libs/simplebar/simplebar.min.css">
+
+        <!-- Flat PICKER JS -->
+        <link rel="stylesheet" href="/assets/libs/flatpickr/flatpickr.min.css">
+
+        <!-- NOTIFICATION SYSTEM CSS -->
+        <link rel="stylesheet" href="/css/notification-system.css">
+
+
+
+        <!-- SITE CSS -->
+        <link rel="stylesheet" href="/css/site.css">
+
+        <!-- MAIN JS -->
+        <script src="/assets/js/main.js" defer></script>
+
+		
+
+		<!-- TOASTIFY CSS -->
+		<link rel="stylesheet" href="/assets/libs/toastify-js/src/toastify.css">
+
+	</head>
+
+	<body>
+
+        <!-- SWITCHER -->
+                    
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
+            <div class="offcanvas-header border-bottom d-block p-0">
+                <div class="d-flex align-items-center justify-content-between p-3">
+                    <h5 class="offcanvas-title text-default" id="offcanvasRightLabel">Switcher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <nav class="border-top border-block-start-dashed">
+                    <div class="nav nav-tabs nav-justified" id="switcher-main-tab" role="tablist">
+                        <button class="nav-link active" id="switcher-home-tab" data-bs-toggle="tab" data-bs-target="#switcher-home"
+                            type="button" role="tab" aria-controls="switcher-home" aria-selected="true">Theme Styles</button>
+                        <button class="nav-link" id="switcher-profile-tab" data-bs-toggle="tab" data-bs-target="#switcher-profile"
+                            type="button" role="tab" aria-controls="switcher-profile" aria-selected="false">Theme Colors</button>
+                    </div>
+                </nav>
+            </div>
+            <div class="offcanvas-body">
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active border-0" id="switcher-home" role="tabpanel" aria-labelledby="switcher-home-tab"
+                        tabindex="0">
+                        <div class="">
+                            <p class="switcher-style-head">Theme Color Mode:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-light-theme">
+                                            Light
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-light-theme"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-dark-theme">
+                                            Dark
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-dark-theme">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Directions:</p>
+                            <div class="row switcher-style gx-0">
+                  
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:347
+await in (anonymous)
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+gt @ HubConnection.ts:201
+baseUrl @ HubConnection.ts:189
+(anonymous) @ live-notifications.js:95
+(anonymous) @ live-notifications.js:102
+Utils.ts:184 [2026-05-24T12:00:12.847Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: Error: <!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
+
+    <head>
+
+        <!-- META DATA -->
+		<meta charset="UTF-8">
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="Description" content="Unified — Internal operations tool">
+
+		<!-- TITLE -->
+		<title>Error — Unified</title>
+
+		<!-- FAVICON -->
+		<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+        <!-- BOOTSTRAP CSS -->
+	    <link  id="style" href="/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- STYLES CSS -->
+        <link href="/assets/css/styles.css" rel="stylesheet">
+
+        <!-- ICONS CSS -->
+        <link href="/assets/CSS/icons.css" rel="stylesheet">
+        
+        
+        <!-- NODE WAVES CSS -->
+        <link href="/assets/libs/node-waves/waves.min.css" rel="stylesheet"> 
+
+        <!-- SIMPLEBAR CSS -->
+        <link rel="stylesheet" href="/assets/libs/simplebar/simplebar.min.css">
+
+        <!-- Flat PICKER JS -->
+        <link rel="stylesheet" href="/assets/libs/flatpickr/flatpickr.min.css">
+
+        <!-- NOTIFICATION SYSTEM CSS -->
+        <link rel="stylesheet" href="/css/notification-system.css">
+
+
+
+        <!-- SITE CSS -->
+        <link rel="stylesheet" href="/css/site.css">
+
+        <!-- MAIN JS -->
+        <script src="/assets/js/main.js" defer></script>
+
+		
+
+		<!-- TOASTIFY CSS -->
+		<link rel="stylesheet" href="/assets/libs/toastify-js/src/toastify.css">
+
+	</head>
+
+	<body>
+
+        <!-- SWITCHER -->
+                    
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
+            <div class="offcanvas-header border-bottom d-block p-0">
+                <div class="d-flex align-items-center justify-content-between p-3">
+                    <h5 class="offcanvas-title text-default" id="offcanvasRightLabel">Switcher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <nav class="border-top border-block-start-dashed">
+                    <div class="nav nav-tabs nav-justified" id="switcher-main-tab" role="tablist">
+                        <button class="nav-link active" id="switcher-home-tab" data-bs-toggle="tab" data-bs-target="#switcher-home"
+                            type="button" role="tab" aria-controls="switcher-home" aria-selected="true">Theme Styles</button>
+                        <button class="nav-link" id="switcher-profile-tab" data-bs-toggle="tab" data-bs-target="#switcher-profile"
+                            type="button" role="tab" aria-controls="switcher-profile" aria-selected="false">Theme Colors</button>
+                    </div>
+                </nav>
+            </div>
+            <div class="offcanvas-body">
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active border-0" id="switcher-home" role="tabpanel" aria-labelledby="switcher-home-tab"
+                        tabindex="0">
+                        <div class="">
+                            <p class="switcher-style-head">Theme Color Mode:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-light-theme">
+                                            Light
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-light-theme"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-dark-theme">
+                                            Dark
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-dark-theme">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Directions:</p>
+                            <div class="row sw
+log @ Utils.ts:184
+yt @ HttpConnection.ts:308
+await in yt
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+gt @ HubConnection.ts:201
+baseUrl @ HubConnection.ts:189
+(anonymous) @ live-notifications.js:95
+(anonymous) @ live-notifications.js:102
+live-notifications.js:100 [LiveNotifications] Failed to connect: a: Failed to complete negotiation with the server: Error: <!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
+
+    <head>
+
+        <!-- META DATA -->
+		<meta charset="UTF-8">
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="Description" content="Unified — Internal operations tool">
+
+		<!-- TITLE -->
+		<title>Error — Unified</title>
+
+		<!-- FAVICON -->
+		<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+        <!-- BOOTSTRAP CSS -->
+	    <link  id="style" href="/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- STYLES CSS -->
+        <link href="/assets/css/styles.css" rel="stylesheet">
+
+        <!-- ICONS CSS -->
+        <link href="/assets/CSS/icons.css" rel="stylesheet">
+        
+        
+        <!-- NODE WAVES CSS -->
+        <link href="/assets/libs/node-waves/waves.min.css" rel="stylesheet"> 
+
+        <!-- SIMPLEBAR CSS -->
+        <link rel="stylesheet" href="/assets/libs/simplebar/simplebar.min.css">
+
+        <!-- Flat PICKER JS -->
+        <link rel="stylesheet" href="/assets/libs/flatpickr/flatpickr.min.css">
+
+        <!-- NOTIFICATION SYSTEM CSS -->
+        <link rel="stylesheet" href="/css/notification-system.css">
+
+
+
+        <!-- SITE CSS -->
+        <link rel="stylesheet" href="/css/site.css">
+
+        <!-- MAIN JS -->
+        <script src="/assets/js/main.js" defer></script>
+
+		
+
+		<!-- TOASTIFY CSS -->
+		<link rel="stylesheet" href="/assets/libs/toastify-js/src/toastify.css">
+
+	</head>
+
+	<body>
+
+        <!-- SWITCHER -->
+                    
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
+            <div class="offcanvas-header border-bottom d-block p-0">
+                <div class="d-flex align-items-center justify-content-between p-3">
+                    <h5 class="offcanvas-title text-default" id="offcanvasRightLabel">Switcher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <nav class="border-top border-block-start-dashed">
+                    <div class="nav nav-tabs nav-justified" id="switcher-main-tab" role="tablist">
+                        <button class="nav-link active" id="switcher-home-tab" data-bs-toggle="tab" data-bs-target="#switcher-home"
+                            type="button" role="tab" aria-controls="switcher-home" aria-selected="true">Theme Styles</button>
+                        <button class="nav-link" id="switcher-profile-tab" data-bs-toggle="tab" data-bs-target="#switcher-profile"
+                            type="button" role="tab" aria-controls="switcher-profile" aria-selected="false">Theme Colors</button>
+                    </div>
+                </nav>
+            </div>
+            <div class="offcanvas-body">
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active border-0" id="switcher-home" role="tabpanel" aria-labelledby="switcher-home-tab"
+                        tabindex="0">
+                        <div class="">
+                            <p class="switcher-style-head">Theme Color Mode:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-light-theme">
+                                            Light
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-light-theme"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-dark-theme">
+                                            Dark
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-dark-theme">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Directions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-ltr">
+                                            LTR
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="direction" id="switcher-ltr" checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-rtl">
+                                            RTL
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="direction" id="switcher-rtl">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Navigation Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-vertical">
+                                            Vertical
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-style" id="switcher-vertical"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-horizontal">
+                                            Horizontal
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-style"
+                                            id="switcher-horizontal">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="navigation-menu-styles">
+                            <p class="switcher-style-head">Vertical & Horizontal Menu Styles:</p>
+                            <div class="row switcher-style gx-0 pb-2 gy-2">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-click">
+                                            Menu Click
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-menu-click">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-hover">
+                                            Menu Hover
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-menu-hover">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-click">
+                                            Icon Click
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-icon-click">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-hover">
+                                            Icon Hover
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-icon-hover">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sidemenu-layout-styles">
+                            <p class="switcher-style-head">Sidemenu Layout Styles:</p>
+                            <div class="row switcher-style gx-0 pb-2 gy-2">
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-default-menu">
+                                            Default Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-default-menu" checked>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-closed-menu">
+                                            Closed Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-closed-menu">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icontext-menu">
+                                            Icon Text
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-icontext-menu">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-overlay">
+                                            Icon Overlay
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-icon-overlay">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-detached">
+                                            Detached
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-detached">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-double-menu">
+                                            Double Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-double-menu">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Page Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-regular">
+                                            Regular
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-styles" id="switcher-regular"
+                                        checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-classic">
+                                            Classic
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-styles" id="switcher-classic">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-modern">
+                                            Modern
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-styles" id="switcher-modern">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Layout Width Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-sm-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-full-width">
+                                            Full Width
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="layout-width" id="switcher-full-width"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-boxed">
+                                            Boxed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="layout-width" id="switcher-boxed">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Menu Positions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-fixed">
+                                            Fixed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="menu-positions" id="switcher-menu-fixed"
+                                            checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-scroll">
+                                            Scrollable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="menu-positions" id="switcher-menu-scroll">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Header Positions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-header-fixed">
+                                            Fixed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="header-positions"
+                                            id="switcher-header-fixed" checked>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-header-scroll">
+                                            Scrollable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="header-positions"
+                                            id="switcher-header-scroll">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Loader:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-loader-enable">
+                                            Enable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-loader"
+                                            id="switcher-loader-enable">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-loader-disable">
+                                            Disable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-loader"
+                                            id="switcher-loader-disable" checked>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade border-0" id="switcher-profile" role="tabpanel" aria-labelledby="switcher-profile-tab" tabindex="0">
+                        <div>
+                            <div class="theme-colors">
+                                <p class="switcher-style-head">Menu Colors:</p>
+                                <div class="d-flex switcher-style pb-2">
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Light Menu" type="radio" name="menu-colors"
+                                            id="switcher-menu-light">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Dark Menu" type="radio" name="menu-colors"
+                                            id="switcher-menu-dark" checked>
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Color Menu" type="radio" name="menu-colors"
+                                            id="switcher-menu-primary">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-gradient" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Gradient Menu" type="radio" name="menu-colors"
+                                            id="switcher-menu-gradient">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-transparent"
+                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Transparent Menu"
+                                            type="radio" name="menu-colors" id="switcher-menu-transparent">
+                                    </div>
+                                </div>
+                                <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Menu dynamically change from below Theme Primary color picker</div>
+                            </div>
+                            <div class="theme-colors">
+                                <p class="switcher-style-head">Header Colors:</p>
+                                <div class="d-flex switcher-style pb-2">
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Light Header" type="radio" name="header-colors"
+                                            id="switcher-header-light" checked>
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Dark Header" type="radio" name="header-colors"
+                                            id="switcher-header-dark">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Color Header" type="radio" name="header-colors"
+                                            id="switcher-header-primary">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-gradient" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Gradient Header" type="radio" name="header-colors"
+                                            id="switcher-header-gradient">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-transparent" data-bs-toggle="tooltip"
+                                            data-bs-placement="top" title="Transparent Header" type="radio" name="header-colors"
+                                            id="switcher-header-transparent">
+                                    </div>
+                                </div>
+                                <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Header dynamically change from below Theme Primary color picker</div>
+                            </div>
+                            <div class="theme-colors">
+                                <p class="switcher-style-head">Theme Primary:</p>
+                                <div class="d-flex flex-wrap align-items-center switcher-style">
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary-1" type="radio"
+                                            name="theme-primary" id="switcher-primary">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary-2" type="radio"
+                                            name="theme-primary" id="switcher-primary1">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary-3" type="radio" name="theme-primary"
+                                            id="switcher-primary2">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary-4" type="radio" name="theme-primary"
+                                            id="switcher-primary3">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-primary-5" type="radio" name="theme-primary"
+                                            id="switcher-primary4">
+                                    </div>
+                                    <div class="form-check switch-select ps-0 mt-1 color-primary-light">
+                                        <div class="theme-container-primary"></div>
+                                        <div class="pickr-container-primary"  onchange="updateChartColor(this.value)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="theme-colors">
+                                <p class="switcher-style-head">Theme Background:</p>
+                                <div class="d-flex flex-wrap align-items-center switcher-style">
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-bg-1" type="radio"
+                                            name="theme-background" id="switcher-background">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-bg-2" type="radio"
+                                            name="theme-background" id="switcher-background1">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-bg-3" type="radio" name="theme-background"
+                                            id="switcher-background2">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-bg-4" type="radio"
+                                            name="theme-background" id="switcher-background3">
+                                    </div>
+                                    <div class="form-check switch-select me-3">
+                                        <input class="form-check-input color-input color-bg-5" type="radio"
+                                            name="theme-background" id="switcher-background4">
+                                    </div>
+                                    <div class="form-check switch-select ps-0 mt-1 tooltip-static-demo color-bg-transparent">
+                                        <div class="theme-container-background"></div>
+                                        <div class="pickr-container-background"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="menu-image mb-3">
+                                <p class="switcher-style-head">Menu With Background Image:</p>
+                                <div class="d-flex flex-wrap align-items-center switcher-style">
+                                    <div class="form-check switch-select m-2">
+                                        <input class="form-check-input bgimage-input bg-img1" type="radio"
+                                            name="menu-background" id="switcher-bg-img">
+                                    </div>
+                                    <div class="form-check switch-select m-2">
+                                        <input class="form-check-input bgimage-input bg-img2" type="radio"
+                                            name="menu-background" id="switcher-bg-img1">
+                                    </div>
+                                    <div class="form-check switch-select m-2">
+                                        <input class="form-check-input bgimage-input bg-img3" type="radio" name="menu-background"
+                                            id="switcher-bg-img2">
+                                    </div>
+                                    <div class="form-check switch-select m-2">
+                                        <input class="form-check-input bgimage-input bg-img4" type="radio"
+                                            name="menu-background" id="switcher-bg-img3">
+                                    </div>
+                                    <div class="form-check switch-select m-2">
+                                        <input class="form-check-input bgimage-input bg-img5" type="radio"
+                                            name="menu-background" id="switcher-bg-img4">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid canvas-footer">
+                        <a href="javascript:void(0);" id="reset-all" class="btn btn-danger text-nowrap">Reset</a> 
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END SWITCHER -->
+
+        <!-- LOADER -->
+		<div b-fx3qej47ow id="loader">
+            <div b-fx3qej47ow class="spinner-border text-primary" role="status" aria-label="Loading"></div>
+		</div>
+		<!-- END LOADER -->
+
+        <!-- PAGE -->
+		<div b-fx3qej47ow class="page">
+
+            <!-- HEADER -->
+            
+           <header class="app-header sticky" id="header">
+
+                <!-- Start::main-header-container -->
+                <div class="main-header-container container-fluid">
+
+                    <!-- Start::header-content-left -->
+                    <div class="header-content-left">
+
+                        <!-- Start::header-element -->
+                        <div class="header-element">
+                            <div class="horizontal-logo">
+                                <a class="header-logo" href="/index">
+                                    <span class="fw-semibold fs-5 text-primary">Unified</span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- End::header-element -->
+
+                        <!-- Start::header-element -->
+                        <div class="header-element mx-lg-0 mx-2">
+                            <a aria-label="Hide Sidebar" class="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle" data-bs-toggle="sidebar" href="javascript:void(0);"><span></span></a>
+                        </div>
+                        <!-- End::header-element -->
+
+                        <!-- Start::header-element -->
+                        <div class="header-element header-search d-md-block d-none my-auto auto-complete-search">
+                            <!-- Start::header-link -->
+                            <input type="text" class="header-search-bar form-control" id="header-search" placeholder="Search anything here ..." spellcheck=false autocomplete="off" autocapitalize="off">
+                            <a href="javascript:void(0);" class="header-search-icon border-0">
+                                <i class="ri-search-line"></i>
+                            </a>
+                            <!-- End::header-link -->
+                        </div>
+                        <!-- End::header-element -->
+
+                    </div>
+                    <!-- End::header-content-left -->
+
+                    <!-- Start::header-content-right -->
+                    <ul class="header-content-right">
+
+                        <!-- Start::header-element -->
+                        <li class="header-element d-md-none d-block">
+                            <a href="javascript:void(0);" class="header-link" data-bs-toggle="modal" data-bs-target="#header-responsive-search">
+                                <!-- Start::header-link-icon -->
+                                <i class="ri-search-line header-link-icon"></i>
+                                <!-- End::header-link-icon -->
+                            </a>  
+                        </li>
+                        <!-- End::header-element -->
+
+                        <!-- Start::header-element -->
+                        <li class="header-element country-selector dropdown">
+                            <!-- Start::header-link|dropdown-toggle -->
+                            <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside" data-bs-toggle="dropdown">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" />
+                                </svg>
+                                
+                            </a>
+                            <!-- End::header-link|dropdown-toggle -->
+                            <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">EN</span>
+                                                English
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">ES</span>
+                                        español
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">FR</span>
+                                        français
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">AR</span>
+                                        عربي
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">DE</span>
+                                        Deutsch
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">ZH</span>
+                                        中国人
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">IT</span>
+                                        Italiano
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
+                                        <span class="avatar avatar-rounded avatar-xs lh-1 me-2 bg-primary-transparent text-primary d-inline-flex align-items-center justify-content-center">RU</span>
+                                        Русский
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <!-- End::header-element -->
+
+                        <!-- Start::header-element -->
+                        <li class="header-element header-theme-mode">
+                            <!-- Start::header-link|layout-setting -->
+                            <a href="javascript:void(0);" class="header-link layout-setting">
+                                <span class="light-layout">
+                                    <!-- Start::header-link-icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                                    </svg>
+                                    <!-- End::header-link-icon -->
+                                </span>
+                                <span class="dark-layout">
+                                    <!-- Start::header-link-icon -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                                    </svg>
+                                    <!-- End::header-link-icon -->
+                                </span>
+                            </a>
+                            <!-- End::header-link|layout-setting -->
+                        </li>
+                        <!-- End::header-element -->
+
+                        <!-- Cart removed — not applicable -->
+
+
+                        <!-- Start::header-element -->
+                        <li class="header-element notifications-dropdown d-xl-block d-none dropdown">
+                            <!-- Start::header-link|dropdown-toggle -->
+                            <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" id="messageDropdown" aria-expanded="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 header-link-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5" />
+                                </svg>
+                                <span class="header-icon-pulse bg-primary2 rounded pulse pulse-secondary d-none"></span>
+                            </a>
+                            <!-- End::header-link|dropdown-toggle -->
+                            <!-- Start::main-header-dropdown -->
+                            <div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
+                                <div class="p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <p class="mb-0 fs-15 fw-medium">Notifications</p>
+                                        <span class="badge bg-secondary text-fixed-white" id="notifiation-data">None</span>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <ul class="list-unstyled mb-0" id="header-notification-scroll">
+                                </ul>
+                                <div class="p-5 " id="header-notification-empty">
+                                    <div class="text-center">
+                                        <span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
+                                            <i class="ri-notification-off-line fs-2"></i>
+                                        </span>
+                                        <h6 class="fw-medium mt-3">No New Notifications</h6>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <div class="px-3 py-2">
+                                    <a href="/Profile/Notifications" class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center">
+                                        <i class="bx bx-cog me-1"></i>Manage Notifications
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- End::main-header-dropdown -->
+                        </li>
+                        <!-- End::header-element -->
+
+                        <!-- Start::header-element -->
+                        <li class="header-element dropdown">
+                            <!-- Start::header-link|dropdown-toggle -->
+                            <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="lh-1">
+                                            <i class="bx bx-user-circle fs-22 text-muted"></i>
+                                    </div>
+                                    <div class="d-none d-md-block">
+                                        <span class="fw-medium fs-13">am3@unified.local</span>
+                                            <span class="badge bg-info text-dark ms-1 fs-10">Account Manager</span>
+                                    </div>
+                                </div>
+                            </a>
+                            <!-- End::header-link|dropdown-toggle -->
+                            <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
+                                <li>
+                                    <div class="dropdown-item text-center border-bottom py-2">
+                                        <span class="fw-semibold d-block">am3@unified.local</span>
+                                        <span class="d-block fs-12 text-muted">
+                                                <span class="badge bg-info text-dark">Account Manager</span>
+                                        </span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="/Profile">
+                                        <i class="bx bx-user p-1 rounded-circle bg-primary-transparent me-2 fs-16"></i>View Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="/Profile/Notifications">
+                                        <i class="bx bx-bell p-1 rounded-circle bg-warning-transparent me-2 fs-16"></i>Notification Settings
+                                    </a>
+                                </li>
+                                <li class="border-top">
+                                    <a class="dropdown-item d-flex align-items-center" href="/Identity/Account/Logout?returnUrl=%2F">
+                                        <i class="fe fe-log-out p-1 rounded-circle bg-danger-transparent me-2 fs-16"></i>Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <!-- End::header-element -->
+
+                        <!-- Switcher/gear icon removed -->
+
+                    </ul>
+                    <!-- End::header-content-right -->
+
+                </div>
+                <!-- End::main-header-container -->
+
+            </header>
+
+            <div class="modal fade" id="header-responsive-search" tabindex="-1" aria-labelledby="header-responsive-search" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <input type="text" class="form-control border-end-0" placeholder="Search Anything ..."
+                                    aria-label="Search Anything ..." aria-describedby="button-addon2">
+                                <button class="btn btn-primary" type="button"
+                                    <i class="ri-search-line"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- END HEADER -->
+
+            <!-- SIDEBAR -->
+
+            
+                        <aside class="app-sidebar sticky" id="sidebar">
+
+                <!-- Start::main-sidebar-header -->
+                <div class="main-sidebar-header">
+                    <a class="header-logo" href="/index">
+                        <span class="fw-bold fs-5 text-white">Unified</span>
+                    </a>
+                </div>
+                <!-- End::main-sidebar-header -->
+
+                <!-- Start::main-sidebar -->
+                <div class="main-sidebar" id="sidebar-scroll">
+
+                    <!-- Start::nav -->
+                    <nav class="main-menu-container nav nav-pills flex-column sub-open">
+                        <ul class="main-menu">
+
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="cs-support">
+                                        <span class="category-name">CS Support</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                            <li class="slide d-flex align-items-center">
+                                                <a class="side-menu__item flex-grow-1" href="/CsLiveHelp/Requests">
+                                                    <i class="bx bx-support side-menu__icon"></i>
+                                                    <span class="side-menu__label">CS Live Help</span>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        data-notification-mute-btn="Requests"
+                                                        title="Mute/unmute Requests notifications"
+                                                        aria-label="Mute/unmute Requests notifications"
+                                                        aria-pressed="false">
+                                                    <i class="ri-notification-2-line"></i>
+                                                </button>
+                                            </li>
+                                    </ul>
+                                </li>
+                            <li class="slide__category-group">
+                                <div class="slide__category" data-category="system">
+                                    <span class="category-name">System</span>
+                                    <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                </div>
+                                <ul class="category-items">
+                                    
+                                    <li class="slide">
+                                        <a class="side-menu__item" href="/Home/Roadmap">
+                                            <i class="bx bx-map-alt side-menu__icon"></i>
+                                            <span class="side-menu__label">Roadmap</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        </ul>
+                    </nav>
+                    <!-- End::nav -->
+
+                </div>
+                <!-- End::main-sidebar -->
+
+            </aside>
+
+            <style>
+                .slide__category {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+                    user-select: none;
+                }
+                .category-toggle-icon {
+                    font-size: 1rem;
+                    transition: transform 0.25s ease;
+                    margin-inline-end: 0.25rem;
+                    opacity: 0.7;
+                }
+                .slide__category-group.collapsed .category-toggle-icon {
+                    transform: rotate(-90deg);
+                }
+                .category-items {
+                    overflow: hidden;
+                    transition: max-height 0.3s ease, opacity 0.3s ease;
+                    max-height: 2000px;
+                    opacity: 1;
+                    padding-left: 0;
+                    list-style: none;
+                    margin: 0;
+                }
+                .slide__category-group.collapsed .category-items {
+                    max-height: 0;
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                /* drag-and-drop */
+                li.slide[draggable="true"] {
+                    cursor: grab;
+                }
+                li.slide.no-drag,
+                li.slide.no-drag[draggable="true"] {
+                    cursor: default;
+                }
+                li.slide.drag--active {
+                    opacity: 0.4;
+                }
+                li.slide.drag--over {
+                    outline: 2px dashed rgba(255,255,255,0.45);
+                    outline-offset: -2px;
+                    border-radius: 4px;
+                }
+
+                .sidebar-chat-unread {
+                    min-width: 1.25rem;
+                }
+            </style>
+
+            <script defer src="https://cdn.jsdelivr.net/npm/%40microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+            <script>
+                (function () {
+                    const COLLAPSED_KEY = 'sidebar_collapsed';
+                    const ORDER_KEY     = 'sidebar_order';
+                    const isChatUser    = false;
+
+                    /* ── collapsed state ── */
+                    function getCollapsed() {
+                        try { return JSON.parse(localStorage.getItem(COLLAPSED_KEY)) || []; }
+                        catch { return []; }
+                    }
+                    function saveCollapsed(list) {
+                        localStorage.setItem(COLLAPSED_KEY, JSON.stringify(list));
+                    }
+
+                    /* ── item order ── */
+                    function getOrders() {
+                        try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || {}; }
+                        catch { return {}; }
+                    }
+                    function saveOrders(orders) {
+                        localStorage.setItem(ORDER_KEY, JSON.stringify(orders));
+                    }
+
+                    /* derive a stable key for a slide <li> from its anchor href */
+                    function itemKey(li) {
+                        const a = li.querySelector('a');
+                        return a ? a.getAttribute('href') || a.textContent.trim() : li.textContent.trim();
+                    }
+
+                    /* restore saved order inside a category-items <ul> */
+                    function restoreOrder(ul, categoryKey) {
+                        const orders = getOrders();
+                        const savedOrder = orders[categoryKey];
+                        if (!savedOrder || !savedOrder.length) return;
+
+                        const items = Array.from(ul.querySelectorAll(':scope > li.slide'));
+                        const map   = {};
+                        items.forEach(function (li) { map[itemKey(li)] = li; });
+
+                        savedOrder.forEach(function (key) {
+                            if (map[key]) ul.appendChild(map[key]);
+                        });
+                        /* append any items not present in saved order (newly added routes) */
+                        items.forEach(function (li) {
+                            if (!savedOrder.includes(itemKey(li))) ul.appendChild(li);
+                        });
+                    }
+
+                    /* persist current DOM order of a category-items <ul> */
+                    function persistOrder(ul, categoryKey) {
+                        const orders = getOrders();
+                        orders[categoryKey] = Array.from(ul.querySelectorAll(':scope > li.slide'))
+                            .map(itemKey);
+                        saveOrders(orders);
+                    }
+
+                    /* attach drag-and-drop to a category-items <ul> */
+                    function enableDrag(ul, categoryKey) {
+                        let dragged = null;
+
+                        ul.querySelectorAll(':scope > li.slide').forEach(function (li) {
+                            const isNoDrag = li.getAttribute('data-no-drag') === 'true' || li.classList.contains('no-drag');
+                            li.setAttribute('draggable', isNoDrag ? 'false' : 'true');
+
+                            li.addEventListener('dragstart', function (e) {
+                                if (isNoDrag) {
+                                    e.preventDefault();
+                                    return;
+                                }
+
+                                dragged = li;
+                                li.classList.add('drag--active');
+                                e.dataTransfer.effectAllowed = 'move';
+                            });
+
+                            li.addEventListener('dragend', function () {
+                                li.classList.remove('drag--active');
+                                ul.querySelectorAll(':scope > li.slide').forEach(function (s) {
+                                    s.classList.remove('drag--over');
+                                });
+                                dragged = null;
+                            });
+
+                            li.addEventListener('dragover', function (e) {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                                if (li === dragged) return;
+                                ul.querySelectorAll(':scope > li.slide').forEach(function (s) {
+                                    s.classList.remove('drag--over');
+                                });
+                                li.classList.add('drag--over');
+                            });
+
+                            li.addEventListener('dragleave', function () {
+                                li.classList.remove('drag--over');
+                            });
+
+                            li.addEventListener('drop', function (e) {
+                                e.preventDefault();
+                                li.classList.remove('drag--over');
+                                if (!dragged || dragged === li) return;
+
+                                /* insert dragged before or after target based on pointer position */
+                                const rect   = li.getBoundingClientRect();
+                                const midY   = rect.top + rect.height / 2;
+                                const after  = e.clientY > midY;
+
+                                if (after) {
+                                    li.after(dragged);
+                                } else {
+                                    li.before(dragged);
+                                }
+
+                                persistOrder(ul, categoryKey);
+                            });
+                        });
+                    }
+
+                    async function refreshRecentChatBadges() {
+                        const items = document.querySelectorAll('[data-chat-recent-item="true"]');
+                        if (!items.length) return;
+
+                        try {
+                            const res = await fetch('/CsMessaging/RecentConversations?take=8', {
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            const data = await res.json();
+                            if (!data?.success || !Array.isArray(data.conversations)) return;
+
+                            const byId = new Map(data.conversations.map(c => [String(c.conversationId), c]));
+
+                            items.forEach(function (li) {
+                                const id = li.getAttribute('data-conversation-id') || '';
+                                const row = byId.get(id);
+                                const badge = li.querySelector('.sidebar-chat-unread');
+                                if (!badge) return;
+
+                                const unread = row?.unreadCount || 0;
+                                badge.textContent = String(unread);
+                                badge.classList.toggle('d-none', unread <= 0);
+                            });
+                        } catch {
+                            // ignore sidebar badge refresh failures
+                        }
+                    }
+
+                    function wireSidebarChatRealtime() {
+                        if (!isChatUser) return;
+                        if (typeof window.signalR === 'undefined' || !window.signalR?.HubConnectionBuilder) return;
+
+                        const connection = new window.signalR.HubConnectionBuilder()
+                            .withUrl('/hubs/cs-messaging')
+                            .withAutomaticReconnect()
+                            .build();
+
+                        connection.on('ConversationChanged', refreshRecentChatBadges);
+                        connection.on('ConversationReadUpdated', refreshRecentChatBadges);
+                        connection.start().then(refreshRecentChatBadges).catch(function () {});
+                    }
+
+                    /* ── main init ── */
+                    function init() {
+                        const collapsed = getCollapsed();
+
+                        document.querySelectorAll('.slide__category[data-category]').forEach(function (header) {
+                            const group       = header.closest('.slide__category-group');
+                            const categoryKey = header.getAttribute('data-category');
+                            const ul          = group.querySelector('.category-items');
+
+                            /* restore saved item order */
+                            if (ul) {
+                                restoreOrder(ul, categoryKey);
+                                enableDrag(ul, categoryKey);
+                            }
+
+                            /* restore collapsed state */
+                            if (collapsed.includes(categoryKey)) {
+                                group.classList.add('collapsed');
+                            }
+
+                            header.addEventListener('click', function () {
+                                const isCollapsed = group.classList.toggle('collapsed');
+                                const list = getCollapsed();
+                                if (isCollapsed) {
+                                    if (!list.includes(categoryKey)) list.push(categoryKey);
+                                } else {
+                                    const idx = list.indexOf(categoryKey);
+                                    if (idx > -1) list.splice(idx, 1);
+                                }
+                                saveCollapsed(list);
+                            });
+                        });
+
+                        wireSidebarChatRealtime();
+                        refreshRecentChatBadges();
+                    }
+
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', init);
+                    } else {
+                        init();
+                    }
+                })();
+            </script>
+
+
+            <!-- END SIDEBAR -->
+
+            <!-- MAIN-CONTENT -->
+
+            <div b-fx3qej47ow class="main-content app-content">
+                <div b-fx3qej47ow class="container-fluid">
+                    
+                    
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-6 text-center">
+            <h1 class="display-1 fw-bold text-danger">500</h1>
+            <h2 class="mb-3">Something Went Wrong</h2>
+            <p class="text-muted mb-4">An unexpected error occurred. Please try again later.</p>
+                <p class="small text-muted">Request ID: <code>00-95c4e2cef9fc08edaba747cc34c11bed-d6191d6d8a98d727-00</code></p>
+        <a class="btn btn-primary btn-wave" href="/index">
+            <i class="bx bx-home me-1"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+                </div>
+            </div>
+            <!-- END MAIN-CONTENT -->
+
+            <!-- FOOTER -->
+            
+            <footer class="footer mt-auto py-3 bg-white text-center">
+                <div class="container">
+                    <span class="text-muted">
+                        Preview &mdash; made with <i class="bx bx-heart text-danger"></i> by
+                        <a href="https://github.com/Jacquesvdberg92" target="_blank" class="fw-medium text-primary">
+                            Jacquesvdberg92
+                        </a>
+                    </span>
+                </div>
+            </footer>
+
+
+            <!-- END FOOTER -->
+
+		</div>
+        <!-- END PAGE-->
+
+        <!-- SCRIPTS -->
+
+        
+        <!-- SCROLL-TO-TOP -->
+        <div class="scrollToTop">
+                <span class="arrow"><i class="ri-arrow-up-line fs-20"></i></span>
+        </div>
+        <div id="responsive-overlay"></div>
+
+        <!-- POPPER JS -->
+        <script src="/assets/libs/@popperjs/core/umd/popper.min.js" defer></script>
+
+        <!-- BOOTSTRAP JS -->
+        <script src="/assets/libs/bootstrap/js/bootstrap.bundle.min.js" defer></script>
+
+        <!-- NODE WAVES JS -->
+        <script src="/assets/libs/node-waves/waves.min.js" defer></script>
+
+        <!-- SIMPLEBAR JS -->
+        <script src="/assets/libs/simplebar/simplebar.min.js" defer></script>
+        <script src="/assets/js/simplebar.js" defer></script>
+
+        <!-- Flat PICKER JS -->
+        <script src="/assets/libs/flatpickr/flatpickr.min.js" defer></script>
+
+        <!-- DEFAULTMENU JS -->
+        <script src="/assets/js/defaultmenu.js" defer></script>
+
+        <!-- SITE JS -->
+        <script src="/js/site.js" defer></script>
+
+        <!-- SIGNALR JS -->
+        <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js" defer></script>
+
+        <!-- NOTIFICATION SYSTEM JS (in dependency order) -->
+        <script src="/js/notification-sounds.js" defer></script>
+        <script src="/js/notification-manager.js" defer></script>
+        <script src="/js/live-notifications.js" defer></script>
+        <script src="/js/notification-visual-indicators.js" defer></script>
+        <script src="/js/notification-page-controls.js" defer></script>
+
+
+        <!-- TOASTIFY JS -->
+        <script src="/assets/libs/toastify-js/src/toastify.js" defer></script>
+
+        
+
+        
+
+        
+
+		<!-- STICKY JS -->
+		<script src="/assets/js/sticky.js" defer></script>
+
+		<!-- DASHBOARD WIDGETS JS -->
+		<script src="/js/dashboard-widgets.js" defer></script>
+
+		<!-- CUSTOM JS -->
+		<script src="/assets/js/custom.js" defer></script>
+
+		<!-- CUSTOM-SWITCHER JS -->
+		<script src="/assets/js/custom-switcher.js" defer></script>
+
+        <!-- END SCRIPTS -->
+
+	</body>
+</html>
+: Status code '403'
+    at K.Pe (HttpConnection.ts:352:20)
+    at async K.yt (HttpConnection.ts:245:33)
+    at async K.start (HttpConnection.ts:137:38)
+    at async q.yt (HubConnection.ts:225:13)
+    at async q.gt (HubConnection.ts:199:42)
+(anonymous) @ live-notifications.js:100
+Promise.catch
+(anonymous) @ live-notifications.js:99
+(anonymous) @ live-notifications.js:102
+bootstrap-autofill-overlay.js:7198 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('chrome-extension://nngceckbapebfimnlniiiahkandclblb') does not match the recipient window's origin ('https://localhost:7004').
+sendMessageToNotificationBarIframe @ bootstrap-autofill-overlay.js:7198
+openNotificationBar @ bootstrap-autofill-overlay.js:7086
+(anonymous) @ bootstrap-autofill-overlay.js:7016
+(anonymous) @ bootstrap-autofill-overlay.js:6903
+overlay_notifications_content_service_awaiter @ bootstrap-autofill-overlay.js:6899
+handleOpenNotificationBarMessage @ bootstrap-autofill-overlay.js:6991
+openNotificationBar @ bootstrap-autofill-overlay.js:6959
+AutofillInit.handleExtensionMessage @ bootstrap-autofill-overlay.js:25458
+bootstrap-autofill-overlay.js:7198 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('chrome-extension://nngceckbapebfimnlniiiahkandclblb') does not match the recipient window's origin ('https://localhost:7004').
+sendMessageToNotificationBarIframe @ bootstrap-autofill-overlay.js:7198
+openNotificationBar @ bootstrap-autofill-overlay.js:7086
+(anonymous) @ bootstrap-autofill-overlay.js:7016
+(anonymous) @ bootstrap-autofill-overlay.js:6903
+overlay_notifications_content_service_awaiter @ bootstrap-autofill-overlay.js:6899
+handleOpenNotificationBarMessage @ bootstrap-autofill-overlay.js:6991
+openNotificationBar @ bootstrap-autofill-overlay.js:6959
+AutofillInit.handleExtensionMessage @ bootstrap-autofill-overlay.js:25458
+bootstrap-autofill-overlay.js:7198 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('chrome-extension://nngceckbapebfimnlniiiahkandclblb') does not match the recipient window's origin ('https://localhost:7004').
+sendMessageToNotificationBarIframe @ bootstrap-autofill-overlay.js:7198
+openNotificationBar @ bootstrap-autofill-overlay.js:7086
+(anonymous) @ bootstrap-autofill-overlay.js:7016
+(anonymous) @ bootstrap-autofill-overlay.js:6903
+overlay_notifications_content_service_awaiter @ bootstrap-autofill-overlay.js:6899
+handleOpenNotificationBarMessage @ bootstrap-autofill-overlay.js:6991
+openNotificationBar @ bootstrap-autofill-overlay.js:6959
+AutofillInit.handleExtensionMessage @ bootstrap-autofill-overlay.js:25458
+Utils.ts:190 [2026-05-24T12:00:12.862Z] Information: WebSocket connected to wss://localhost:7004/hubs/cslivehelp?id=RtqOFraXu_IYiiHrZSl64Q.
+Utils.ts:184 [2026-05-24T12:03:04.212Z] Error: Connection disconnected with error 'Error: WebSocket closed with status code: 1006 (no reason given).'.
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:527
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+cslivehelp.js:68 [CsLiveHelp] Board reconnecting…
+showToastMsg @ cslivehelp.js:68
+(anonymous) @ cslivehelp.js:324
+forEach @ HubConnection.ts:892
+(anonymous) @ HubConnection.ts:891
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+FetchHttpClient.ts:110  POST https://localhost:7004/hubs/cslivehelp/negotiate?negotiateVersion=1 net::ERR_CONNECTION_REFUSED
+async @ FetchHttpClient.ts:110
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:187 [2026-05-24T12:03:06.559Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ Utils.ts:187
+async @ FetchHttpClient.ts:131
+await in async
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:06.559Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:347
+await in (anonymous)
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:06.559Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+yt @ HttpConnection.ts:308
+await in yt
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+FetchHttpClient.ts:110  POST https://localhost:7004/hubs/cslivehelp/negotiate?negotiateVersion=1 net::ERR_CONNECTION_REFUSED
+async @ FetchHttpClient.ts:110
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:187 [2026-05-24T12:03:10.914Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ Utils.ts:187
+async @ FetchHttpClient.ts:131
+await in async
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:10.914Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:347
+await in (anonymous)
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:10.914Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+yt @ HttpConnection.ts:308
+await in yt
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+FetchHttpClient.ts:110  POST https://localhost:7004/hubs/cslivehelp/negotiate?negotiateVersion=1 net::ERR_CONNECTION_REFUSED
+async @ FetchHttpClient.ts:110
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:187 [2026-05-24T12:03:23.273Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ Utils.ts:187
+async @ FetchHttpClient.ts:131
+await in async
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:23.273Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:347
+await in (anonymous)
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:23.273Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+yt @ HttpConnection.ts:308
+await in yt
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+FetchHttpClient.ts:110  POST https://localhost:7004/hubs/cslivehelp/negotiate?negotiateVersion=1 net::ERR_CONNECTION_REFUSED
+async @ FetchHttpClient.ts:110
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:187 [2026-05-24T12:03:55.643Z] Warning: Error from HTTP request. TypeError: Failed to fetch.
+log @ Utils.ts:187
+async @ FetchHttpClient.ts:131
+await in async
+XhrHttpClient @ DefaultHttpClient.ts:38
+async @ AccessTokenHttpClient.ts:28
+post @ HttpClient.ts:121
+(anonymous) @ HttpConnection.ts:320
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:55.644Z] Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+(anonymous) @ HttpConnection.ts:347
+await in (anonymous)
+yt @ HttpConnection.ts:248
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122
+Utils.ts:184 [2026-05-24T12:03:55.644Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: TypeError: Failed to fetch
+log @ Utils.ts:184
+yt @ HttpConnection.ts:308
+await in yt
+start @ HttpConnection.ts:137
+(anonymous) @ HubConnection.ts:228
+(anonymous) @ HubConnection.ts:923
+await in (anonymous)
+st @ HubConnection.ts:834
+(anonymous) @ HubConnection.ts:135
+(anonymous) @ HttpConnection.ts:549
+(anonymous) @ HttpConnection.ts:462
+resolve @ WebSocketTransport.ts:181
+(anonymous) @ WebSocketTransport.ts:122

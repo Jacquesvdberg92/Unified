@@ -34,6 +34,12 @@ public class CsLiveHelpService
         int? TeamId,
         int? BrandId);
 
+    public sealed record CommentNotificationRecipients(
+        string? AccountManagerId,
+        string? AssignedAgentId,
+        IReadOnlyCollection<string> TargetedUserIds,
+        int? BrandId);
+
     // ── Reference data ────────────────────────────────────────────────────
 
     public async Task<List<CsRequestType>> GetRequestTypesAsync()
@@ -420,6 +426,30 @@ public class CsLiveHelpService
             mentionedUserIds,
             all,
             teamId,
+            req.BrandId);
+    }
+
+    public async Task<CommentNotificationRecipients> ResolveCommentNotificationRecipientsAsync(int requestId)
+    {
+        var req = await _db.CsRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == requestId);
+
+        if (req is null)
+            return new CommentNotificationRecipients(null, null, [], null);
+
+        var targeted = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(req.AccountManagerId))
+            targeted.Add(req.AccountManagerId);
+
+        if (!string.IsNullOrWhiteSpace(req.AssignedToId))
+            targeted.Add(req.AssignedToId);
+
+        return new CommentNotificationRecipients(
+            req.AccountManagerId,
+            req.AssignedToId,
+            targeted.Distinct().ToList(),
             req.BrandId);
     }
 

@@ -10,10 +10,10 @@ const NotificationSounds = (() => {
     let isInitialized = false;
 
     const SOUND_FILES = {
-        notification: '/assets/audio/perfect-beauty.mp3',
-        comment: '/assets/audio/perfect-beauty.mp3',
-        mention: '/assets/audio/perfect-beauty.mp3',
-        newMessage: '/assets/audio/perfect-beauty.mp3'
+        notification: '/assets/audio/ping.mp3',
+        comment: '/assets/audio/ping.mp3',
+        mention: '/assets/audio/ping.mp3',
+        newMessage: '/assets/audio/ping.mp3'
     };
 
     const SOUND_SETTINGS = {

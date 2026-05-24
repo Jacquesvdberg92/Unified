@@ -610,7 +610,7 @@
         if (modal.id.startsWith('commentModal-')) {
             const requestId = modal.dataset.requestId;
             if (requestId) {
-                const threadBody = modal.querySelector('#threadBody-' + requestId);
+                let threadBody = modal.querySelector('#threadBody-' + requestId);
                 if (threadBody) {
                     fetch('/CsLiveHelp/AmCommentThread/' + requestId, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -621,7 +621,19 @@
                     })
                     .then(function (html) {
                         if (!html) return;
-                        threadBody.innerHTML = html;
+                        // If the current element is a <p> placeholder (no comments yet),
+                        // replace it with a proper scrollable thread container.
+                        if (threadBody.tagName === 'P') {
+                            const wrap = document.createElement('div');
+                            wrap.className = 'thread-body mb-3 border rounded p-2';
+                            wrap.style.cssText = 'max-height:260px;overflow-y:auto';
+                            wrap.id = 'threadBody-' + requestId;
+                            wrap.innerHTML = html;
+                            threadBody.replaceWith(wrap);
+                            threadBody = wrap;
+                        } else {
+                            threadBody.innerHTML = html;
+                        }
                         threadBody.scrollTop = threadBody.scrollHeight;
                     })
                     .catch(function () {

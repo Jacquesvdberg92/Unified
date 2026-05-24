@@ -265,20 +265,36 @@
                                     <ul class="category-items">
                                         @if (User.IsInRole("AccountManager"))
                                         {
-                                            <li class="slide">
-                                                <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item">
+                                            <li class="slide d-flex align-items-center">
+                                                <a asp-controller="CsLiveHelp" asp-action="Requests" class="side-menu__item flex-grow-1">
                                                     <i class="bx bx-support side-menu__icon"></i>
                                                     <span class="side-menu__label">CS Live Help</span>
                                                 </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        data-notification-mute-btn="Requests"
+                                                        title="Mute/unmute Requests notifications"
+                                                        aria-label="Mute/unmute Requests notifications"
+                                                        aria-pressed="false">
+                                                    <i class="ri-notification-2-line"></i>
+                                                </button>
                                             </li>
                                         }
                                         @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
                                         {
-                                            <li class="slide">
-                                                <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item">
+                                            <li class="slide d-flex align-items-center">
+                                                <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item flex-grow-1">
                                                     <i class="bx bx-support side-menu__icon"></i>
                                                     <span class="side-menu__label">CS Live Help</span>
                                                 </a>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        data-notification-mute-btn="Board"
+                                                        title="Mute/unmute Board notifications"
+                                                        aria-label="Mute/unmute Board notifications"
+                                                        aria-pressed="false">
+                                                    <i class="ri-notification-2-line"></i>
+                                                </button>
                                             </li>
                                             <li class="slide">
                                                 <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">

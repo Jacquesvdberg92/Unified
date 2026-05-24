@@ -19,22 +19,21 @@ const NotificationPageControls = (() => {
         const muteButtons = document.querySelectorAll('[data-notification-mute-btn]');
 
         muteButtons.forEach(btn => {
+            if (btn.dataset.notificationMuteBound === 'true') {
+                const contextType = btn.dataset.notificationMuteBtn || pageContextType;
+                const contextId = btn.dataset.notificationContextId || '';
+                const isMuted = NotificationManager.isMuted(contextType, contextId);
+                updateMuteButtonState(btn, isMuted);
+                return;
+            }
+
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-
-                const contextType = btn.dataset.notificationMuteBtn || pageContextType;
-                const contextId = btn.dataset.notificationContextId || '';
-
-                const isMuted = NotificationManager.toggleMute(contextType, contextId);
-                updateMuteButtonState(btn, isMuted);
-
-                // Show user feedback
-                const message = isMuted ? 
-                    `Notifications muted for ${contextType}` : 
-                    `Notifications unmuted for ${contextType}`;
-                console.log(message);
+                handleMuteButtonClick(btn, pageContextType);
             });
+
+            btn.dataset.notificationMuteBound = 'true';
 
             // Initialize button state
             const contextType = btn.dataset.notificationMuteBtn || pageContextType;
@@ -48,6 +47,23 @@ const NotificationPageControls = (() => {
             const { contextType, contextId, isMuted } = e.detail;
             updatePageControlsForContext(pageContextType, contextType, contextId, isMuted);
         });
+    }
+
+    /**
+     * Handle mute button click
+     */
+    function handleMuteButtonClick(button, fallbackPageContextType = '') {
+        const contextType = button.dataset.notificationMuteBtn || fallbackPageContextType;
+        if (!contextType) return;
+
+        const contextId = button.dataset.notificationContextId || '';
+        const isMuted = NotificationManager.toggleMute(contextType, contextId);
+        updateMuteButtonState(button, isMuted);
+
+        const message = isMuted
+            ? `Notifications muted for ${contextType}`
+            : `Notifications unmuted for ${contextType}`;
+        console.log(message);
     }
 
     /**
@@ -90,6 +106,15 @@ const NotificationPageControls = (() => {
         relevantButtons.forEach(btn => {
             updateMuteButtonState(btn, isMuted);
         });
+    }
+
+    function updateAllControlsForContext(changedContextType, changedContextId, isMuted) {
+        if (!changedContextType) return;
+
+        const selector = `[data-notification-mute-btn="${changedContextType}"]` +
+            (changedContextId ? `[data-notification-context-id="${changedContextId}"]` : ':not([data-notification-context-id])');
+
+        document.querySelectorAll(selector).forEach(btn => updateMuteButtonState(btn, isMuted));
     }
 
     /**
@@ -214,6 +239,15 @@ const NotificationPageControls = (() => {
      * Auto-initialize all mute buttons and toggles on the page
      */
     function autoInitialize() {
+        // Initialize all mute button states
+        document.querySelectorAll('[data-notification-mute-btn]').forEach(btn => {
+            const contextType = btn.dataset.notificationMuteBtn || '';
+            const contextId = btn.dataset.notificationContextId || '';
+            if (!contextType) return;
+            const isMuted = NotificationManager?.isMuted(contextType, contextId) ?? false;
+            updateMuteButtonState(btn, isMuted);
+        });
+
         // Handle checkbox toggles for mute
         document.addEventListener('change', (e) => {
             if (e.target.classList.contains('notification-mute-toggle')) {
@@ -228,8 +262,15 @@ const NotificationPageControls = (() => {
             }
         });
 
-        // Handle clear notifications
+        // Handle mute button clicks globally (for sidebar and shared controls)
         document.addEventListener('click', (e) => {
+            const muteBtn = e.target.closest('[data-notification-mute-btn]');
+            if (muteBtn) {
+                e.preventDefault();
+                handleMuteButtonClick(muteBtn, '');
+                return;
+            }
+
             const clearLink = e.target.closest('.notification-clear-item');
             if (clearLink) {
                 e.preventDefault();
@@ -237,6 +278,12 @@ const NotificationPageControls = (() => {
                 const contextId = clearLink.dataset.notificationClearId;
                 NotificationManager?.clearNotifications(contextType, contextId);
             }
+        });
+
+        // Keep all controls synchronized across pages/tabs
+        document.addEventListener('notificationPreferenceChanged', (e) => {
+            const { contextType, contextId, isMuted } = e.detail || {};
+            updateAllControlsForContext(contextType, contextId, isMuted);
         });
     }
 

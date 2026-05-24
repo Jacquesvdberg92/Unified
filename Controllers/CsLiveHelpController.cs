@@ -143,24 +143,21 @@ public class CsLiveHelpController : Controller
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardAdded", payload);
 
         var recipients = await _svc.ResolveRecipientsAsync(req.Id, null);
-        if (recipients.AllUniqueAgentIds.Any())
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardAdded", payload);
-        else
-            await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+        // Board should always receive new AM requests in real time.
+        // Sending only to scoped recipients can miss connected CS users who are not
+        // in the resolved brand/team sets, which makes cards appear only after refresh.
+        await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
 
-        if (recipients.AllUniqueAgentIds.Any())
+        await _hub.Clients.Group("cs-board").SendAsync("RequestNotification", new
         {
-            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("RequestNotification", new
-            {
-                type = "newRequest",
-                requestId = req.Id.ToString(),
-                brandName = brand?.Name,
-                requestType = rtype?.Name,
-                actor = User.Identity?.Name ?? "System",
-                contextType = "Board",
-                timestamp = DateTime.UtcNow
-            });
-        }
+            type = "newRequest",
+            requestId = req.Id.ToString(),
+            brandName = brand?.Name,
+            requestType = rtype?.Name,
+            actor = User.Identity?.Name ?? "System",
+            contextType = "Board",
+            timestamp = DateTime.UtcNow
+        });
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Request submitted." });
@@ -356,6 +353,23 @@ public class CsLiveHelpController : Controller
             await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
         else
             await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+
+        var commentRecipients = await _svc.ResolveCommentNotificationRecipientsAsync(id);
+        var amCommentTargets = string.IsNullOrWhiteSpace(commentRecipients.AssignedAgentId)
+            ? new List<string>()
+            : new List<string> { commentRecipients.AssignedAgentId };
+
+        if (amCommentTargets.Any())
+        {
+            await _hub.Clients.Users(amCommentTargets).SendAsync("CommentNotification", new
+            {
+                type = "comment",
+                requestId = id.ToString(),
+                author = author?.DisplayName ?? amId,
+                contextType = "Requests",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         if (recipients.MentionedUserIds.Any())
         {
@@ -578,6 +592,23 @@ public class CsLiveHelpController : Controller
             await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
         else
             await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+
+        var commentRecipients = await _svc.ResolveCommentNotificationRecipientsAsync(id);
+        var csCommentTargets = string.IsNullOrWhiteSpace(commentRecipients.AccountManagerId)
+            ? new List<string>()
+            : new List<string> { commentRecipients.AccountManagerId };
+
+        if (csCommentTargets.Any())
+        {
+            await _hub.Clients.Users(csCommentTargets).SendAsync("CommentNotification", new
+            {
+                type = "comment",
+                requestId = id.ToString(),
+                author = agent?.DisplayName ?? csId,
+                contextType = "Board",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         if (recipients.MentionedUserIds.Any())
         {
@@ -1018,6 +1049,7 @@ public class CsLiveHelpController : Controller
         var amId = _users.GetUserId(User)!;
         var req = await _svc.GetRequestAsync(id);
         if (req is null || req.AccountManagerId != amId) return NotFound();
+        ViewData["ShowActions"] = true;
         return PartialView("_CsRequestCard", req);
     }
 
