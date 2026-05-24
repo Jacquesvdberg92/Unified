@@ -166,8 +166,6 @@
                                 @{
                                     var notifications = ViewBag.Notifications as List<string> ?? new List<string>();
                                 }
-                                @if (notifications.Any())
-                                {
                                 <ul class="list-unstyled mb-0" id="header-notification-scroll">
                                     @foreach (var note in notifications)
                                     {
@@ -185,10 +183,7 @@
                                     </li>
                                     }
                                 </ul>
-                                }
-                                else
-                                {
-                                <div class="p-5">
+                                <div class="p-5 @(notifications.Any() ? "d-none" : "")" id="header-notification-empty">
                                     <div class="text-center">
                                         <span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
                                             <i class="ri-notification-off-line fs-2"></i>
@@ -196,7 +191,6 @@
                                         <h6 class="fw-medium mt-3">No New Notifications</h6>
                                     </div>
                                 </div>
-                                }
                                 <div class="dropdown-divider"></div>
                                 <div class="px-3 py-2">
                                     <a href="/Profile/Notifications" class="btn btn-sm btn-light w-100 d-flex align-items-center justify-content-center">

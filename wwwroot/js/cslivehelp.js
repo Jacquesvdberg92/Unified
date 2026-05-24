@@ -121,6 +121,19 @@
 
     // ── SignalR connection ───────────────────────────────────────────────────
 
+    const seenNotificationKeys = new Set();
+
+    function markSeen(key) {
+        if (!key) return false;
+        if (seenNotificationKeys.has(key)) return true;
+        seenNotificationKeys.add(key);
+        if (seenNotificationKeys.size > 500) {
+            const first = seenNotificationKeys.values().next().value;
+            if (first) seenNotificationKeys.delete(first);
+        }
+        return false;
+    }
+
     const connection = new signalR.HubConnectionBuilder()
         .withUrl('/hubs/cslivehelp')
         .withAutomaticReconnect()
@@ -323,18 +336,23 @@
         }
 
         const contextType = data.contextType || 'Board';
-        const notificationTitle = data.type === 'newRequest' ? 'New Request' : 
-                                  data.type === 'escalated' ? 'Request Escalated' : 'Request Update';
-        const notificationMessage = data.brandName ? `${data.brandName} - ${data.requestType}` : 'New request created';
+        const contextId = String(data.requestId || '');
+        const dedupeKey = `request:${data.type || 'update'}:${contextId}:${data.timestamp || ''}`;
+        if (markSeen(dedupeKey)) return;
 
-        // Determine if notification should be triggered based on page context and mute settings
-        const shouldNotify = !NotificationManager.isMuted(contextType);
+        const notificationTitle = data.type === 'newRequest' ? 'New Request' :
+                                  data.type === 'escalated' ? 'Request Escalated' : 'Request Update';
+        const notificationMessage = data.brandName
+            ? `${data.brandName}${data.requestType ? ` - ${data.requestType}` : ''}`
+            : 'New request created';
+
+        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
 
         if (shouldNotify) {
             NotificationManager.handleNotification({
                 type: data.type,
                 contextType: contextType,
-                contextId: data.requestId,
+                contextId: contextId,
                 title: notificationTitle,
                 message: notificationMessage,
                 sound: true,
@@ -357,16 +375,20 @@
         }
 
         const contextType = data.contextType || 'Board';
-        const notificationTitle = 'New Comment';
-        const notificationMessage = `${data.author} commented on request #${data.requestId}`;
+        const contextId = String(data.requestId || '');
+        const dedupeKey = `comment:${contextId}:${data.author || ''}:${data.timestamp || ''}`;
+        if (markSeen(dedupeKey)) return;
 
-        const shouldNotify = !NotificationManager.isMuted(contextType, data.requestId);
+        const notificationTitle = 'New Comment';
+        const notificationMessage = `${data.author} commented on request #${contextId}`;
+
+        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
 
         if (shouldNotify) {
             NotificationManager.handleNotification({
                 type: 'comment',
                 contextType: contextType,
-                contextId: data.requestId,
+                contextId: contextId,
                 title: notificationTitle,
                 message: notificationMessage,
                 sound: true,
@@ -389,16 +411,20 @@
         }
 
         const contextType = data.contextType || 'RequestsAllBrands';
-        const notificationTitle = 'You were mentioned';
-        const notificationMessage = `${data.author} mentioned you in request #${data.requestId}`;
+        const contextId = String(data.requestId || '');
+        const dedupeKey = `mention:${contextId}:${data.author || ''}:${data.timestamp || ''}`;
+        if (markSeen(dedupeKey)) return;
 
-        const shouldNotify = !NotificationManager.isMuted(contextType);
+        const notificationTitle = 'You were mentioned';
+        const notificationMessage = `${data.author} mentioned you in request #${contextId}`;
+
+        const shouldNotify = !NotificationManager.isMuted(contextType, contextId);
 
         if (shouldNotify) {
             NotificationManager.handleNotification({
                 type: 'mention',
                 contextType: contextType,
-                contextId: data.requestId,
+                contextId: contextId,
                 title: notificationTitle,
                 message: notificationMessage,
                 sound: true,

@@ -17,7 +17,7 @@ const NotificationManager = (() => {
     let notificationQueue = [];
     let recentNotifications = [];
     let userSettings = null;
-    const RECENT_NOTIFICATION_TIMEOUT = 5000; // Keep for 5 seconds
+    const RECENT_NOTIFICATION_TIMEOUT = 30 * 60 * 1000; // Keep for 30 minutes
 
     /**
      * Load user notification settings from server
@@ -192,6 +192,8 @@ const NotificationManager = (() => {
             type,
             contextType,
             contextId,
+            title,
+            message,
             timestamp: Date.now()
         });
 
@@ -243,6 +245,11 @@ const NotificationManager = (() => {
      */
     function addToRecentNotifications(notification) {
         recentNotifications.push(notification);
+
+        // Keep latest notifications first and cap list for header rendering
+        recentNotifications = recentNotifications
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+            .slice(0, 20);
 
         // Clean up old notifications
         const now = Date.now();
@@ -329,11 +336,55 @@ const NotificationManager = (() => {
         }
     }
 
+    function renderHeaderNotificationList() {
+        const listEl = document.querySelector('#header-notification-scroll');
+        const emptyEl = document.querySelector('#header-notification-empty');
+        if (!listEl) return;
+
+        const maxItems = 10;
+        const items = recentNotifications
+            .slice()
+            .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+            .slice(0, maxItems);
+
+        if (!items.length) {
+            listEl.innerHTML = '';
+            if (emptyEl) emptyEl.classList.remove('d-none');
+            return;
+        }
+
+        if (emptyEl) emptyEl.classList.add('d-none');
+
+        listEl.innerHTML = items.map(item => {
+            const title = item.title || 'Notification';
+            const message = item.message || '';
+            const context = item.contextType || '';
+            const ts = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            return `
+                <li class="dropdown-item">
+                    <div class="d-flex align-items-start">
+                        <div class="pe-2 lh-1 mt-1">
+                            <span class="avatar avatar-md avatar-rounded bg-primary2">
+                                <i class="ri-notification-3-line lh-1 fs-16"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-medium fs-13">${title}</p>
+                            ${message ? `<p class="mb-0 text-muted small">${message}</p>` : ''}
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                ${context ? `<span class="badge bg-light text-dark border">${context}</span>` : ''}
+                                ${ts ? `<span class="text-muted small">${ts}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </li>`;
+        }).join('');
+    }
+
     /**
      * Update notification bell in header
      */
     function updateNotificationBell() {
-        // Target the existing header notification bell with ID messageDropdown
         const bell = document.querySelector('#messageDropdown');
         if (!bell) return;
 
@@ -341,7 +392,6 @@ const NotificationManager = (() => {
         let bellBadge = bell.querySelector('.header-icon-pulse');
 
         if (recentCount > 0) {
-            // Show the pulse badge if it exists, or create one
             if (!bellBadge) {
                 bellBadge = document.createElement('span');
                 bellBadge.className = 'header-icon-pulse bg-primary2 rounded pulse pulse-secondary';
@@ -350,7 +400,6 @@ const NotificationManager = (() => {
                 bellBadge.classList.remove('d-none');
             }
 
-            // Update badge count
             const badgeEl = bell.parentElement.querySelector('#notifiation-data');
             if (badgeEl) {
                 badgeEl.textContent = `${recentCount} Unread`;
@@ -362,7 +411,6 @@ const NotificationManager = (() => {
                 bellBadge.classList.add('d-none');
             }
 
-            // Reset badge count
             const badgeEl = bell.parentElement.querySelector('#notifiation-data');
             if (badgeEl) {
                 badgeEl.textContent = 'None';
@@ -370,6 +418,8 @@ const NotificationManager = (() => {
 
             bell.classList.remove('has-notifications');
         }
+
+        renderHeaderNotificationList();
     }
 
     /**
@@ -563,11 +613,16 @@ const NotificationManager = (() => {
     };
 })();
 
-// Auto-clear old recent notifications periodically
+// Auto-refresh bell/list rendering periodically to keep UI in sync
 setInterval(() => {
-    const now = Date.now();
     const stats = NotificationManager.getStats();
     if (stats.totalRecent > 0) {
         NotificationManager.updateNotificationBell();
     }
 }, 6000);
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => NotificationManager.updateNotificationBell());
+} else {
+    NotificationManager.updateNotificationBell();
+}

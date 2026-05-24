@@ -136,12 +136,31 @@ public class CsLiveHelpController : Controller
         var req = await _svc.CreateRequestAsync(amId, brandId, requestTypeId, customDescription, clientId);
         await _svc.AuditAsync(amId, "CreateRequest", req.Id, GetClientIp());
 
-        // Push real-time event to the AM's own group and to all CS agents
+        // Push real-time event to the AM's own group and scoped CS recipients
         var brand = await _db.Brands.FindAsync(brandId);
         var rtype = await _db.CsRequestTypes.FindAsync(requestTypeId);
         var payload = new { id = req.Id, brandName = brand?.Name, requestType = rtype?.Name, status = req.Status.ToString(), isInternal = false };
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardAdded", payload);
-        await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+
+        var recipients = await _svc.ResolveRecipientsAsync(req.Id, null);
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardAdded", payload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+
+        if (recipients.AllUniqueAgentIds.Any())
+        {
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("RequestNotification", new
+            {
+                type = "newRequest",
+                requestId = req.Id.ToString(),
+                brandName = brand?.Name,
+                requestType = rtype?.Name,
+                actor = User.Identity?.Name ?? "System",
+                contextType = "Board",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Request submitted." });
@@ -215,7 +234,12 @@ public class CsLiveHelpController : Controller
         var rtype = await _db.CsRequestTypes.FindAsync(requestTypeId);
         var payload = new { id, brandName = brand?.Name, requestType = rtype?.Name };
         await _hub.Clients.Group($"am-{amId}").SendAsync("CardUpdated", payload);
-        await _hub.Clients.Group("cs-board").SendAsync("CardUpdated", payload);
+
+        var recipients = await _svc.ResolveRecipientsAsync(id, null);
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardUpdated", payload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardUpdated", payload);
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Request updated." });
@@ -317,14 +341,32 @@ public class CsLiveHelpController : Controller
             imagePath = $"/uploads/cs-comments/{id}/{fileName}";
         }
 
+        var mentionNames = _svc.ExtractMentionNames(body).ToList();
         var ok = await _svc.AddCommentAsync(id, amId, body, imagePath);
         if (!ok) return Forbid();
 
         await _svc.AuditAsync(amId, "AddComment", id, GetClientIp());
 
         var author = await _users.GetUserAsync(User);
-        await _hub.Clients.Group($"am-{amId}").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+        var commentPayload = new { requestId = id, author = author?.DisplayName ?? amId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow };
+        await _hub.Clients.Group($"am-{amId}").SendAsync("CommentAdded", commentPayload);
+
+        var recipients = await _svc.ResolveRecipientsAsync(id, mentionNames);
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+
+        if (recipients.MentionedUserIds.Any())
+        {
+            await _hub.Clients.Users(recipients.MentionedUserIds).SendAsync("MentionNotification", new
+            {
+                requestId = id.ToString(),
+                author = author?.DisplayName ?? amId,
+                contextType = "Requests",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Comment added.", imagePath });
@@ -427,11 +469,17 @@ public class CsLiveHelpController : Controller
         await _svc.CsAddCommentAsync(id, csId, $"Card escalated. Team allocation: {assignedTeam.Name}.", isSystem: true);
         await _svc.AuditAsync(csId, "Escalate", id, GetClientIp());
 
-        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = assignedTeam.Name });
+        var statusPayload = new { id, newStatus = "Escalated", assignedTo = assignedTeam.Name };
+        var recipients = await _svc.ResolveRecipientsAsync(id, null);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
-            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = "Escalated", assignedTo = assignedTeam.Name });
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", statusPayload);
 
         TempData["Success"] = "Card escalated.";
         return RedirectToAction(nameof(Board));
@@ -451,11 +499,17 @@ public class CsLiveHelpController : Controller
         await _svc.AuditAsync(csId, $"DragDrop:{status}", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
+        var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
+        var recipients = await _svc.ResolveRecipientsAsync(id, null);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
-            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", statusPayload);
 
         return Json(new { success = true });
     }
@@ -510,17 +564,35 @@ public class CsLiveHelpController : Controller
         }
 
         var csId = _users.GetUserId(User)!;
+        var mentionNames = _svc.ExtractMentionNames(body).ToList();
         var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: false, imagePath: imagePath);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "CsAddComment", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+        var commentPayload = new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow };
+        var recipients = await _svc.ResolveRecipientsAsync(id, mentionNames);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+
+        if (recipients.MentionedUserIds.Any())
+        {
+            await _hub.Clients.Users(recipients.MentionedUserIds).SendAsync("MentionNotification", new
+            {
+                requestId = id.ToString(),
+                author = agent?.DisplayName ?? csId,
+                contextType = "Board",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
-            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+            await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", commentPayload);
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Comment added.", imagePath });
@@ -685,7 +757,27 @@ public class CsLiveHelpController : Controller
 
         var brand = await _db.Brands.FindAsync(brandId);
         var rtype = await _db.CsRequestTypes.FindAsync(requestTypeId);
-        await _hub.Clients.Group("cs-board").SendAsync("CardAdded", new { id = req.Id, brandName = brand?.Name, requestType = rtype?.Name, status = "Open", isInternal = true });
+        var payload = new { id = req.Id, brandName = brand?.Name, requestType = rtype?.Name, status = "Open", isInternal = true };
+        var recipients = await _svc.ResolveRecipientsAsync(req.Id, null);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardAdded", payload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardAdded", payload);
+
+        if (recipients.AllUniqueAgentIds.Any())
+        {
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("RequestNotification", new
+            {
+                type = "newRequest",
+                requestId = req.Id.ToString(),
+                brandName = brand?.Name,
+                requestType = rtype?.Name,
+                actor = User.Identity?.Name ?? "System",
+                contextType = "RequestsAllBrands",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         TempData["Success"] = "Internal request created.";
         return RedirectToAction(nameof(RequestsAllBrands));
@@ -748,19 +840,58 @@ public class CsLiveHelpController : Controller
         }
 
         var csId = _users.GetUserId(User)!;
+        var mentionNames = _svc.ExtractMentionNames(body).ToList();
         var ok   = await _svc.CsAddCommentAsync(id, csId, body, isCsInternalOnly: true, imagePath: imagePath);
         if (!ok) return NotFound();
 
         await _svc.AuditAsync(csId, "InternalAddComment", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow });
+        var commentPayload = new { requestId = id, author = agent?.DisplayName ?? csId, body, isSystem = false, imagePath, createdAt = DateTime.UtcNow };
+        var recipients = await _svc.ResolveRecipientsAsync(id, mentionNames);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CommentAdded", commentPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CommentAdded", commentPayload);
+
+        if (recipients.MentionedUserIds.Any())
+        {
+            await _hub.Clients.Users(recipients.MentionedUserIds).SendAsync("MentionNotification", new
+            {
+                requestId = id.ToString(),
+                author = agent?.DisplayName ?? csId,
+                contextType = "RequestsAllBrands",
+                timestamp = DateTime.UtcNow
+            });
+        }
 
         if (Request.Headers.ContainsKey("X-Requested-With"))
             return Json(new { success = true, message = "Comment added.", imagePath });
 
         TempData["Success"] = "Comment added.";
         return RedirectToAction(nameof(RequestsAllBrands));
+    }
+
+    // ── GET /CsLiveHelp/MentionCandidates/{id} — scoped @mention names ─────
+
+    [HttpGet]
+    [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> MentionCandidates(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null) return NotFound();
+
+        var userId = _users.GetUserId(User)!;
+        var isCsUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.SwissArmyKnife);
+
+        if (!isCsUser && req.AccountManagerId != userId)
+            return Forbid();
+
+        var names = await _svc.GetMentionCandidatesAsync(id);
+        return Json(new { success = true, candidates = names });
     }
 
     // ── GET /CsLiveHelp/AmCommentThread/{id} — refresh thread HTML ───────
@@ -840,8 +971,13 @@ public class CsLiveHelpController : Controller
         await _svc.AuditAsync(csId, $"InternalDragDrop:{status}", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged",
-            new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
+        var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
+        var recipients = await _svc.ResolveRecipientsAsync(id, null);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         return Json(new { success = true });
     }
@@ -860,7 +996,13 @@ public class CsLiveHelpController : Controller
         await _svc.AuditAsync(csId, $"InternalUpdateStatus:{status}", id, GetClientIp());
 
         var agent = await _users.GetUserAsync(User);
-        await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
+        var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
+        var recipients = await _svc.ResolveRecipientsAsync(id, null);
+
+        if (recipients.AllUniqueAgentIds.Any())
+            await _hub.Clients.Users(recipients.AllUniqueAgentIds).SendAsync("CardStatusChanged", statusPayload);
+        else
+            await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
 
         TempData["Success"] = $"Card status updated to {status}.";
         return RedirectToAction(nameof(RequestsAllBrands));

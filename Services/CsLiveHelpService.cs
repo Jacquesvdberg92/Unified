@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
 using Unified.Models.CsLiveHelp;
+using Unified.Models.Identity;
 
 namespace Unified.Services;
 
@@ -24,6 +25,14 @@ public class CsLiveHelpService
     private readonly AppDbContext _db;
 
     public CsLiveHelpService(AppDbContext db) => _db = db;
+
+    public sealed record NotificationRecipients(
+        IReadOnlyCollection<string> BrandAgentIds,
+        IReadOnlyCollection<string> TeamAgentIds,
+        IReadOnlyCollection<string> MentionedUserIds,
+        IReadOnlyCollection<string> AllUniqueAgentIds,
+        int? TeamId,
+        int? BrandId);
 
     // ── Reference data ────────────────────────────────────────────────────
 
@@ -329,5 +338,133 @@ public class CsLiveHelpService
         req.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<int?> ResolveTeamIdForRequestAsync(int requestId)
+    {
+        var req = await _db.CsRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+        if (req is null) return null;
+
+        var teamMention = await _db.CsRequestComments
+            .Where(c => c.RequestId == requestId && c.IsSystemMessage && c.Body.StartsWith("Team allocation:"))
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => c.Body)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrWhiteSpace(teamMention)) return null;
+
+        var teamName = teamMention
+            .Replace("Team allocation:", string.Empty)
+            .Replace(".", string.Empty)
+            .Trim();
+
+        if (string.IsNullOrWhiteSpace(teamName)) return null;
+
+        var teamId = await _db.Teams
+            .Where(t => t.Name == teamName)
+            .Select(t => (int?)t.Id)
+            .FirstOrDefaultAsync();
+
+        return teamId;
+    }
+
+    public async Task<NotificationRecipients> ResolveRecipientsAsync(int requestId, IEnumerable<string>? mentionNames)
+    {
+        var req = await _db.CsRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == requestId);
+
+        if (req is null)
+        {
+            return new NotificationRecipients([], [], [], [], null, null);
+        }
+
+        var brandAgentIds = await _db.AgentBrands
+            .Where(ab => ab.BrandId == req.BrandId)
+            .Select(ab => ab.AgentId)
+            .Distinct()
+            .ToListAsync();
+
+        var teamId = await ResolveTeamIdForRequestAsync(requestId);
+        var teamAgentIds = teamId.HasValue
+            ? await _db.AgentTeams
+                .Where(at => at.TeamId == teamId.Value)
+                .Select(at => at.AgentId)
+                .Distinct()
+                .ToListAsync()
+            : new List<string>();
+
+        var normalizedMentionNames = (mentionNames ?? Enumerable.Empty<string>())
+            .Select(n => (n ?? string.Empty).Trim())
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var mentionedUserIds = normalizedMentionNames.Count == 0
+            ? new List<string>()
+            : await _db.Users
+                .Where(u => normalizedMentionNames.Contains(u.DisplayName))
+                .Select(u => u.Id)
+                .Distinct()
+                .ToListAsync();
+
+        var all = brandAgentIds
+            .Concat(teamAgentIds)
+            .Concat(mentionedUserIds)
+            .Distinct()
+            .ToList();
+
+        return new NotificationRecipients(
+            brandAgentIds,
+            teamAgentIds,
+            mentionedUserIds,
+            all,
+            teamId,
+            req.BrandId);
+    }
+
+    public IEnumerable<string> ExtractMentionNames(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return Enumerable.Empty<string>();
+
+        var matches = System.Text.RegularExpressions.Regex.Matches(
+            text,
+            @"@([A-Za-z][A-Za-z0-9._\- ]{1,48})",
+            System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+        return matches
+            .Select(m => m.Groups[1].Value.Trim())
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyCollection<string>> GetMentionCandidatesAsync(int requestId)
+    {
+        var req = await _db.CsRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == requestId);
+
+        if (req is null) return [];
+
+        var recipients = await ResolveRecipientsAsync(requestId, null);
+
+        var candidateUserIds = recipients.AllUniqueAgentIds
+            .Concat(string.IsNullOrWhiteSpace(req.AccountManagerId) ? [] : [req.AccountManagerId])
+            .Concat(string.IsNullOrWhiteSpace(req.AssignedToId) ? [] : [req.AssignedToId])
+            .Distinct()
+            .ToList();
+
+        if (!candidateUserIds.Any()) return [];
+
+        var names = await _db.Users
+            .Where(u => candidateUserIds.Contains(u.Id))
+            .Select(u => u.DisplayName)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Distinct()
+            .OrderBy(n => n)
+            .ToListAsync();
+
+        return names;
     }
 }
