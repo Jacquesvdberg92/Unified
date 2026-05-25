@@ -44,4 +44,8 @@
     </Content>
   </ItemGroup>
 
-  </Project>
+  <ItemGroup>
+    <Folder Include="tools\CsLiveHelpStress\" />
+  </ItemGroup>
+
+</Project>

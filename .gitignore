@@ -6,3 +6,5 @@ node_modules/
 *.db
 *.db-shm
 *.db-wal
+wwwroot/uploads/**
+!wwwroot/uploads/profiles/.gitkeep
