@@ -41,56 +41,21 @@
         </div>
     }
 
+    <div id="csBroadcastBannerHost" class="mb-3" style="display:none"></div>
+
     <div class="d-flex align-items-center mb-3">
         <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Live Help Board</h5>
         <span class="badge bg-primary ms-3">@requests.Count total</span>
-        @* ── SIMULATION DEMO TOGGLE (TeamLeader / BrandManager / SwissArmyKnife only) ── *@
         @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
              User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
              User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
         {
-            <button type="button" class="btn btn-outline-secondary btn-sm ms-auto"
-                    id="simPanelToggle" title="Toggle simulation panel">
-                <i class="bx bx-joystick me-1"></i>Demo
+            <button type="button" class="btn btn-outline-warning btn-sm ms-auto"
+                    data-bs-toggle="modal" data-bs-target="#broadcastModal">
+                <i class="bx bx-megaphone me-1"></i>Broadcast
             </button>
         }
     </div>
-
-    @* ── SIMULATION PANEL (hidden by default, toggled by button above) ── *@
-    @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
-         User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
-         User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
-    {
-        <div id="simPanel" class="card border-info mb-3" style="display:none">
-            <div class="card-header d-flex align-items-center gap-2 bg-info bg-opacity-10 py-2">
-                <i class="bx bx-joystick text-info"></i>
-                <span class="fw-semibold small">Workflow Simulation</span>
-                <span id="simStatusBadge" class="badge bg-secondary ms-1">Stopped</span>
-                <button type="button" class="btn-close btn-sm ms-auto" id="simPanelClose" title="Hide panel"></button>
-            </div>
-            <div class="card-body p-2">
-                <div class="d-flex flex-wrap gap-2 mb-2 align-items-center">
-                    <button type="button" class="btn btn-success btn-sm" id="simStartBtn">
-                        <i class="bx bx-play me-1"></i>Start
-                    </button>
-                    <button type="button" class="btn btn-warning btn-sm" id="simStopBtn" disabled>
-                        <i class="bx bx-stop me-1"></i>Stop
-                    </button>
-                    <button type="button" class="btn btn-danger btn-sm" id="simCleanBtn">
-                        <i class="bx bx-trash me-1"></i>Cleanup
-                    </button>
-                    <span class="text-muted small ms-auto fst-italic">
-                        Cards are tagged <code>DEMO-SIM-*</code>
-                    </span>
-                </div>
-                <div id="simLog"
-                     class="bg-dark text-success rounded p-2 small font-monospace"
-                     style="height:140px;overflow-y:auto;white-space:pre-wrap;font-size:.75rem">
-                    <span class="text-muted">Simulation log will appear here…</span>
-                </div>
-            </div>
-        </div>
-    }
 
     <!-- Filter bar -->
     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center" id="boardFilterBar">
@@ -458,124 +423,98 @@
     </div>
 </div>
 
-@* ── SIMULATION JS ── *@
 @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
      User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
      User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
 {
+    <div class="modal fade" id="broadcastModal" tabindex="-1" aria-labelledby="broadcastModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="broadcastForm">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="broadcastModalLabel"><i class="bx bx-megaphone me-2"></i>Broadcast Reminder</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="broadcastMessage" class="form-label fw-semibold">Message</label>
+                        <textarea id="broadcastMessage" class="form-control" rows="4" maxlength="300"
+                                  placeholder="Write a reminder for Account Managers..." required></textarea>
+                        <div class="form-text text-end"><span id="broadcastMessageCount">0</span>/300</div>
+                        <div id="broadcastError" class="text-danger small mt-2" style="display:none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning btn-sm" id="broadcastSendBtn">
+                            <i class="bx bx-send me-1"></i>Send Broadcast
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function () {
         'use strict';
 
-        const token      = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-        const panel      = document.getElementById('simPanel');
-        const toggleBtn  = document.getElementById('simPanelToggle');
-        const closeBtn   = document.getElementById('simPanelClose');
-        const startBtn   = document.getElementById('simStartBtn');
-        const stopBtn    = document.getElementById('simStopBtn');
-        const cleanBtn   = document.getElementById('simCleanBtn');
-        const statusBadge = document.getElementById('simStatusBadge');
-        const log        = document.getElementById('simLog');
+        const form = document.getElementById('broadcastForm');
+        const msgInput = document.getElementById('broadcastMessage');
+        const msgCount = document.getElementById('broadcastMessageCount');
+        const sendBtn = document.getElementById('broadcastSendBtn');
+        const errBox = document.getElementById('broadcastError');
+        const modalEl = document.getElementById('broadcastModal');
 
-        if (!panel) return;
+        if (!form || !msgInput) return;
 
-        // ── Panel show/hide ───────────────────────────────────────────────
-        toggleBtn?.addEventListener('click', () => {
-            const visible = panel.style.display !== 'none';
-            panel.style.display = visible ? 'none' : '';
-            if (!visible) pollStatus();
+        msgInput.addEventListener('input', function () {
+            msgCount.textContent = String(this.value.length);
         });
-        closeBtn?.addEventListener('click', () => { panel.style.display = 'none'; });
 
-        // ── Log helper ────────────────────────────────────────────────────
-        function appendLog(msg) {
-            const wasAtBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
-            log.textContent += (log.textContent.trim() === 'Simulation log will appear here…' ? '' : '') + msg + '\n';
-            if (wasAtBottom) log.scrollTop = log.scrollHeight;
-        }
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            errBox.style.display = 'none';
+            const message = msgInput.value.trim();
+            if (!message) {
+                errBox.textContent = 'Message is required.';
+                errBox.style.display = '';
+                return;
+            }
 
-        // Wipe "will appear here" placeholder on first real message
-        let logInitialised = false;
-        function writeLog(msg) {
-            if (!logInitialised) { log.textContent = ''; logInitialised = true; }
-            appendLog(msg);
-        }
-
-        // ── UI state sync ─────────────────────────────────────────────────
-        function setRunning(running) {
-            startBtn.disabled = running;
-            stopBtn.disabled  = !running;
-            statusBadge.textContent = running ? 'Running' : 'Stopped';
-            statusBadge.className   = running
-                ? 'badge bg-success ms-1'
-                : 'badge bg-secondary ms-1';
-            toggleBtn.classList.toggle('btn-outline-success', running);
-            toggleBtn.classList.toggle('btn-outline-secondary', !running);
-        }
-
-        // ── Poll status every 3 s while panel is open ─────────────────────
-        async function pollStatus() {
-            try {
-                const r = await fetch('/CsLiveHelp/SimulationStatus', {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if (r.ok) { const d = await r.json(); setRunning(d.running); }
-            } catch (_) {}
-        }
-        pollStatus();
-        setInterval(() => { if (panel.style.display !== 'none') pollStatus(); }, 3000);
-
-        // ── Fetch helper ──────────────────────────────────────────────────
-        async function postAction(url) {
+            const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
             const fd = new FormData();
             fd.append('__RequestVerificationToken', token);
-            const r = await fetch(url, {
-                method: 'POST', body: fd,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            return r.ok ? await r.json() : null;
-        }
+            fd.append('message', message);
 
-        // ── Start ─────────────────────────────────────────────────────────
-        startBtn?.addEventListener('click', async () => {
-            startBtn.disabled = true;
-            startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Starting…';
-            const d = await postAction('/CsLiveHelp/StartSimulation');
-            startBtn.innerHTML = '<i class="bx bx-play me-1"></i>Start';
-            if (d) { setRunning(d.running); writeLog('▶ ' + d.message); }
-        });
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
 
-        // ── Stop ──────────────────────────────────────────────────────────
-        stopBtn?.addEventListener('click', async () => {
-            stopBtn.disabled = true;
-            const d = await postAction('/CsLiveHelp/StopSimulation');
-            if (d) { setRunning(d.running); writeLog('⏹ ' + d.message); }
-        });
-
-        // ── Cleanup ───────────────────────────────────────────────────────
-        cleanBtn?.addEventListener('click', async () => {
-            if (!confirm('Remove all DEMO-SIM cards from the board?')) return;
-            cleanBtn.disabled = true;
-            cleanBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cleaning…';
-            const d = await postAction('/CsLiveHelp/CleanupSimulation');
-            cleanBtn.disabled = false;
-            cleanBtn.innerHTML = '<i class="bx bx-trash me-1"></i>Cleanup';
-            if (d) { setRunning(false); writeLog('🗑 ' + d.message); }
-        });
-
-        // ── SignalR: listen for SimulationStep events ─────────────────────
-        // The cslivehelp.js SignalR connection is created after this script,
-        // so we register the handler on the shared `window.csHub` once it is ready.
-        function hookSignalR() {
-            if (window.csHub) {
-                window.csHub.on('SimulationStep', function (payload) {
-                    writeLog(payload.message ?? payload);
+            try {
+                const res = await fetch('/CsLiveHelp/BroadcastBanner', {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
-            } else {
-                setTimeout(hookSignalR, 300);
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    errBox.textContent = data.error ?? 'Failed to send broadcast.';
+                    errBox.style.display = '';
+                    return;
+                }
+
+                msgInput.value = '';
+                msgCount.textContent = '0';
+                if (window.bootstrap && modalEl) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                }
+            } catch (_) {
+                errBox.textContent = 'Network error while sending broadcast.';
+                errBox.style.display = '';
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="bx bx-send me-1"></i>Send Broadcast';
             }
-        }
-        hookSignalR();
+        });
     })();
     </script>
 }

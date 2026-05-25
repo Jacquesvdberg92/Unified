@@ -72,6 +72,32 @@
         return status === 'Escalated' ? 'Passed to CS' : status;
     }
 
+    function renderBroadcastBanner(data) {
+        const host = document.getElementById('csBroadcastBannerHost');
+        if (!host) return;
+
+        const msg = (data?.message ?? '').toString().trim();
+        if (!msg) return;
+
+        const actor = (data?.actor ?? 'System').toString();
+        const dt = new Date(data?.timestamp);
+        const ts = isNaN(dt.getTime()) ? 'now' : dt.toLocaleString();
+
+        host.style.display = '';
+        host.innerHTML =
+            '<div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">' +
+                '<div class="d-flex align-items-start gap-2">' +
+                    '<i class="bx bx-bell mt-1"></i>' +
+                    '<div>' +
+                        '<div class="fw-semibold">Broadcast Reminder</div>' +
+                        '<div>' + escHtml(msg) + '</div>' +
+                        '<div class="small text-muted mt-1">From ' + escHtml(actor) + ' · ' + escHtml(ts) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+            '</div>';
+    }
+
     function escHtml(s) {
         return String(s)
             .replace(/&/g, '&amp;')
@@ -151,9 +177,6 @@
         .withUrl('/hubs/cslivehelp')
         .withAutomaticReconnect()
         .build();
-
-    // Expose so simulation panel JS (Board.cshtml) can register SimulationStep
-    window.csHub = connection;
 
     // ── Connection state tracking for debugging and recovery ──────────────────
 
@@ -602,6 +625,30 @@
         }
     });
 
+    connection.on('BroadcastBanner', function (data) {
+        const dedupeKey = `broadcast:${data?.message || ''}:${data?.timestamp || ''}`;
+        if (markSeen(dedupeKey)) return;
+
+        renderBroadcastBanner(data);
+
+        if (typeof NotificationManager !== 'undefined') {
+            try {
+                NotificationManager.handleNotification({
+                    type: 'broadcast',
+                    contextType: 'Board',
+                    contextId: 'cs-live-help-broadcast',
+                    title: 'Broadcast Reminder',
+                    message: data?.message || 'New reminder received.',
+                    sound: true,
+                    visual: true,
+                    toast: true
+                });
+            } catch (err) {
+                console.warn('[CsLiveHelp] Broadcast notification failed:', err);
+            }
+        }
+    });
+
     connection.start()
         .then(() => {
             window.csConnectionState.isConnected = true;
@@ -671,6 +718,12 @@
             formEl.dataset.isSubmitting = '1';
 
             const fd   = new FormData(formEl);
+            // Defensive file handling: explicitly include selected files for dynamic modal forms.
+            formEl.querySelectorAll('input[type="file"][name]').forEach(function (fileInput) {
+                const file = fileInput.files?.[0];
+                if (file) fd.set(fileInput.name, file, file.name);
+            });
+
             const url  = formEl.action || formEl.getAttribute('action');
             const btn  = formEl.querySelector('[type="submit"]');
             const originalText = btn?.innerHTML;

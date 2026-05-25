@@ -16,6 +16,15 @@
         _                         => Model.Status.ToString()
     };
     var isTlManager = User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife");
+    var assignedName = Model.AssignedTo?.DisplayName ?? Model.AssignedTo?.UserName;
+    var teamAllocationName = Model.Comments
+        .Where(c => c.IsSystemMessage && c.Body.Contains("Team allocation:"))
+        .OrderByDescending(c => c.CreatedAt)
+        .Select(c => c.Body.Split("Team allocation:").LastOrDefault()?.Trim().TrimEnd('.'))
+        .FirstOrDefault();
+    var assignmentLabel = !string.IsNullOrWhiteSpace(teamAllocationName)
+        ? $"Team: {teamAllocationName}"
+        : assignedName;
 }
 
 <div class="card border shadow-sm p-2 small @(Model.Status == CsRequestStatus.Escalated ? "border-danger" : "")" data-card-id="@Model.Id" data-brand-id="@Model.BrandId" data-client-id="@Model.ClientId?.ToLower()">
@@ -35,10 +44,16 @@
     {
         <div class="text-muted mt-1" style="font-size:.75rem; white-space:pre-wrap">@Model.CustomDescription</div>
     }
-    @if (Model.AssignedTo != null)
+    @if (!string.IsNullOrWhiteSpace(assignmentLabel))
     {
-        <div class="text-muted mt-1" style="font-size:.72rem">
-            <i class="bx bx-user me-1"></i>@(Model.AssignedTo.DisplayName ?? Model.AssignedTo.UserName)
+        <div class="text-muted mt-1 cs-assigned-row" style="font-size:.72rem">
+            <i class="bx bx-user me-1"></i><span class="cs-assigned-name">@assignmentLabel</span>
+        </div>
+    }
+    else
+    {
+        <div class="text-muted mt-1 cs-assigned-row" style="font-size:.72rem;display:none">
+            <i class="bx bx-user me-1"></i><span class="cs-assigned-name"></span>
         </div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.ClientId))

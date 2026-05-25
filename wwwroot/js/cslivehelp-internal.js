@@ -149,7 +149,8 @@
         if (data.assignedTo) {
             const assignedEl = card.querySelector('.cs-assigned-name');
             if (assignedEl) {
-                assignedEl.textContent = data.assignedTo;
+                const isEscalated = newStatus === 'Escalated';
+                assignedEl.textContent = isEscalated ? ('Team: ' + data.assignedTo) : data.assignedTo;
                 const row = card.querySelector('.cs-assigned-row');
                 if (row) row.style.display = '';
             }
