@@ -86,6 +86,27 @@
         }
     });
 
+    connection.on('WorkDistributionMentionNotification', function (evt) {
+        if (typeof NotificationManager === 'undefined') {
+            return;
+        }
+
+        const contextId = String(evt?.date || evt?.contextId || '');
+        const author = evt?.author || 'Someone';
+        const dateLabel = evt?.date || contextId;
+
+        NotificationManager.handleNotification({
+            type: 'mention',
+            contextType: 'WorkDistribution',
+            contextId: contextId,
+            title: 'You were mentioned',
+            message: `${author} mentioned you in work distribution (${dateLabel})`,
+            sound: true,
+            visual: true,
+            toast: true
+        });
+    });
+
     connection.onreconnected(function () {
         if (!onMessagingPage && typeof NotificationManager !== 'undefined') {
             NotificationManager.updateNotificationBell();

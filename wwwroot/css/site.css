@@ -103,6 +103,13 @@ pre.work-dist-body {
     padding: 0;
     margin: 0;
 }
+.mention-me {
+    background-color: rgba(255, 193, 7, 0.25);
+    color: var(--bs-warning-text-emphasis, #664d03);
+    border-radius: 3px;
+    padding: 0 3px;
+    font-weight: 600;
+}
 .text-truncate-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;

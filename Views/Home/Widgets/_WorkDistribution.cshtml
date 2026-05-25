@@ -19,7 +19,7 @@
         else
         {
             <p class="text-muted small mb-1">@dist.Date.ToString("dd MMM yyyy") — posted by @(dist.CreatedBy?.DisplayName ?? "System")</p>
-            <pre class="bg-light rounded p-2 small mb-0 text-muted" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;">@dist.Body</pre>
+            <pre class="bg-light rounded p-2 small mb-0 text-muted" style="white-space:pre-wrap;max-height:200px;overflow-y:auto;" data-wd-body="1">@dist.Body</pre>
         }
     </div>
 </div>

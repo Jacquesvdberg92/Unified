@@ -22,9 +22,11 @@
                     <label class="form-label fw-semibold">Distribution for @date.ToString("dd MMM yyyy")</label>
                     <textarea name="body" class="form-control font-monospace"
                               rows="20"
-                              placeholder="Paste or type the work distribution message here...">@body</textarea>
+                              placeholder="Paste or type the work distribution message here..."
+                              data-mentions-enabled="1"
+                              data-mentions-url="@Url.Action("MentionCandidates", "WorkDistribution")">@body</textarea>
                     <div class="form-text">
-                        Tip: paste directly from the team chat — formatting and @@mentions will be preserved.
+                        Tip: type @@ to mention teammates (e.g. @@John Doe); mentioned users will be notified.
                     </div>
                 </div>
 
@@ -39,4 +41,6 @@
     </div>
 </div>
 
-
+@section Scripts {
+    <script src="~/js/work-distribution-mentions.js"></script>
+}

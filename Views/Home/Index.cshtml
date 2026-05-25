@@ -60,6 +60,7 @@
 </div>
 
 @section Scripts {
+<script src="~/js/work-distribution-view.js" defer></script>
 <script defer>
 (function () {
     /* innerHTML does not execute <script> tags — this helper clones and appends them so they run */
@@ -79,7 +80,10 @@
         var key = col.getAttribute('data-widget-key');
         fetch('/Home/GetWidget?key=' + encodeURIComponent(key), { credentials: 'same-origin' })
             .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
-            .then(function (html) { setHtmlAndRunScripts(col, html); })
+            .then(function (html) {
+                setHtmlAndRunScripts(col, html);
+                window.dispatchEvent(new Event('wd:content-updated'));
+            })
             .catch(function () {
                 col.innerHTML = '<div class="card"><div class="card-body text-danger text-center py-4"><i class="bx bx-error-circle fs-3"></i><p class="mt-2 mb-0">Failed to load widget.</p></div></div>';
             });

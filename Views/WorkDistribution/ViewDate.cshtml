@@ -14,7 +14,7 @@
 
     <div class="card">
         <div class="card-body">
-            <pre class="work-dist-body">@entry.Body</pre>
+            <pre class="work-dist-body" data-wd-body="1">@entry.Body</pre>
             <hr />
             <small class="text-muted">
                 Posted by @(entry.CreatedBy?.DisplayName ?? "Unknown") ·
@@ -24,4 +24,6 @@
     </div>
 </div>
 
-
+@section Scripts {
+    <script src="~/js/work-distribution-view.js"></script>
+}

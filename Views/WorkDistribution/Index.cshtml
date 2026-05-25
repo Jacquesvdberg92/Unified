@@ -13,7 +13,7 @@
     CsLiveAllocationSlot? SlotFor(int h) => slots.FirstOrDefault(s => s.SlotHour == h);
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
+<div class="container-xxl flex-grow-1 container-p-y" data-current-user="@ViewBag.CurrentUserDisplayName">
 
     @if (TempData["Success"] != null)
     {
@@ -226,4 +226,8 @@
     <script src="~/js/work-distribution.js"></script>
 }
 
-
+@if (!canEdit)
+{
+    <script src="~/js/work-distribution.js"></script>
+}
+<script src="~/js/work-distribution.js"></script>
