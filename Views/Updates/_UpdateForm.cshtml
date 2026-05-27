@@ -63,6 +63,9 @@
 }
 
 <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-primary improve-ai-btn" data-target-editor="quillEditor" data-ai-context="update" data-ai-endpoint="/Updates/ImproveWithAi" data-default-prompt="Rewrite this update to sound friendly, clear, and professional.">
+        <i class="bx bx-sparkles me-1"></i> Improve with AI
+    </button>
     <button type="submit" class="btn btn-primary">@(isEdit ? "Save Changes" : "Post Update")</button>
     <a asp-action="Feed" class="btn btn-outline-secondary">Cancel</a>
 </div>

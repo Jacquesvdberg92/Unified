@@ -12,8 +12,8 @@ using Unified.Data;
 namespace Unified.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260523202917_CsMessagingConversationIndexes")]
-    partial class CsMessagingConversationIndexes
+    [Migration("20260525083229_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -456,6 +456,87 @@ namespace Unified.Migrations
                             IsOther = true,
                             Name = "Other"
                         });
+                });
+
+            modelBuilder.Entity("Unified.Models.CsLiveHelp.NotificationPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContextId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContextType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsMuted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NotificationPreferences");
+                });
+
+            modelBuilder.Entity("Unified.Models.CsLiveHelp.UserNotificationSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AudioNotificationsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("AudioVolume")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("BadgeNotificationsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DesktopNotificationsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("NotifyOnMentions")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyOnMessages")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyOnSystemAlerts")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ToastNotificationsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserNotificationSettings");
                 });
 
             modelBuilder.Entity("Unified.Models.CsMessaging.CsConversation", b =>

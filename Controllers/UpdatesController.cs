@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using Unified.Data;
 using Unified.Models.Identity;
 using Unified.Models.Updates;
@@ -15,12 +16,14 @@ public class UpdatesController : Controller
     private readonly UpdateService        _service;
     private readonly AppDbContext         _db;
     private readonly UserManager<AppUser> _users;
+    private readonly AiContentService     _ai;
 
-    public UpdatesController(UpdateService service, AppDbContext db, UserManager<AppUser> users)
+    public UpdatesController(UpdateService service, AppDbContext db, UserManager<AppUser> users, AiContentService ai)
     {
         _service = service;
         _db      = db;
         _users   = users;
+        _ai      = ai;
     }
 
     // GET: /Updates  (Feed)
@@ -136,6 +139,28 @@ public class UpdatesController : Controller
         return RedirectToAction(nameof(Feed));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> ImproveWithAi([FromBody] AiImproveRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(new { message = "Invalid request." });
+
+        if (string.IsNullOrWhiteSpace(request.InputText))
+            return BadRequest(new { message = "Please add content before using AI improve." });
+
+        try
+        {
+            var improved = await _ai.ImproveAsync(request.InputText, request.Prompt ?? string.Empty, request.Context ?? "update");
+            return Ok(new { result = improved });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private async Task PopulateViewBagAsync(Update? update = null)
@@ -155,4 +180,14 @@ public class UpdatesController : Controller
         string.IsNullOrWhiteSpace(raw)
             ? []
             : raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    public sealed class AiImproveRequest
+    {
+        [Required]
+        public string InputText { get; set; } = string.Empty;
+
+        public string? Prompt { get; set; }
+
+        public string? Context { get; set; }
+    }
 }

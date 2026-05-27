@@ -16,7 +16,17 @@ public static class SeedData
         var db          = services.GetRequiredService<AppDbContext>();
         var config      = services.GetRequiredService<IConfiguration>();
 
-        await db.Database.MigrateAsync();
+        // Only migrate if the database needs it
+        try
+        {
+            await db.Database.MigrateAsync();
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 2714)
+        {
+            // 2714 = "There is already an object named X in the database"
+            // This means migrations were already applied, continue with seeding
+            System.Diagnostics.Debug.WriteLine($"Database already initialized: {ex.Message}");
+        }
 
         // -- Roles --------------------------------------------------------
         string[] roles = [Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.SwissArmyKnife, Roles.AccountManager, Roles.Finance];

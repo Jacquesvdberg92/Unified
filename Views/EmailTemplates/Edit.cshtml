@@ -49,6 +49,9 @@
                         <input asp-for="IsActive" class="form-check-input" type="checkbox" />
                         <label asp-for="IsActive" class="form-check-label">Active</label>
                     </div>
+                    <button type="button" class="btn btn-outline-primary improve-ai-btn" data-target-editor="quillEditor" data-ai-context="emailTemplate" data-ai-endpoint="/Updates/ImproveWithAi" data-default-prompt="Improve this email template for clarity, professionalism, and readability while preserving intent.">
+                        <i class="bx bx-sparkles me-1"></i> Improve with AI
+                    </button>
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
                 </form>
@@ -94,6 +97,8 @@
         </div>
     </div>
 </div>
+
+@await Html.PartialAsync("~/Views/Shared/_AiImproveModal.cshtml")
 
 @section Scripts {
     <link href="@Url.Content("~/assets/libs/quill/quill.snow.css")" rel="stylesheet" />

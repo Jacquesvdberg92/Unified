@@ -90,6 +90,7 @@ builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddScoped<Unified.Services.CsMessagingService>();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<Unified.Services.AiContentService>();
 builder.Services.AddScoped<Unified.Services.TelegramService>();
 builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
 builder.Services.AddSingleton<IActivityLogQueue, ActivityLogQueueService>();

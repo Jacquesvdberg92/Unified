@@ -1,0 +1,26 @@
+<div class="modal fade" id="aiImproveModal" tabindex="-1" aria-labelledby="aiImproveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiImproveModalLabel">Improve with AI</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" for="aiPromptInput">Prompt</label>
+                    <textarea id="aiPromptInput" class="form-control" rows="3" placeholder="Describe how you want this content improved..."></textarea>
+                </div>
+                <div class="mb-2 d-flex align-items-center justify-content-between">
+                    <label class="form-label mb-0" for="aiResultOutput">Result</label>
+                    <small id="aiImproveStatus" class="text-muted"></small>
+                </div>
+                <textarea id="aiResultOutput" class="form-control" rows="10" placeholder="AI output will appear here..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="aiCopyResultBtn">Copy</button>
+                <button type="button" class="btn btn-outline-primary" id="aiApplyResultBtn">Use this result</button>
+                <button type="button" class="btn btn-primary" id="aiRunImproveBtn">Improve</button>
+            </div>
+        </div>
+    </div>
+</div>
