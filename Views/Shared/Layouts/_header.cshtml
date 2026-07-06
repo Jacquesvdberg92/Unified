@@ -125,14 +125,14 @@
                                                 .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<Unified.Models.Identity.AppUser>>()
                                                 .GetUserAsync(User);
                                         }
-                                        @if (currentUser?.AvatarUrl != null)
+                                        @*@if (currentUser?.AvatarUrl != null)
                                         {
                                             <img src="@currentUser.AvatarUrl" alt="@User.Identity!.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
                                         }
                                         else
-                                        {
+                                        {*@
                                             <i class="bx bx-user-circle fs-22 text-muted"></i>
-                                        }
+                                        @*}*@
                                     </div>
                                     <div class="d-none d-md-block">
                                         <span class="fw-medium fs-13">@User.Identity!.Name</span>

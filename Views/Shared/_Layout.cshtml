@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+@inject Microsoft.Extensions.Configuration.IConfiguration _cfg
+<!DOCTYPE html>
 <html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
 
     <head>
@@ -29,6 +30,34 @@
         <!-- SITE CSS -->
         <link rel="stylesheet" href="@Url.Content("~/css/site.css")">
 
+        @if (_cfg["Demo:Enabled"] == "true")
+        {
+            <style>
+                :root { --demo-banner-h: 2rem; }
+                .demo-preview-banner {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 99999;
+                    height: var(--demo-banner-h);
+                    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+                    color: #fff;
+                    text-align: center;
+                    font-size: 0.8125rem;
+                    font-weight: 600;
+                    letter-spacing: 0.03em;
+                    line-height: var(--demo-banner-h);
+                    padding: 0 1rem;
+                    box-shadow: 0 2px 8px rgba(99,102,241,.35);
+                    pointer-events: none;
+                    user-select: none;
+                }
+                body { padding-top: var(--demo-banner-h); }
+                #header { top: var(--demo-banner-h) !important; }
+            </style>
+        }
+
         <!-- MAIN JS -->
         <script src="@Url.Content("~/assets/js/main.js")" defer></script>
 
@@ -40,6 +69,13 @@
 	</head>
 
 	<body>
+
+        @if (_cfg["Demo:Enabled"] == "true")
+        {
+            <div class="demo-preview-banner" role="banner" aria-label="Demo preview banner">
+                🔍 Preview Mode — You are viewing a live demo. Data may be reset periodically.
+            </div>
+        }
 
         <!-- SWITCHER -->
         <partial name="~/Views/Shared/Layouts/_switcher.cshtml">

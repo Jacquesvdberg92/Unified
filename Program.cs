@@ -133,6 +133,7 @@ app.UseRouting();
 app.UseOutputCache();
 
 app.UseAuthentication();
+app.UseMiddleware<DemoAutoLoginMiddleware>();
 app.UseMiddleware<ActivityLoggingMiddleware>();
 app.UseAuthorization();
 app.UseSession();
