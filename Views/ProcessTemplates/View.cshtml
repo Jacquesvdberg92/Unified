@@ -71,6 +71,6 @@
 
 @section Scripts {
 <script type="application/json" id="templateBodyRaw">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BodyText))</script>
-<script>document.getElementById('btnDownload').dataset.filename = '@Html.Raw(Model.Title.Replace(" ", "_"))';</script>
+<script>document.getElementById('btnDownload').dataset.filename = @Json.Serialize(Model.Title.Replace(" ", "_"));</script>
 <script src="@Url.Content("~/js/process-templates.js")"></script>
 }
