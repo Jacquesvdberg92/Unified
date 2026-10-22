@@ -41,6 +41,8 @@ public class HomeController : Controller
 
     [Route("/")]
     [Route("/index")]
+    [Route("/Home")]
+    [Route("/Home/Index")]
     public async Task<IActionResult> Index()
     {
         // Show pinned-updates toast on first page load after login.

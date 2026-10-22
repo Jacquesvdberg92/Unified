@@ -27,7 +27,10 @@ public class UpdatesController : Controller
         _ai      = ai;
     }
 
-    // GET: /Updates  (Feed)
+    // GET: /Updates
+    public IActionResult Index() => RedirectToAction(nameof(Feed));
+
+    // GET: /Updates/Feed
     public async Task<IActionResult> Feed(int? brandId, string? tag, string? search, bool archived = false)
     {
         var updates = await _service.GetFeedAsync(brandId, tag, search, archived);

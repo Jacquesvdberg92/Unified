@@ -304,6 +304,10 @@ public class CsLiveHelpController : Controller
             return RedirectToAction(nameof(Requests));
         }
 
+        // Check ownership before writing any upload to disk
+        if (!await _db.CsRequests.AnyAsync(r => r.Id == id && r.AccountManagerId == amId))
+            return Forbid();
+
         // Validate and save image if provided
         string? imagePath = null;
         if (image is { Length: > 0 })
@@ -396,6 +400,12 @@ public class CsLiveHelpController : Controller
     [
         Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.SwissArmyKnife
     ];
+
+    // ── GET /CsLiveHelp — role-appropriate landing page ──────────────────
+
+    [HttpGet]
+    public IActionResult Index() =>
+        User.IsInRole(Roles.AccountManager) ? RedirectToAction(nameof(Requests)) : RedirectToAction(nameof(Board));
 
     // ── GET /CsLiveHelp/Board ─────────────────────────────────────────────
 
@@ -532,6 +542,10 @@ public class CsLiveHelpController : Controller
             TempData["Error"] = "Comment must be between 1 and 1000 characters.";
             return RedirectToAction(nameof(Board));
         }
+
+        // Check the request exists before writing any upload to disk
+        if (!await _db.CsRequests.AnyAsync(r => r.Id == id))
+            return NotFound();
 
         // Validate and save image if provided
         string? imagePath = null;
@@ -805,6 +819,10 @@ public class CsLiveHelpController : Controller
             TempData["Error"] = "Comment must be between 1 and 1000 characters.";
             return RedirectToAction(nameof(RequestsAllBrands));
         }
+
+        // Check the request exists before writing any upload to disk
+        if (!await _db.CsRequests.AnyAsync(r => r.Id == id))
+            return NotFound();
 
         string? imagePath = null;
         if (image is { Length: > 0 })

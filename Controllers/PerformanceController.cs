@@ -28,6 +28,9 @@ public class PerformanceController : Controller
         _users = users;
     }
 
+    [HttpGet]
+    public IActionResult Index() => RedirectToAction(nameof(MyReviews));
+
     // ── Agent: view my own reviews ────────────────────────────────────────
 
     [HttpGet]

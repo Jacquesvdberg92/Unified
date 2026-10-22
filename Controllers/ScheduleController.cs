@@ -107,6 +107,8 @@ public class ScheduleController : Controller
         return RedirectToAction(nameof(WeekView), new { weekStart });
     }
 
+    public IActionResult Index() => RedirectToAction(nameof(AgentView));
+
     // ── Agent personal view ────────────────────────────────────────────────
 
     public async Task<IActionResult> AgentView(string? weekStart)

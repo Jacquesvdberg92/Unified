@@ -69,8 +69,14 @@ public class RegisterAccountManagerModel : PageModel
             return new List<DateTimeOffset>();
         })!;
 
-        requestTimes.RemoveAll(t => t < DateTimeOffset.UtcNow.AddHours(-1));
-        if (requestTimes.Count >= MaxRequestsPerHour)
+        // The list is shared through the cache, so concurrent sign-ups from one IP must not race on it
+        bool limited;
+        lock (requestTimes)
+        {
+            requestTimes.RemoveAll(t => t < DateTimeOffset.UtcNow.AddHours(-1));
+            limited = requestTimes.Count >= MaxRequestsPerHour;
+        }
+        if (limited)
         {
             ModelState.AddModelError(string.Empty, "Too many registration attempts from this IP address. Please try again later.");
             return Page();
@@ -123,7 +129,8 @@ public class RegisterAccountManagerModel : PageModel
             throw;
         }
 
-        requestTimes.Add(DateTimeOffset.UtcNow);
+        lock (requestTimes)
+            requestTimes.Add(DateTimeOffset.UtcNow);
         _cache.Set(cacheKey, requestTimes, TimeSpan.FromHours(1));
 
         return RedirectToPage("./RegistrationPending");
