@@ -89,8 +89,9 @@
         let threadBody = modal.querySelector('.thread-body');
         if (threadBody) return threadBody;
 
-        // Pattern 2: Look for .border.rounded div (fallback for internal)
-        threadBody = modal.querySelector('.modal-body .border.rounded');
+        // Pattern 2: Look for .border.rounded div (fallback for internal). Skip the
+        // @mention suggestions dropdown, which shares those classes and is hidden.
+        threadBody = modal.querySelector('.modal-body > .border.rounded:not(.cslh-mention-suggestions)');
         if (threadBody) return threadBody;
 
         // Pattern 3: If no thread body exists, we'll create one in the modal-body
@@ -124,6 +125,8 @@
     // (This is possible because we hook into the same connection object)
     connection.off('CardStatusChanged');
     connection.on('CardStatusChanged', function (data) {
+        window.csChatOnStatus?.(data.id, data.newStatus, data.assignedTo);
+
         const card = cardEl(data.id);
         if (!card) return;
 

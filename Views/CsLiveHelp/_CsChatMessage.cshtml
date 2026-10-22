@@ -17,10 +17,13 @@
                       ?? (isMine ? "You"
                           : Model.IsInternal ? "Internal request"
                           : Model.AccountManager?.DisplayName ?? Model.AccountManager?.UserName ?? "Account Manager");
+    // Who picked it up — drives the ➕ reaction (✅ follows the status)
+    var pickedBy = Model.AssignedTo?.DisplayName ?? Model.AssignedTo?.UserName;
     var initials = string.Concat(sender.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
 }
 
-<div class="cs-chat-msg @(isMine ? "cs-chat-msg-mine" : "")" data-chat-msg-id="@Model.Id">
+<div class="cs-chat-msg @(isMine ? "cs-chat-msg-mine" : "")" data-chat-msg-id="@Model.Id"
+     data-chat-status="@Model.Status" data-picked-by="@pickedBy">
     <div class="cs-chat-avatar @(Model.IsInternal ? "cs-chat-avatar-internal" : "")" title="@sender" aria-hidden="true">@initials</div>
     <div class="cs-chat-bubble">
         <div class="cs-chat-meta">
@@ -28,5 +31,7 @@
             <span>@Model.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
         </div>
         <partial name="@cardPartial" model="Model" />
+        @* Filled in by cslivehelp.js from data-chat-status / data-picked-by *@
+        <div class="cs-chat-reactions"></div>
     </div>
 </div>

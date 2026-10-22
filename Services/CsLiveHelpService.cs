@@ -53,6 +53,7 @@ public class CsLiveHelpService
             .Where(r => r.AccountManagerId == amId && r.Id > afterId)
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AssignedTo)
             .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
                 .ThenInclude(c => c.Author)
             .OrderByDescending(r => r.CreatedAt)
@@ -80,6 +81,7 @@ public class CsLiveHelpService
                      && r.Id > afterId)
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AssignedTo)
             .OrderByDescending(r => r.CreatedAt)
             .Take(50)
             .ToListAsync();
