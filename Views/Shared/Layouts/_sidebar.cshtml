@@ -3,6 +3,7 @@
             @using Unified.Services
             @inject UserManager<AppUser> UserManager
             @inject CsMessagingService CsMessagingService
+            @inject UpdateService UpdateService
 
                         <aside class="app-sidebar sticky" id="sidebar">
 
@@ -45,11 +46,22 @@
                                                 <span class="side-menu__label">Dashboard</span>
                                             </a>
                                         </li>
-                                        <li class="slide">
-                                            <a asp-controller="Updates" asp-action="Feed" class="side-menu__item">
+                                        <li class="slide d-flex align-items-center">
+                                            <a asp-controller="Updates" asp-action="Feed" class="side-menu__item flex-grow-1">
                                                 <i class="bx bx-news side-menu__icon"></i>
                                                 <span class="side-menu__label">Updates Feed</span>
+                                                @* Filled in by updates-unread.js from the ids the browser hasn't seen yet *@
+                                                <span class="badge bg-danger ms-2 d-none" id="sidebarUpdatesUnread"
+                                                      data-update-ids="@string.Join(",", await UpdateService.GetRecentIdsAsync())"></span>
                                             </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-link p-0 ms-2 me-2 notification-mute-btn"
+                                                    data-notification-mute-btn="Updates"
+                                                    title="Mute/unmute new update sounds"
+                                                    aria-label="Mute/unmute new update sounds"
+                                                    aria-pressed="false">
+                                                <i class="ri-notification-2-line"></i>
+                                            </button>
                                         </li>
                                         <li class="slide">
                                             <a asp-controller="Schedule" asp-action="AgentView" class="side-menu__item">

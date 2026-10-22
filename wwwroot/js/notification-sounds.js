@@ -13,7 +13,8 @@ const NotificationSounds = (() => {
         notification: '/assets/audio/ping.mp3',
         comment: '/assets/audio/ping.mp3',
         mention: '/assets/audio/ping.mp3',
-        newMessage: '/assets/audio/ping.mp3'
+        newMessage: '/assets/audio/ping.mp3',
+        update: '/assets/audio/ping.mp3'
     };
 
     const SOUND_SETTINGS = {

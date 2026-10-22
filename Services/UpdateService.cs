@@ -10,7 +10,8 @@ public class UpdateService
     private readonly AppDbContext _db;
     private readonly IMemoryCache _cache;
 
-    private const string PinnedCacheKey = "updates:pinned";
+    private const string PinnedCacheKey    = "updates:pinned";
+    private const string RecentIdsCacheKey = "updates:recent-ids";
     private static readonly TimeSpan PinnedTtl = TimeSpan.FromMinutes(2);
 
     public UpdateService(AppDbContext db, IMemoryCache cache)
@@ -145,7 +146,28 @@ public class UpdateService
                 .ToListAsync();
         })!;
 
-    private void InvalidatePinnedCache() => _cache.Remove(PinnedCacheKey);
+    // ── Unread badge ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Ids of the newest non-archived updates, cached for 2 minutes. Rendered into the sidebar on
+    /// every page so the browser can count the ones posted since the user last opened the feed.
+    /// </summary>
+    public Task<List<int>> GetRecentIdsAsync() =>
+        _cache.GetOrCreateAsync(RecentIdsCacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = PinnedTtl;
+            return await _db.Updates
+                .OrderByDescending(u => u.Id)
+                .Select(u => u.Id)
+                .Take(50)
+                .ToListAsync();
+        })!;
+
+    private void InvalidatePinnedCache()
+    {
+        _cache.Remove(PinnedCacheKey);
+        _cache.Remove(RecentIdsCacheKey);
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────
 

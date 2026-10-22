@@ -107,6 +107,29 @@
         });
     });
 
+    connection.on('UpdatePosted', function (evt) {
+        if (!evt?.id) {
+            return;
+        }
+
+        window.UnifiedUpdatesUnread?.add(evt.id);
+
+        if (typeof NotificationManager === 'undefined') {
+            return;
+        }
+
+        NotificationManager.handleNotification({
+            type: 'update',
+            contextType: 'Updates',
+            title: evt.isPinned ? 'New pinned update' : 'New update posted',
+            message: `${evt.title || 'Untitled'} (by ${evt.authorName || 'Someone'})`,
+            url: `/Updates/Detail/${evt.id}`,
+            sound: true,
+            visual: true,
+            toast: true
+        });
+    });
+
     connection.onreconnected(function () {
         if (!onMessagingPage && typeof NotificationManager !== 'undefined') {
             NotificationManager.updateNotificationBell();
