@@ -66,6 +66,7 @@ public class UpdateService
 
     public async Task<Update> PostUpdateAsync(Update update, IEnumerable<int> brandIds)
     {
+        update.Body      = HtmlContent.Sanitize(update.Body);
         update.CreatedAt = DateTime.UtcNow;
         update.UpdatedAt = DateTime.UtcNow;
         _db.Updates.Add(update);
@@ -77,6 +78,7 @@ public class UpdateService
 
     public async Task<Update> EditUpdateAsync(Update update, IEnumerable<int> brandIds)
     {
+        update.Body      = HtmlContent.Sanitize(update.Body);
         update.UpdatedAt = DateTime.UtcNow;
         _db.Updates.Update(update);
         await _db.SaveChangesAsync();

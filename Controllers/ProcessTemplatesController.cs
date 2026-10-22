@@ -84,6 +84,8 @@ public class ProcessTemplatesController : Controller
     {
         var template = await _service.GetTemplateAsync(id);
         if (template is null) return NotFound();
+        if (template.GuidanceNotes is not null)   // loaded into the editor via innerHTML
+            template.GuidanceNotes = HtmlContent.Sanitize(template.GuidanceNotes);
 
         await PopulateViewBagAsync(template.AffectedBrands.Select(b => b.BrandId));
         return View(template);

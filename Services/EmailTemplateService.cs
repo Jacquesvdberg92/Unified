@@ -53,7 +53,7 @@ public class EmailTemplateService
         {
             Title       = $"{master.Title} — {brand.Name}",
             SubjectLine = SubstituteTokens(master.SubjectLine, brand),
-            BodyHtml    = SubstituteTokens(master.BodyHtml, brand),
+            BodyHtml    = HtmlContent.Sanitize(SubstituteTokens(master.BodyHtml, brand)),
             BrandId     = brandId,
             IsActive    = true,
             CreatedAt   = DateTime.UtcNow,
@@ -90,10 +90,11 @@ public class EmailTemplateService
         if (brandId.HasValue)
             brand = await _db.Brands.FindAsync(brandId) ?? brand;
 
+        // Sanitize after substitution too: brand values (URLs, signature) end up in the HTML
         if (brand == null)
-            return template.BodyHtml;
+            return HtmlContent.Sanitize(template.BodyHtml);
 
-        return SubstituteTokens(template.BodyHtml, brand);
+        return HtmlContent.Sanitize(SubstituteTokens(template.BodyHtml, brand));
     }
 
     // Returns the resolved subject line for copy purposes
@@ -114,6 +115,7 @@ public class EmailTemplateService
 
     public async Task<EmailTemplate> CreateAsync(EmailTemplate template)
     {
+        template.BodyHtml  = HtmlContent.Sanitize(template.BodyHtml);
         template.CreatedAt = DateTime.UtcNow;
         template.UpdatedAt = DateTime.UtcNow;
         _db.EmailTemplates.Add(template);
@@ -123,6 +125,7 @@ public class EmailTemplateService
 
     public async Task UpdateAsync(EmailTemplate template)
     {
+        template.BodyHtml  = HtmlContent.Sanitize(template.BodyHtml);
         template.UpdatedAt = DateTime.UtcNow;
         _db.EmailTemplates.Update(template);
         await _db.SaveChangesAsync();
@@ -150,6 +153,8 @@ public class EmailTemplateService
 
     public async Task<Brand> CreateBrandAsync(Brand brand)
     {
+        if (brand.FooterSignatureHtml is not null)
+            brand.FooterSignatureHtml = HtmlContent.Sanitize(brand.FooterSignatureHtml);
         _db.Brands.Add(brand);
         await _db.SaveChangesAsync();
         return brand;
@@ -157,6 +162,8 @@ public class EmailTemplateService
 
     public async Task UpdateBrandAsync(Brand brand)
     {
+        if (brand.FooterSignatureHtml is not null)
+            brand.FooterSignatureHtml = HtmlContent.Sanitize(brand.FooterSignatureHtml);
         _db.Brands.Update(brand);
         await _db.SaveChangesAsync();
     }

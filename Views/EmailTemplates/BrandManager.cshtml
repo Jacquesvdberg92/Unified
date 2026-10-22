@@ -61,11 +61,11 @@
                 @if (!string.IsNullOrWhiteSpace(brand.FooterSignatureHtml))
                 {
                     <div class="border rounded p-2 bg-light mb-2" id="sig-preview-@brand.Id">
-                        @Html.Raw(brand.FooterSignatureHtml)
+                        @Html.Raw(HtmlContent.Sanitize(brand.FooterSignatureHtml))
                     </div>
                     <button class="btn btn-sm btn-outline-secondary copy-sig-btn"
                             data-brand-id="@brand.Id"
-                            data-sig="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(brand.FooterSignatureHtml))">
+                            data-sig="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(HtmlContent.Sanitize(brand.FooterSignatureHtml)))">
                         <i class="ri-clipboard-line me-1"></i> Copy Signature HTML
                     </button>
                 }
