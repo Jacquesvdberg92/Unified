@@ -70,8 +70,9 @@
         <!-- SITE CSS -->
         <link rel="stylesheet" href="@Url.Content("~/css/site.css")" asp-append-version="true">
 
-        <!-- MAIN JS -->
-        <script src="@Url.Content("~/assets/js/main.js")" defer></script>
+        <!-- MAIN JS: restores the saved theme onto <html>. Loaded without defer so it runs before
+             the first paint; deferring it made dark mode pages flash white on every load. -->
+        <script src="@Url.Content("~/assets/js/main.js")"></script>
 
 		@await RenderSectionAsync("Styles", required: false)
 
