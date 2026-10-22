@@ -46,8 +46,21 @@ public class GlobalExceptionHandlerMiddleware
 
             _logger.LogError(ex, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
 
+            // Too late to swap the response once it has started streaming
+            if (context.Response.HasStarted)
+                throw;
+
             context.Response.Clear();
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            // AJAX / fetch callers expect a status they can check, not a redirect to an HTML page
+            if (context.Request.Headers.XRequestedWith == "XMLHttpRequest"
+                || context.Request.Headers.Accept.ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new { success = false, message = "Something went wrong. Please try again." });
+                return;
+            }
+
             context.Response.Redirect("/Home/Error");
         }
     }

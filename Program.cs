@@ -1,3 +1,5 @@
+using System.Net;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -12,12 +14,25 @@ using Unified.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// IIS / reverse-proxy forwarded headers (required for Cloudflare tunnel + IIS)
+// IIS / reverse-proxy forwarded headers (required for Cloudflare tunnel + IIS).
+// Only proxies on this machine (loopback, the default) are trusted, so clients can't spoof
+// their IP or scheme. A proxy elsewhere (e.g. cloudflared on another host) must be listed
+// under ForwardedHeaders:KnownProxies / KnownNetworks.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
+    foreach (var proxy in builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? [])
+        options.KnownProxies.Add(IPAddress.Parse(proxy));
+    foreach (var network in builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>() ?? [])
+        options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+
+    // Escape hatch for setups where the proxy address isn't known up front. Lets any client
+    // spoof X-Forwarded-For, so only use it when the app is reachable solely through the proxy.
+    if (builder.Configuration.GetValue<bool>("ForwardedHeaders:TrustAllProxies"))
+    {
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
 });
 
 // Add services to the container.
@@ -110,7 +125,12 @@ builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
 builder.Services.AddSingleton<IActivityLogQueue, ActivityLogQueueService>();
 builder.Services.AddHostedService(sp => (ActivityLogQueueService)sp.GetRequiredService<IActivityLogQueue>());
 builder.Services.AddHostedService<ActivityLogRetentionService>();
-builder.Services.AddDataProtection();
+// Vault passwords and login cookies are encrypted with this key ring; losing it makes them
+// unreadable. Set DataProtection:KeysPath to a backed-up folder to control where it lives
+// (unset keeps the platform default location, so existing keys keep working).
+var dataProtection = builder.Services.AddDataProtection();
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } keysPath)
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -137,8 +157,17 @@ app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        // Long-lived cache for versioned static assets
-        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
+        var request = ctx.Context.Request;
+        string cacheControl;
+        if (request.Query.ContainsKey("v"))
+            cacheControl = "public, max-age=31536000, immutable";   // asp-append-version: URL changes with content
+        else if (request.Path.StartsWithSegments("/uploads"))
+            cacheControl = "private, max-age=86400";                 // user files: don't keep in shared caches
+        else if (request.Path.StartsWithSegments("/assets") || request.Path.StartsWithSegments("/lib"))
+            cacheControl = "public, max-age=604800";                 // vendor theme / libraries
+        else
+            cacheControl = "no-cache";                               // revalidate so deploys show up immediately
+        ctx.Context.Response.Headers.CacheControl = cacheControl;
     }
 });
 app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");

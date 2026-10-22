@@ -351,9 +351,9 @@
     </script>
 
     @* Load shared SignalR client first *@
-    <script src="~/js/cslivehelp-mentions.js"></script>
-    <script src="~/js/cslivehelp.js"></script>
+    <script src="~/js/cslivehelp-mentions.js" asp-append-version="true"></script>
+    <script src="~/js/cslivehelp.js" asp-append-version="true"></script>
 
     @* Load internal-page-specific logic after shared client is ready *@
-    <script src="~/js/cslivehelp-internal.js"></script>
+    <script src="~/js/cslivehelp-internal.js" asp-append-version="true"></script>
 }

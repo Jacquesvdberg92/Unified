@@ -22,12 +22,12 @@
         <link href="@Url.Content("~/assets/css/styles.css")" rel="stylesheet">
 
         <!-- ICONS CSS -->
-        <link href="@Url.Content("~/assets/CSS/icons.css")" rel="stylesheet">
+        <link href="@Url.Content("~/assets/css/icons.css")" rel="stylesheet">
         
         <partial name="~/Views/Shared/Layouts/_styles.cshtml">
 
         <!-- SITE CSS -->
-        <link rel="stylesheet" href="@Url.Content("~/css/site.css")">
+        <link rel="stylesheet" href="@Url.Content("~/css/site.css")" asp-append-version="true">
 
         <!-- MAIN JS -->
         <script src="@Url.Content("~/assets/js/main.js")" defer></script>
@@ -100,7 +100,7 @@
 		<script src="@Url.Content("~/assets/js/sticky.js")" defer></script>
 
 		<!-- DASHBOARD WIDGETS JS -->
-		<script src="@Url.Content("~/js/dashboard-widgets.js")" defer></script>
+		<script src="@Url.Content("~/js/dashboard-widgets.js")" asp-append-version="true" defer></script>
 
 		<!-- CUSTOM JS -->
 		<script src="@Url.Content("~/assets/js/custom.js")" defer></script>

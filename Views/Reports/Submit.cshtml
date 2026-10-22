@@ -83,5 +83,5 @@
 
 @section Scripts {
 <script type="application/json" id="agentOptionsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(agents.Select(a => new { value = a.Id, text = a.Name })))</script>
-<script src="@Url.Content("~/js/reports.js")"></script>
+<script src="@Url.Content("~/js/reports.js")" asp-append-version="true"></script>
 }

@@ -109,13 +109,8 @@ public class VaultController : Controller
         {
             var existing = (await _svc.GetVaultForUserAsync(userId)).FirstOrDefault(e => e.Id == entry.Id);
             if (existing is null) return NotFound();
-            plainPassword = _svc.GetType().GetMethod("_protector") is null
-                ? existing.EncryptedPassword  // will be re-set; handled in service
-                : existing.EncryptedPassword;
-            // Pass existing encrypted value directly — service detects IsProtected
-            entry.EncryptedPassword = existing.EncryptedPassword;
 
-            // Re-encrypt the same password: just upsert without changing encrypted field.
+            // Keep the stored encrypted password; only update the other fields
             existing.Label      = entry.Label;
             existing.Username   = entry.Username;
             existing.CategoryId = entry.CategoryId;
