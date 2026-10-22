@@ -38,7 +38,7 @@
                 <i class="bx bx-plus me-1"></i> Add Holiday
             </div>
             <div class="card-body">
-                <form asp-action="AddHoliday" method="post">
+                <form data-inplace asp-action="AddHoliday" method="post">
                     @Html.AntiForgeryToken()
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Date</label>
@@ -93,7 +93,7 @@
                                     <td class="fw-semibold">@h.Name</td>
                                     <td class="text-muted small">@(h.Notes ?? "—")</td>
                                     <td>
-                                        <form asp-action="DeleteHoliday" method="post"
+                                        <form data-inplace asp-action="DeleteHoliday" method="post"
                                               onsubmit="return confirm('Remove @h.Name?')">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id"   value="@h.Id" />

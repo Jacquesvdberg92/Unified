@@ -59,7 +59,7 @@ else
                                 <td class="text-muted small">@(log.AgentNote ?? "—")</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <form asp-action="Approve" method="post" class="d-flex gap-1 align-items-center">
+                                        <form data-inplace asp-action="Approve" method="post" class="d-flex gap-1 align-items-center">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="logId" value="@log.Id" />
                                             <input type="text" name="reviewerNote" class="form-control form-control-sm"
@@ -68,7 +68,7 @@ else
                                                 <i class="bx bx-check"></i>
                                             </button>
                                         </form>
-                                        <form asp-action="Reject" method="post" class="d-flex gap-1 align-items-center">
+                                        <form data-inplace asp-action="Reject" method="post" class="d-flex gap-1 align-items-center">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="logId" value="@log.Id" />
                                             <input type="text" name="reviewerNote" class="form-control form-control-sm"

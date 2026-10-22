@@ -106,10 +106,14 @@
             .replace(/"/g, '&quot;');
     }
 
-    function ensureCardModals(id) {
-        if (document.getElementById('statusModal-' + id) ||
+    // The CS board's per-card action modals (see wireCsActionForms)
+    const csActionModalPrefixes = ['statusModal-', 'escalateModal-', 'resetModal-', 'passedModal-'];
+
+    // force: fetch even though some of the card's modals exist, adding only the missing ones
+    function ensureCardModals(id, force) {
+        if (!force && (document.getElementById('statusModal-' + id) ||
             document.getElementById('csCommentModal-' + id) ||
-            document.getElementById('commentModal-' + id)) {
+            document.getElementById('commentModal-' + id))) {
             return Promise.resolve();
         }
 
@@ -125,8 +129,11 @@
             const wrap = document.createElement('div');
             wrap.innerHTML = html.trim();
             while (wrap.firstElementChild) {
-                document.body.appendChild(wrap.firstElementChild);
+                const el = wrap.firstElementChild;
+                if (el.id && document.getElementById(el.id)) el.remove();
+                else document.body.appendChild(el);
             }
+            wireCsActionForms();
         })
         .catch(function () {
             // keep card visible even if modal markup fails
@@ -330,7 +337,11 @@
 
     // ── Event: CardStatusChanged ─────────────────────────────────────────────
 
-    connection.on('CardStatusChanged', function (data) {
+    connection.on('CardStatusChanged', applyStatusChange);
+
+    // Also called with the response of this user's own status actions, so the card moves
+    // straight away even when the broadcast is slow or not addressed to this user
+    function applyStatusChange(data) {
         window.csChatOnStatus(data.id, data.newStatus, data.assignedTo);
 
         const card = cardEl(data.id);
@@ -365,7 +376,7 @@
                 if (row) row.style.display = '';
             }
         }
-    });
+    }
 
     // ── Event: CardAdded ─────────────────────────────────────────────────────
 
@@ -858,7 +869,7 @@
      * Prevents duplicate submissions by disabling the button during the request.
      * Uses a flag to track if a submission is already in flight.
      */
-    function ajaxFormSetup(formEl, modalEl) {
+    function ajaxFormSetup(formEl, modalEl, onSuccess) {
         if (formEl.dataset.ajaxWired) return;
         formEl.dataset.ajaxWired = '1';
         formEl.dataset.isSubmitting = '0';
@@ -907,6 +918,7 @@
                     }
                     formEl.reset();
                     showToastMsg(data.message ?? 'Done.', true);
+                    onSuccess?.(data);
                     console.log('[CsLiveHelp] Form submitted successfully:', url);
                 } else {
                     showToastMsg(data.error ?? 'An error occurred. Please try again.', false);
@@ -986,6 +998,74 @@
     }
 
     wireCsCommentModals();
+
+    // ── CS action forms: post in the background instead of reloading the board ──
+    //
+    // Status moves, escalate, send reset, mark passed, resolve escalation and new internal
+    // requests. The controller answers fetch calls with JSON; SignalR moves or adds the card
+    // for everyone, and this user's own card is moved and re-rendered from the response.
+
+    function wireCsActionForms() {
+        const modalSelector = csActionModalPrefixes.concat(['intStatusModal-', 'intResolveModal-'])
+            .map(function (p) { return '[id^="' + p + '"]'; }).join(', ');
+        document.querySelectorAll(modalSelector).forEach(function (modal) {
+            modal.querySelectorAll('form').forEach(function (form) {
+                ajaxFormSetup(form, modal, onCardAction);
+            });
+        });
+
+        const createModal = document.getElementById('newInternalRequestModal');
+        const createForm  = createModal?.querySelector('form');
+        if (createForm) ajaxFormSetup(createForm, createModal);
+
+        const composerForm = document.querySelector('#csChatComposer form[action$="/CreateInternalRequest"]');
+        if (composerForm) ajaxFormSetup(composerForm, null);
+    }
+
+    function onCardAction(data) {
+        if (!data?.card) return;
+        applyStatusChange(data.card);
+        refreshCard(data.card.id);
+    }
+
+    // Re-renders one card (and on the CS board its action modals) so the buttons and the
+    // status choices match the card's new status
+    function refreshCard(id) {
+        const partialUrl = (window.csCardPartialUrl ?? '/CsLiveHelp/CardPartial/') + id + (chatFeed ? '?chat=true' : '');
+        fetch(partialUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (res) {
+                if (!res.ok) throw new Error('partial failed');
+                return res.text();
+            })
+            .then(function (html) {
+                const wrap = document.createElement('div');
+                wrap.innerHTML = html.trim();
+                const fresh = wrap.firstElementChild;
+                const old   = cardEl(id);
+                const target = chatFeed ? old?.closest('.cs-chat-msg') : old;
+                if (!fresh || !target) return;
+                fresh.style.display = target.style.display;   // keep the board filter applied
+                target.replaceWith(fresh);
+                if (chatFeed) chatRenderReactions(fresh);
+            })
+            .catch(function () { /* the moved card stays as it is */ });
+
+        const stale = csActionModalPrefixes
+            .map(function (p) { return document.getElementById(p + id); })
+            .filter(Boolean);
+        if (!stale.length) return;
+
+        function reloadModals() {
+            stale.forEach(function (m) { m.remove(); });
+            ensureCardModals(id, true);
+        }
+        // Swap the modals only once the one that was just used has finished closing
+        const closing = stale.find(function (m) { return m.style.display === 'block'; });
+        if (closing) closing.addEventListener('hidden.bs.modal', reloadModals, { once: true });
+        else reloadModals();
+    }
+
+    wireCsActionForms();
 
     function cleanupStaleModalState() {
         const openModals = document.querySelectorAll('.modal.show').length;

@@ -490,6 +490,9 @@ public class CsLiveHelpController : Controller
         if (req?.AccountManagerId is not null)
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName });
 
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = $"Card status updated to {status}.", card = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName } });
+
         TempData["Success"] = $"Card status updated to {status}.";
         return RedirectToAction(nameof(Board));
     }
@@ -505,6 +508,8 @@ public class CsLiveHelpController : Controller
 
         if (assignedTeamId <= 0)
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Please select a team allocation before passing to CS." });
             TempData["Error"] = "Please select a team allocation before passing to CS.";
             return RedirectToAction(nameof(Board));
         }
@@ -512,6 +517,8 @@ public class CsLiveHelpController : Controller
         var assignedTeam = await _db.Teams.FindAsync(assignedTeamId);
         if (assignedTeam is null)
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Selected team allocation is invalid." });
             TempData["Error"] = "Selected team allocation is invalid.";
             return RedirectToAction(nameof(Board));
         }
@@ -533,6 +540,9 @@ public class CsLiveHelpController : Controller
         var req = await _db.CsRequests.FindAsync(id);
         if (req?.AccountManagerId is not null)
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", statusPayload);
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Card escalated.", card = statusPayload });
 
         TempData["Success"] = "Card escalated.";
         return RedirectToAction(nameof(Board));
@@ -689,6 +699,9 @@ public class CsLiveHelpController : Controller
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body = "Password reset to Aa123456", isSystem = true, createdAt = DateTime.UtcNow });
         }
 
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Password reset comment posted and card completed.", card = new { id, newStatus = "Completed", assignedTo = agent?.DisplayName } });
+
         TempData["Success"] = "Password reset comment posted and card completed.";
         return RedirectToAction(nameof(Board));
     }
@@ -715,6 +728,9 @@ public class CsLiveHelpController : Controller
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged", new { id, newStatus = "Completed", assignedTo = agent?.DisplayName });
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CommentAdded", new { requestId = id, author = agent?.DisplayName ?? csId, body = "Passed to relevant agents", isSystem = true, createdAt = DateTime.UtcNow });
         }
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Card marked as passed to relevant agents.", card = new { id, newStatus = "Completed", assignedTo = agent?.DisplayName } });
 
         TempData["Success"] = "Card marked as passed to relevant agents.";
         return RedirectToAction(nameof(Board));
@@ -775,6 +791,9 @@ public class CsLiveHelpController : Controller
             await _hub.Clients.Group($"am-{req.AccountManagerId}").SendAsync("CardStatusChanged",
                 new { id, newStatus = "Completed", assignedTo = (string?)null });
 
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Escalation resolved.", card = new { id, newStatus = "Completed", assignedTo = (string?)null } });
+
         TempData["Success"] = "Escalation resolved.";
         return RedirectToAction(nameof(RequestsAllBrands));
     }
@@ -798,12 +817,16 @@ public class CsLiveHelpController : Controller
 
         if (type.IsOther && string.IsNullOrWhiteSpace(customDescription))
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "A description is required for 'Other' request type." });
             TempData["Error"] = "A description is required for 'Other' request type.";
             return RedirectToAction(nameof(RequestsAllBrands));
         }
 
         if (!string.IsNullOrWhiteSpace(customDescription) && customDescription.Length > 500)
         {
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+                return Json(new { success = false, error = "Description must be 500 characters or fewer." });
             TempData["Error"] = "Description must be 500 characters or fewer.";
             return RedirectToAction(nameof(RequestsAllBrands));
         }
@@ -835,6 +858,9 @@ public class CsLiveHelpController : Controller
             contextType = "RequestsAllBrands",
             timestamp = DateTime.UtcNow
         });
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = "Internal request created." });
 
         TempData["Success"] = "Internal request created.";
         return RedirectToAction(nameof(RequestsAllBrands));
@@ -1050,6 +1076,9 @@ public class CsLiveHelpController : Controller
         var agent = await _users.GetUserAsync(User);
         var statusPayload = new { id, newStatus = status.ToString(), assignedTo = agent?.DisplayName };
         await _hub.Clients.Group("cs-board").SendAsync("CardStatusChanged", statusPayload);
+
+        if (Request.Headers.ContainsKey("X-Requested-With"))
+            return Json(new { success = true, message = $"Card status updated to {status}.", card = statusPayload });
 
         TempData["Success"] = $"Card status updated to {status}.";
         return RedirectToAction(nameof(RequestsAllBrands));

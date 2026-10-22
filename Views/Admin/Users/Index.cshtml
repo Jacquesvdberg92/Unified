@@ -94,7 +94,7 @@
                                         <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-outline-primary">Edit</a>
                                         @if (user.CanUnlock)
                                         {
-                                            <form asp-action="UnlockUser" method="post" class="d-inline">
+                                            <form data-inplace asp-action="UnlockUser" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@user.Id" />
                                                 <button type="submit" class="btn btn-outline-success">Unlock</button>
@@ -102,7 +102,7 @@
                                         }
                                         else if (user.CanLock)
                                         {
-                                            <form asp-action="LockUser" method="post" class="d-inline">
+                                            <form data-inplace asp-action="LockUser" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@user.Id" />
                                                 <button type="submit" class="btn btn-outline-warning">Lock</button>
@@ -110,7 +110,7 @@
                                         }
                                         @if (user.CanDelete)
                                         {
-                                            <form asp-action="DeleteUser" method="post" class="d-inline" onsubmit="return confirm('Delete @user.DisplayName? This cannot be undone.');">
+                                            <form data-inplace asp-action="DeleteUser" method="post" class="d-inline" onsubmit="return confirm('Delete @user.DisplayName? This cannot be undone.');">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@user.Id" />
                                                 <button type="submit" class="btn btn-outline-danger">Delete</button>
