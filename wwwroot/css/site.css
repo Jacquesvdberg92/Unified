@@ -330,7 +330,7 @@ pre.work-dist-body {
 .quick-reaction {
     border: 1px solid var(--bs-border-color);
     border-radius: 999px;
-    background: #fff;
+    background: var(--custom-white);
     font-size: .74rem;
     line-height: 1;
     padding: .25rem .45rem;
@@ -394,4 +394,49 @@ pre.work-dist-body {
     .cs-msg-bubble {
         max-width: 92%;
     }
+}
+
+/* -- Dark mode --------------------------------------------------------------
+   The theme switches dark mode with data-theme-mode; _Layout mirrors it to Bootstrap's
+   data-bs-theme. Map Bootstrap's colour variables onto the theme's dark palette so plain
+   Bootstrap components (.card, .list-group, tables, muted text) use the theme's surfaces
+   and text instead of Bootstrap's stock greys or its light-mode #212529 text. */
+[data-theme-mode=dark][data-bs-theme=dark] {
+    --bs-body-bg: rgb(var(--body-bg-rgb));
+    --bs-body-bg-rgb: var(--body-bg-rgb);
+    --bs-body-color: var(--default-text-color);
+    --bs-emphasis-color: #fff;
+    --bs-secondary-color: var(--text-muted);
+    --bs-secondary-bg: rgb(var(--body-bg-rgb2));
+    --bs-tertiary-bg: rgb(var(--light-rgb));
+    --bs-border-color: var(--default-border);
+}
+
+/* The theme hard-codes a white background and black text on contextual table rows/headers */
+[data-theme-mode=dark] :is(.table-primary, .table-secondary, .table-success, .table-danger,
+                           .table-warning, .table-info, .table-light, .table-dark),
+[data-theme-mode=dark] .table thead:is(.table-primary, .table-secondary, .table-success, .table-danger,
+                                       .table-warning, .table-info, .table-light, .table-dark) {
+    background-color: transparent;
+    color: var(--default-text-color);
+    --bs-table-color: var(--default-text-color);
+}
+
+/* Sidebar brand text: .text-white is inverted to near-black in this theme's dark mode */
+.app-brand-text {
+    color: #fff;
+}
+
+[data-menu-styles=light]:not([data-theme-mode=dark]) .app-brand-text,
+[data-menu-styles=transparent]:not([data-theme-mode=dark]) .app-brand-text {
+    color: var(--default-text-color);
+}
+
+/* Footer attribution link: Ukraine blue is too dark to read on the dark footer */
+.ukraine-link {
+    color: #005BBB;
+}
+
+[data-theme-mode=dark] .ukraine-link {
+    color: #5aa9ff;
 }
