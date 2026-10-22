@@ -319,36 +319,38 @@
                 <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div class="modal-body">
-                        @if (r.Comments.Any(c => c.IsCsInternalOnly))
+                        @* Always render the thread container so live comments have a place to land *@
+                        <div class="thread-body mb-3 border rounded p-2 small" id="threadBody-@r.Id" style="max-height:200px;overflow-y:auto">
+                        @if (!r.Comments.Any(c => c.IsCsInternalOnly))
                         {
-                            <div class="mb-3 border rounded p-2 small" style="max-height:200px;overflow-y:auto">
-                                @foreach (var c in r.Comments.Where(c => c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
-                                {
-                                    <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
-                                        <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body
-                                        @if (!string.IsNullOrWhiteSpace(c.ImagePath))
-                                                    {
-                                                        var attachExt = System.IO.Path.GetExtension(c.ImagePath).ToLowerInvariant();
-                                                        var isImg = new[]{ ".jpg",".jpeg",".png",".gif",".webp" }.Contains(attachExt);
-                                                        <div class="mt-1">
-                                                            @if (isImg)
-                                                            {
-                                                                <a href="@c.ImagePath" target="_blank" rel="noopener">
-                                                                    <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
-                                                                </a>
-                                                            }
-                                                            else
-                                                            {
-                                                                <a href="@c.ImagePath" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm py-0 px-2">
-                                                                    <i class="bx bx-file me-1"></i>@System.IO.Path.GetFileName(c.ImagePath)
-                                                                </a>
-                                                            }
-                                                        </div>
-                                                    }
-                                    </div>
-                                }
-                            </div>
+                            <p class="text-muted mb-0">No comments yet.</p>
                         }
+                            @foreach (var c in r.Comments.Where(c => c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
+                            {
+                                <div class="mb-1 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
+                                    <span class="fw-semibold">@c.CreatedAt.ToString("MMM dd HH:mm"):</span> @c.Body
+                                    @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                                {
+                                                    var attachExt = System.IO.Path.GetExtension(c.ImagePath).ToLowerInvariant();
+                                                    var isImg = new[]{ ".jpg",".jpeg",".png",".gif",".webp" }.Contains(attachExt);
+                                                    <div class="mt-1">
+                                                        @if (isImg)
+                                                        {
+                                                            <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                                <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <a href="@c.ImagePath" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                                                                <i class="bx bx-file me-1"></i>@System.IO.Path.GetFileName(c.ImagePath)
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                }
+                                </div>
+                            }
+                        </div>
                         <textarea name="body" class="form-control form-control-sm" rows="3"
                                   placeholder="Your comment…" maxlength="1000" required></textarea>
                         <div class="mt-2">
@@ -435,6 +437,7 @@
     @* Configure card partial URL for internal page *@
     <script>
         window.csCardPartialUrl = '/CsLiveHelp/InternalCardPartial/';
+        window.csChatReactUrl   = '/CsLiveHelp/InternalUpdateStatusJson/';
     </script>
 
     @* Load shared SignalR client first *@

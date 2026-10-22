@@ -151,6 +151,99 @@
         if (hint) hint.style.display = chatFeed.querySelector('.cs-chat-msg') ? 'none' : '';
     }
 
+    // Size the feed so the composer always sits at the bottom of the screen
+    function chatFitToScreen() {
+        if (!chatFeed) return;
+        const composer = document.getElementById('csChatComposer');
+        const footer   = document.querySelector('footer.footer');
+        const top      = chatFeed.getBoundingClientRect().top + window.scrollY;
+        const below    = (composer ? composer.offsetHeight + 12 : 0) + (footer?.offsetHeight ?? 0) + 16;
+        chatFeed.style.height = Math.max(260, window.innerHeight - top - below) + 'px';
+    }
+
+    // ── Chat reactions: ➕ once someone picks the request up, ✅ once it is done ──
+    //
+    // Derived from the request status, so they stay in step with the board. On CS pages
+    // (window.csChatReactUrl set) the missing reactions are offered as buttons that move
+    // the request to In Progress / Completed, exactly like dragging it on the board.
+
+    const pickedStatuses = ['InProgress', 'OnGoing', 'Escalated', 'Completed'];
+
+    function chatRenderReactions(msg) {
+        const box = msg.querySelector('.cs-chat-reactions');
+        if (!box) return;
+
+        const status   = msg.dataset.chatStatus ?? 'Open';
+        const pickedBy = msg.dataset.pickedBy ?? '';
+        const isPicked = pickedStatuses.includes(status);
+        const isDone   = status === 'Completed';
+        const canReact = !!window.csChatReactUrl;
+
+        let html = '';
+        if (isPicked) {
+            html += '<span class="cs-chat-reaction cs-chat-reaction-picked" title="Picked up' +
+                    (pickedBy ? ' by ' + escHtml(pickedBy) : '') + '">➕' +
+                    (pickedBy ? ' ' + escHtml(pickedBy) : '') + '</span>';
+        }
+        if (isDone) {
+            html += '<span class="cs-chat-reaction cs-chat-reaction-done" title="Done">✅</span>';
+        }
+        if (canReact && !isPicked) {
+            html += '<button type="button" class="cs-chat-reaction cs-chat-react-btn" data-react="InProgress" title="Pick this up">➕ Pick</button>';
+        }
+        if (canReact && !isDone) {
+            html += '<button type="button" class="cs-chat-reaction cs-chat-react-btn" data-react="Completed" title="Mark as done">✅ Done</button>';
+        }
+        box.innerHTML = html;
+    }
+
+    // Called by the CardStatusChanged handlers here and in cslivehelp-internal.js
+    window.csChatOnStatus = function (id, status, assignedTo) {
+        const msg = chatFeed?.querySelector('.cs-chat-msg[data-chat-msg-id="' + id + '"]');
+        if (!msg) return;
+        msg.dataset.chatStatus = status;
+        if (assignedTo && status !== 'Escalated') msg.dataset.pickedBy = assignedTo;
+        chatRenderReactions(msg);
+    };
+
+    if (chatFeed) {
+        chatFeed.querySelectorAll('.cs-chat-msg').forEach(chatRenderReactions);
+
+        chatFeed.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.cs-chat-react-btn');
+            if (!btn || !window.csChatReactUrl) return;
+
+            const msg    = btn.closest('.cs-chat-msg');
+            const id     = msg?.dataset.chatMsgId;
+            const status = btn.dataset.react;
+            if (!id || !status) return;
+
+            btn.disabled = true;
+            try {
+                const fd = new FormData();
+                fd.append('status', status);
+                fd.append('__RequestVerificationToken',
+                    document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '');
+                const res = await fetch(window.csChatReactUrl + id, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) throw new Error('status update failed');
+                // The CardStatusChanged broadcast fills in who picked it; update now in case it is slow
+                window.csChatOnStatus(id, status, null);
+            } catch (_) {
+                btn.disabled = false;
+                showToastMsg('Could not update request #' + id + '. Please try again.', false);
+            }
+        });
+
+        chatFitToScreen();
+        window.addEventListener('resize', chatFitToScreen);
+        // Alerts above the feed (TempData messages, broadcast banner) change the space left
+        document.addEventListener('closed.bs.alert', chatFitToScreen);
+    }
+
     chatScrollToBottom(true);
 
     const hasEscalatedColumn = !!document.getElementById('col-Escalated');
@@ -238,6 +331,8 @@
     // ── Event: CardStatusChanged ─────────────────────────────────────────────
 
     connection.on('CardStatusChanged', function (data) {
+        window.csChatOnStatus(data.id, data.newStatus, data.assignedTo);
+
         const card = cardEl(data.id);
         if (!card) return;
 
@@ -347,6 +442,7 @@
             if (!msg) return;
             msg.querySelector('[data-card-id]')?.classList.add('new-card-notice');
             chatFeed.appendChild(msg);
+            chatRenderReactions(msg);
             chatUpdateEmptyHint();
             chatScrollToBottom(false);
             ensureCardModals(data.id).finally(function () {
@@ -415,7 +511,7 @@
         if (threadBody) return threadBody;
 
         // Pattern 4: Internal board comment modal with .border.rounded fallback (intCommentModal-{id} .modal-body .border.rounded)
-        threadBody = document.querySelector('#intCommentModal-' + requestId + ' .modal-body .border.rounded');
+        threadBody = document.querySelector('#intCommentModal-' + requestId + ' .modal-body > .border.rounded:not(.cslh-mention-suggestions)');
         if (threadBody) return threadBody;
 
         // Pattern 5: Fallback "No comments yet" placeholder as <p id="threadBody-{id}">
@@ -526,9 +622,12 @@
             threadBody = wrap;
         }
 
-        // Remove "No comments yet" placeholder if present
-        const emptyP = threadBody.querySelector('p.text-muted');
+        // Remove "No comments yet" placeholder if present (the Board's placeholder is a
+        // plain <p> inside a muted .thread-body)
+        const emptyP = threadBody.querySelector('p.text-muted')
+            ?? (threadBody.classList.contains('text-muted') ? threadBody.querySelector('p') : null);
         if (emptyP) emptyP.remove();
+        threadBody.classList.remove('text-muted');
 
         // Build and append comment HTML
         const dt = new Date(data.createdAt);
@@ -687,6 +786,7 @@
         if (markSeen(dedupeKey)) return;
 
         renderBroadcastBanner(data);
+        chatFitToScreen();
 
         if (typeof NotificationManager !== 'undefined') {
             try {
