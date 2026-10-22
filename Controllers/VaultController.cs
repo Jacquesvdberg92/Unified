@@ -24,6 +24,9 @@ public class VaultController : Controller
         _users = users;
     }
 
+    [HttpGet]
+    public IActionResult Index() => RedirectToAction(nameof(MyVault));
+
     // ── My Vault ──────────────────────────────────────────────────────────
 
     [HttpGet]

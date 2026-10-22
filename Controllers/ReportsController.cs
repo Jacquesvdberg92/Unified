@@ -30,6 +30,9 @@ public class ReportsController : Controller
     // ── Dashboard ─────────────────────────────────────────────────────────
 
     [HttpGet]
+    public IActionResult Index() => RedirectToAction(nameof(Dashboard));
+
+    [HttpGet]
     [OutputCache(PolicyName = "Reports")]
     public async Task<IActionResult> Dashboard(int? periodType, string? periodStart)
     {
