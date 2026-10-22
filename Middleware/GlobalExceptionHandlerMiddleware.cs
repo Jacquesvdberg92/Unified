@@ -23,6 +23,7 @@ public class GlobalExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
+            long? errorId = null;
             try
             {
                 var log = new ErrorLog
@@ -38,6 +39,7 @@ public class GlobalExceptionHandlerMiddleware
 
                 db.ErrorLogs.Add(log);
                 await db.SaveChangesAsync();
+                errorId = log.Id;
             }
             catch (Exception persistEx)
             {
@@ -61,7 +63,12 @@ public class GlobalExceptionHandlerMiddleware
                 return;
             }
 
-            context.Response.Redirect("/Home/Error");
+            // Pass the error reference and the failing page so the error page can offer
+            // "Report this problem" with both filled in
+            var query = QueryString.Empty.Add("from", $"{context.Request.Path}{context.Request.QueryString}");
+            if (errorId.HasValue)
+                query = query.Add("errorId", errorId.Value.ToString());
+            context.Response.Redirect($"{context.Request.PathBase}/Home/Error{query}");
         }
     }
 }

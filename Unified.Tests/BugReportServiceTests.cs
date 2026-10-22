@@ -298,6 +298,31 @@ public class BugReportServiceTests
     }
 
     [Fact]
+    public async Task Submit_FromErrorPage_HighlightsThatErrorButOnlyIfItIsTheReportersOwn()
+    {
+        var stub = WorkingGitHub();
+        var (db, svc, _) = await BuildAsync(nameof(Submit_FromErrorPage_HighlightsThatErrorButOnlyIfItIsTheReportersOwn), stub);
+        var at = Context().SubmittedAtUtc;
+        var own = new ErrorLog { UserId = "u1", Path = "/Brands/Edit/3", Method = "POST", ExceptionType = "System.NullReferenceException", Message = "Mine", StackTrace = "at Mine", Timestamp = at.AddMinutes(-1) };
+        var other = new ErrorLog { UserId = "u2", Path = "/Secret", Method = "GET", ExceptionType = "X", Message = "Not mine", StackTrace = "at Secret", Timestamp = at.AddMinutes(-1) };
+        db.ErrorLogs.AddRange(own, other);
+        await db.SaveChangesAsync();
+
+        var report = await svc.SubmitAsync(NewReport(), Context() with { ErrorLogId = own.Id }, null, null);
+
+        Assert.Contains($"| Error reference | ERR-{own.Id} |", report.SystemInfo);
+        Assert.Contains($"**The error this report is about (ERR-{own.Id})**", report.SystemInfo);
+        Assert.Contains("System.NullReferenceException: Mine", report.SystemInfo);
+        // Shown once, as the reported error, not repeated under recent errors
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(report.SystemInfo, "NullReferenceException: Mine"));
+
+        var spoofed = await svc.SubmitAsync(NewReport(), Context() with { ErrorLogId = other.Id }, null, null);
+
+        Assert.DoesNotContain("Not mine", spoofed.SystemInfo);
+        Assert.DoesNotContain("Error reference", spoofed.SystemInfo);
+    }
+
+    [Fact]
     public void FormatSystemInfo_ListsClientDetailsAndConsoleErrors()
     {
         var clientInfo = JsonSerializer.Serialize(new

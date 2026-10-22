@@ -1,30 +1,125 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
-    var statusCode = Context.Request.Query["statusCode"].FirstOrDefault();
-    var is404 = statusCode == "404";
-    ViewData["Title"] = is404 ? "Page Not Found" : "Error";
+    var code = Model?.StatusCode ?? 500;
+
+    var (title, message, icon, tone) = code switch
+    {
+        400 => ("Bad Request", "The request couldn't be understood. The link may be incomplete or a form may have been submitted twice.", "bx-error", "warning"),
+        401 => ("Please Sign In", "You need to be signed in to see this page.", "bx-lock-alt", "warning"),
+        403 => ("Access Denied", "Your account doesn't have permission to open this page. If you think it should, ask your team leader.", "bx-block", "warning"),
+        404 => ("Page Not Found", "The page you're looking for doesn't exist or has been moved. Check the address, or head back and try another link.", "bx-search-alt", "primary"),
+        405 or 408 => ("Request Didn't Go Through", "The request took too long or wasn't allowed. Please try again.", "bx-time-five", "warning"),
+        413 => ("Upload Too Large", "That file or form is bigger than the app accepts. Try a smaller file.", "bx-upload", "warning"),
+        429 => ("Slow Down a Little", "You've made a lot of requests in a short time. Wait a minute, then try again.", "bx-tachometer", "warning"),
+        502 or 503 or 504 => ("Temporarily Unavailable", "Unified or a service it depends on isn't responding right now. Please try again in a few minutes.", "bx-cloud-lightning", "danger"),
+        _ => ("Something Went Wrong", "An unexpected error stopped this page from loading. It has been logged, and reporting it helps us fix it faster.", "bx-bug", "danger")
+    };
+
+    ViewData["Title"] = title;
+
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var canRetry = code >= 500 || code is 408 or 429;
+    var canReport = isSignedIn && code != 401;
+    var occurredAt = (Model?.OccurredAtUtc ?? DateTime.UtcNow).ToString("yyyy-MM-dd HH:mm:ss") + " UTC";
+
+    var details = new List<(string Label, string Value)>();
+    if (Model?.ErrorReference is string reference) details.Add(("Error reference", reference));
+    details.Add(("Status", code.ToString()));
+    if (!string.IsNullOrEmpty(Model?.OriginalPath)) details.Add(("Page", Model.OriginalPath));
+    details.Add(("Time", occurredAt));
+    if (Model?.ShowRequestId == true) details.Add(("Request ID", Model.RequestId!));
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-lg-6 text-center">
-        @if (is404)
-        {
-            <h1 class="display-1 fw-bold text-primary">404</h1>
-            <h2 class="mb-3">Page Not Found</h2>
-            <p class="text-muted mb-4">The page you are looking for doesn&rsquo;t exist or has been moved.</p>
-        }
-        else
-        {
-            <h1 class="display-1 fw-bold text-danger">500</h1>
-            <h2 class="mb-3">Something Went Wrong</h2>
-            <p class="text-muted mb-4">An unexpected error occurred. Please try again later.</p>
-            @if (Model?.ShowRequestId == true)
-            {
-                <p class="small text-muted">Request ID: <code>@Model.RequestId</code></p>
-            }
-        }
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-wave">
-            <i class="bx bx-home me-1"></i> Back to Dashboard
-        </a>
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row justify-content-center mt-4 mt-lg-5">
+        <div class="col-xl-6 col-lg-8">
+            <div class="card custom-card overflow-hidden">
+                <div class="card-body p-4 p-md-5 text-center">
+                    <span class="avatar avatar-xxl avatar-rounded bg-@tone-transparent text-@tone mb-3">
+                        <i class="bx @icon" style="font-size: 2.5rem"></i>
+                    </span>
+                    <div class="text-@tone fw-semibold small text-uppercase mb-1" style="letter-spacing: .08em">Error @code</div>
+                    <h2 class="fw-bold mb-2">@title</h2>
+                    <p class="text-muted mb-4 mx-auto" style="max-width: 32rem">@message</p>
+
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                        @if (canReport)
+                        {
+                            <a asp-controller="BugReports" asp-action="Create"
+                               asp-route-from="@Model?.OriginalPath" asp-route-errorId="@Model?.ErrorId" asp-route-statusCode="@code"
+                               class="btn btn-@(code == 404 ? "outline-primary" : "primary") btn-wave">
+                                <i class="bx bx-bug me-1"></i>Report this problem
+                            </a>
+                        }
+                        @if (code == 401)
+                        {
+                            <a href="/Identity/Account/Login@(string.IsNullOrEmpty(Model?.OriginalPath) ? "" : "?returnUrl=" + Uri.EscapeDataString(Model.OriginalPath))" class="btn btn-primary btn-wave">
+                                <i class="bx bx-log-in me-1"></i>Sign in
+                            </a>
+                        }
+                        @if (canRetry && !string.IsNullOrEmpty(Model?.OriginalPath))
+                        {
+                            <a href="@Model.OriginalPath" class="btn btn-outline-secondary btn-wave">
+                                <i class="bx bx-refresh me-1"></i>Try again
+                            </a>
+                        }
+                        <button type="button" class="btn btn-outline-secondary btn-wave" id="errorGoBack">
+                            <i class="bx bx-arrow-back me-1"></i>Go back
+                        </button>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-@(code == 404 ? "primary" : "outline-secondary") btn-wave">
+                            <i class="bx bx-home me-1"></i>Dashboard
+                        </a>
+                    </div>
+
+                    <div class="border rounded text-start p-3 bg-light-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-semibold small">Details for support</span>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" id="errorCopyDetails">
+                                <i class="bx bx-copy me-1"></i><span>Copy</span>
+                            </button>
+                        </div>
+                        <dl class="row small mb-0" id="errorDetails">
+                            @foreach (var (label, value) in details)
+                            {
+                                <dt class="col-sm-4 text-muted fw-normal">@label</dt>
+                                <dd class="col-sm-8 mb-1 text-break"><code>@value</code></dd>
+                            }
+                        </dl>
+                    </div>
+
+                    @if (code >= 500)
+                    {
+                        <ul class="text-muted small text-start mt-4 mb-0 ps-3">
+                            <li>Your work on other pages isn't affected. If you were saving a form, check whether it saved before trying again.</li>
+                            <li>If it keeps happening, <strong>Report this problem</strong> sends the error details to the team automatically. Just add what you were doing.</li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        var back = document.getElementById('errorGoBack');
+        back.addEventListener('click', function () {
+            if (history.length > 1 && document.referrer) history.back();
+            else location.href = '@Url.Action("Index", "Home")';
+        });
+
+        var copy = document.getElementById('errorCopyDetails');
+        copy.addEventListener('click', function () {
+            var lines = [];
+            document.querySelectorAll('#errorDetails dt').forEach(function (dt) {
+                lines.push(dt.textContent.trim() + ': ' + dt.nextElementSibling.textContent.trim());
+            });
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(lines.join('\n')).then(function () {
+                var label = copy.querySelector('span');
+                label.textContent = 'Copied';
+                setTimeout(function () { label.textContent = 'Copy'; }, 2000);
+            });
+        });
+    })();
+</script>

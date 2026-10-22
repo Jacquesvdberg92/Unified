@@ -16,7 +16,8 @@ public record BugReportContext(
     string? UserAgent,
     string EnvironmentName,
     DateTime SubmittedAtUtc,
-    string? ClientInfoJson);
+    string? ClientInfoJson,
+    long? ErrorLogId = null);
 
 /// <summary>
 /// Stores bug reports and sends each one to GitHub as an issue. A report that can't be sent
@@ -36,6 +37,7 @@ public class BugReportService
     private const int MaxConsoleErrors = 10;
     private const int MaxServerErrors = 5;
     private const int StackTraceLines = 12;
+    private const int ReportedErrorStackTraceLines = 40;
 
     // Client info keys shown in the system info table, in this order, with their labels.
     private static readonly (string Key, string Label)[] ClientFields =
@@ -191,27 +193,40 @@ public class BugReportService
 
     private async Task<string> BuildSystemInfoAsync(string reporterId, BugReportContext context, CancellationToken cancellationToken)
     {
+        // Only the reporter's own errors: the error id comes from the URL and could be anyone's
+        ServerError? reportedError = null;
+        if (context.ErrorLogId is long errorId)
+        {
+            reportedError = await _db.ErrorLogs
+                .AsNoTracking()
+                .Where(e => e.Id == errorId && e.UserId == reporterId)
+                .Select(e => new ServerError(e.Id, e.Timestamp, e.Method, e.Path, e.ExceptionType, e.Message, e.StackTrace))
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         var since = context.SubmittedAtUtc.AddHours(-24);
+        var reportedErrorId = reportedError?.Id ?? 0;
         var serverErrors = await _db.ErrorLogs
             .AsNoTracking()
-            .Where(e => e.UserId == reporterId && e.Timestamp >= since)
+            .Where(e => e.UserId == reporterId && e.Timestamp >= since && e.Id != reportedErrorId)
             .OrderByDescending(e => e.Timestamp)
             .Take(MaxServerErrors)
-            .Select(e => new ServerError(e.Timestamp, e.Method, e.Path, e.ExceptionType, e.Message, e.StackTrace))
+            .Select(e => new ServerError(e.Id, e.Timestamp, e.Method, e.Path, e.ExceptionType, e.Message, e.StackTrace))
             .ToListAsync(cancellationToken);
 
-        return FormatSystemInfo(context, serverErrors);
+        return FormatSystemInfo(context, serverErrors, reportedError);
     }
 
-    public record ServerError(DateTime Timestamp, string Method, string Path, string ExceptionType, string Message, string StackTrace);
+    public record ServerError(long Id, DateTime Timestamp, string Method, string Path, string ExceptionType, string Message, string StackTrace);
 
-    public static string FormatSystemInfo(BugReportContext context, IReadOnlyList<ServerError> serverErrors)
+    public static string FormatSystemInfo(BugReportContext context, IReadOnlyList<ServerError> serverErrors, ServerError? reportedError = null)
     {
         var client = ParseClientInfo(context.ClientInfoJson, out var consoleErrors);
 
         var rows = new List<(string Label, string? Value)>
         {
             ("Reported by", context.ReporterName),
+            ("Error reference", reportedError is null ? null : $"ERR-{reportedError.Id}"),
             ("Roles", context.ReporterRoles.Count > 0 ? string.Join(", ", context.ReporterRoles) : "none"),
             ("Page", context.PageUrl),
             ("Submitted (UTC)", context.SubmittedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")),
@@ -227,6 +242,12 @@ public class BugReportService
         foreach (var (label, value) in rows.Where(r => !string.IsNullOrWhiteSpace(r.Value)))
             sb.AppendLine($"| {label} | {TableCell(value!)} |");
 
+        if (reportedError is not null)
+        {
+            sb.AppendLine().AppendLine($"**The error this report is about (ERR-{reportedError.Id})**").AppendLine();
+            sb.AppendLine(CodeBlock(FormatServerError(reportedError, ReportedErrorStackTraceLines)));
+        }
+
         if (consoleErrors.Count > 0)
         {
             sb.AppendLine().AppendLine("**Recent browser errors**").AppendLine();
@@ -236,14 +257,15 @@ public class BugReportService
         if (serverErrors.Count > 0)
         {
             sb.AppendLine().AppendLine("**Recent server errors for this user (last 24h)**").AppendLine();
-            var text = string.Join("\n\n", serverErrors.Select(e =>
-                $"{e.Timestamp:yyyy-MM-dd HH:mm:ss} {e.Method} {e.Path}\n{e.ExceptionType}: {e.Message}\n" +
-                string.Join("\n", e.StackTrace.Split('\n').Take(StackTraceLines).Select(l => l.TrimEnd()))));
-            sb.AppendLine(CodeBlock(text));
+            sb.AppendLine(CodeBlock(string.Join("\n\n", serverErrors.Select(e => FormatServerError(e, StackTraceLines)))));
         }
 
         return sb.ToString().TrimEnd();
     }
+
+    private static string FormatServerError(ServerError e, int stackTraceLines) =>
+        $"{e.Timestamp:yyyy-MM-dd HH:mm:ss} {e.Method} {e.Path}\n{e.ExceptionType}: {e.Message}\n" +
+        string.Join("\n", e.StackTrace.Split('\n').Take(stackTraceLines).Select(l => l.TrimEnd()));
 
     private static Dictionary<string, string> ParseClientInfo(string? json, out List<string> consoleErrors)
     {

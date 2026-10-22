@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Unified.Models;
@@ -175,8 +176,22 @@ public class HomeController : Controller
 
     [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error(int? statusCode)
+    public IActionResult Error(int? statusCode, long? errorId, string? from)
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        // Status code pages re-execute this action, so the failing URL comes from the feature;
+        // unhandled exceptions redirect here and pass it as ?from=
+        var reExecute = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
+        var originalPath = reExecute is not null
+            ? $"{reExecute.OriginalPathBase}{reExecute.OriginalPath}{reExecute.OriginalQueryString}"
+            : from;
+
+        return View(new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+            StatusCode = statusCode is >= 400 and <= 599 ? statusCode.Value : 500,
+            ErrorId = errorId,
+            OriginalPath = Url.IsLocalUrl(originalPath) ? originalPath : null,
+            OccurredAtUtc = DateTime.UtcNow
+        });
     }
 }

@@ -17,6 +17,7 @@
             <form asp-action="Create" method="post" enctype="multipart/form-data" id="bugReportForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="PageUrl" />
+                <input type="hidden" asp-for="ErrorId" />
                 <input type="hidden" asp-for="ClientInfo" id="bugClientInfo" />
 
                 <div class="alert alert-warning">
@@ -29,6 +30,14 @@
                 </div>
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                @if (Model.ErrorId is long errorId)
+                {
+                    <div class="alert alert-info d-flex align-items-center gap-2">
+                        <i class="bx bx-link fs-5"></i>
+                        <div>This report will include the details of error <code>ERR-@errorId</code>. Just tell us what you were doing when it happened.</div>
+                    </div>
+                }
 
                 @if (!string.IsNullOrWhiteSpace(Model.PageUrl))
                 {

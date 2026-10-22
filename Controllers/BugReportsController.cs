@@ -69,9 +69,27 @@ public class BugReportsController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create(string? from = null)
+    public IActionResult Create(string? from = null, long? errorId = null, int? statusCode = null)
     {
-        return View(new BugReportInputModel { PageUrl = ToAbsolutePageUrl(from) });
+        var model = new BugReportInputModel { PageUrl = ToAbsolutePageUrl(from), ErrorId = errorId };
+
+        // Started from the error page: give the user a head start on the summary
+        var path = Url.IsLocalUrl(from) ? from!.Split('?')[0] : null;
+        if (errorId.HasValue || statusCode.HasValue)
+        {
+            var what = statusCode switch
+            {
+                404 => "Page not found",
+                403 => "Access denied",
+                null or 500 => "Error",
+                _ => $"Error {statusCode}"
+            };
+            model.Title = path is null ? what : $"{what} on {path}";
+            if (model.Title.Length > 120)
+                model.Title = model.Title[..120];
+        }
+
+        return View(model);
     }
 
     [HttpPost]
@@ -107,7 +125,8 @@ public class BugReportsController : Controller
             UserAgent: Request.Headers.UserAgent.ToString(),
             EnvironmentName: _env.EnvironmentName,
             SubmittedAtUtc: DateTime.UtcNow,
-            ClientInfoJson: input.ClientInfo);
+            ClientInfoJson: input.ClientInfo,
+            ErrorLogId: input.ErrorId);
 
         var report = new BugReport
         {
