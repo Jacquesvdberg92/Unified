@@ -17,7 +17,7 @@ namespace Unified.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -1955,6 +1955,102 @@ namespace Unified.Migrations
                     b.ToTable("VaultEntries");
                 });
 
+            modelBuilder.Entity("Unified.Models.Withdrawals.WithdrawalComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsSystemMessage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("WithdrawalId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("WithdrawalId");
+
+                    b.ToTable("WithdrawalComments");
+                });
+
+            modelBuilder.Entity("Unified.Models.Withdrawals.WithdrawalRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AssignedToId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("BrandId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<int>("MissingDocuments")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedTickets")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToId");
+
+                    b.HasIndex("BrandId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("WithdrawalRequests");
+                });
+
             modelBuilder.Entity("Unified.Models.WorkDistribution.CsLiveAllocationSlot", b =>
                 {
                     b.Property<int>("Id")
@@ -2674,6 +2770,51 @@ namespace Unified.Migrations
                     b.Navigation("ProvisionedByUser");
                 });
 
+            modelBuilder.Entity("Unified.Models.Withdrawals.WithdrawalComment", b =>
+                {
+                    b.HasOne("Unified.Models.Identity.AppUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Unified.Models.Withdrawals.WithdrawalRequest", "Withdrawal")
+                        .WithMany("Comments")
+                        .HasForeignKey("WithdrawalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Withdrawal");
+                });
+
+            modelBuilder.Entity("Unified.Models.Withdrawals.WithdrawalRequest", b =>
+                {
+                    b.HasOne("Unified.Models.Identity.AppUser", "AssignedTo")
+                        .WithMany()
+                        .HasForeignKey("AssignedToId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Unified.Models.EmailTemplates.Brand", "Brand")
+                        .WithMany()
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Unified.Models.Identity.AppUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Brand");
+
+                    b.Navigation("CreatedBy");
+                });
+
             modelBuilder.Entity("Unified.Models.WorkDistribution.CsLiveAllocationSlot", b =>
                 {
                     b.HasOne("Unified.Models.Identity.AppUser", "Agent1")
@@ -2807,6 +2948,11 @@ namespace Unified.Migrations
             modelBuilder.Entity("Unified.Models.Vault.VaultCategory", b =>
                 {
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Unified.Models.Withdrawals.WithdrawalRequest", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,6 +16,7 @@ using Unified.Models.Logging;
 using Unified.Models.Sip;
 using Unified.Models;
 using Unified.Models.CsMessaging;
+using Unified.Models.Withdrawals;
 
 namespace Unified.Data;
 
@@ -75,6 +76,10 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<AmAuditLog>          AmAuditLogs          => Set<AmAuditLog>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<UserNotificationSettings> UserNotificationSettings => Set<UserNotificationSettings>();
+
+    // WD List (Finance withdrawals)
+    public DbSet<WithdrawalRequest>   WithdrawalRequests   => Set<WithdrawalRequest>();
+    public DbSet<WithdrawalComment>   WithdrawalComments   => Set<WithdrawalComment>();
 
     // Activity + Error logging
     public DbSet<ActivityLog>         ActivityLogs         => Set<ActivityLog>();
@@ -457,6 +462,60 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasIndex(r => r.BrandId);
         builder.Entity<CsRequest>()
             .HasIndex(r => r.AccountManagerId);
+
+        // WD List
+        builder.Entity<WithdrawalRequest>()
+            .Property(w => w.Status)
+            .HasConversion<string>();
+
+        builder.Entity<WithdrawalRequest>()
+            .Property(w => w.ClientId)
+            .HasMaxLength(100);
+
+        builder.Entity<WithdrawalRequest>()
+            .Property(w => w.Currency)
+            .HasMaxLength(3);
+
+        builder.Entity<WithdrawalRequest>()
+            .Property(w => w.Amount)
+            .HasPrecision(18, 2);
+
+        builder.Entity<WithdrawalRequest>()
+            .HasOne(w => w.Brand)
+            .WithMany()
+            .HasForeignKey(w => w.BrandId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<WithdrawalRequest>()
+            .HasOne(w => w.AssignedTo)
+            .WithMany()
+            .HasForeignKey(w => w.AssignedToId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<WithdrawalRequest>()
+            .HasOne(w => w.CreatedBy)
+            .WithMany()
+            .HasForeignKey(w => w.CreatedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<WithdrawalComment>()
+            .HasOne(c => c.Withdrawal)
+            .WithMany(w => w.Comments)
+            .HasForeignKey(c => c.WithdrawalId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<WithdrawalComment>()
+            .HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.AuthorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<WithdrawalRequest>()
+            .HasIndex(w => w.Status);
+        builder.Entity<WithdrawalRequest>()
+            .HasIndex(w => w.ClientId);
+        builder.Entity<WithdrawalRequest>()
+            .HasIndex(w => w.AssignedToId);
 
         // SIP
         builder.Entity<Sip>()

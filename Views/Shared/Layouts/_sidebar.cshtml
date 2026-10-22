@@ -188,6 +188,25 @@
                                 </li>
                             }
 
+                            @* ── Finance ── *@
+                            @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife") || User.IsInRole("Finance"))
+                            {
+                                <li class="slide__category-group">
+                                    <div class="slide__category" data-category="finance">
+                                        <span class="category-name">Finance</span>
+                                        <i class="bx bx-chevron-down category-toggle-icon"></i>
+                                    </div>
+                                    <ul class="category-items">
+                                        <li class="slide">
+                                            <a asp-controller="Withdrawals" asp-action="Index" class="side-menu__item">
+                                                <i class="bx bx-wallet side-menu__icon"></i>
+                                                <span class="side-menu__label">WD List <span class="badge bg-info text-dark ms-1">Beta</span></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+
                             @* ── Chat ── *@
                             @if (isChatUser)
                             {
