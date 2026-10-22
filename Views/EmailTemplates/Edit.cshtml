@@ -41,7 +41,7 @@
                         <label class="form-label">Body HTML</label>
                         <div class="border rounded">
                             <div id="quillToolbar"></div>
-                            <div id="quillEditor" style="min-height:250px;" data-initial-html="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(HtmlContent.Sanitize(Model.BodyHtml)))"></div>
+                            <div id="quillEditor" style="min-height:250px;" data-initial-html="@System.Text.Json.JsonSerializer.Serialize(HtmlContent.Sanitize(Model.BodyHtml))"></div>
                         </div>
                         <input type="hidden" asp-for="BodyHtml" id="bodyHtmlInput" />
                     </div>
