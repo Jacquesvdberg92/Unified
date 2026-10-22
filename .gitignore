@@ -1,6 +1,8 @@
 obj/
 bin/
 *.user
+*.Backup.tmp
+.localpilot/
 node_modules/
 .vs/
 *.db

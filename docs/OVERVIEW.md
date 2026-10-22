@@ -2,7 +2,7 @@
 
 ## What Is Unified?
 
-**Unified** is a multi-module internal business web application built on **ASP.NET Core (.NET 8)** with Razor Pages/MVC, Entity Framework Core, and ASP.NET Core Identity. It is designed to consolidate business workflows — particularly around brand management, email templating, process tracking, document handling, live CS allocation, and Finance department operations — into a single, cohesive platform.
+**Unified** is a multi-module internal business web application built on **ASP.NET Core (.NET 10)** with Razor Pages/MVC, Entity Framework Core, and ASP.NET Core Identity. It is designed to consolidate business workflows — particularly around brand management, email templating, process tracking, document handling, live CS allocation, and Finance department operations — into a single, cohesive platform.
 
 Rather than juggling multiple disconnected tools, Unified brings the key operational pieces of a business together under one authenticated, role-controlled interface.
 
@@ -24,7 +24,7 @@ Rather than juggling multiple disconnected tools, Unified brings the key operati
 
 ## Technology Stack
 
-- **Backend:** ASP.NET Core (.NET 8), C#, Entity Framework Core
+- **Backend:** ASP.NET Core (.NET 10), C#, Entity Framework Core
 - **Frontend:** Razor Views, Bootstrap 5, ApexCharts, Flatpickr, Quill, DataTables, SortableJS
 - **Database:** SQL Server (configurable via `appsettings.json`)
 - **Auth:** ASP.NET Core Identity
