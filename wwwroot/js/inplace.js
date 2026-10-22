@@ -146,6 +146,12 @@
                     showToast('error', 'That did not work (' + res.status + '). Please try again.');
                     return;
                 }
+                // A post that lands on a different page is a navigation: load that page normally
+                // so its own scripts run (the post itself is done, so this only repeats the GET)
+                if (res.redirected && !samePage(new URL(res.url))) {
+                    location.assign(res.url);
+                    return;
+                }
                 var doc = new DOMParser().parseFromString(html, 'text/html');
                 if (!swap(doc, names, opts.form)) {
                     // Somewhere else entirely (for example the sign-in page): load it normally
