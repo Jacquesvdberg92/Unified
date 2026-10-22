@@ -3,6 +3,8 @@
 
 @{
     ViewData["Title"] = "My Requests";
+    // Shift times are offered in 15-minute steps only
+    var quarterHours = Enumerable.Range(0, 96).Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm")).ToList();
     var newlyActioned = (int)(ViewBag.NewlyActioned ?? 0);
 }
 
@@ -103,11 +105,23 @@
                         <div class="row g-2 mb-3">
                             <div class="col">
                                 <label class="form-label">Requested Start</label>
-                                <input type="time" name="request.RequestedStartTime" class="form-control" id="reqStart" />
+                                <select name="request.RequestedStartTime" id="reqStart" class="form-select">
+                                    <option value="">--:--</option>
+                                    @foreach (var t in quarterHours)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col">
                                 <label class="form-label">Requested End</label>
-                                <input type="time" name="request.RequestedEndTime" class="form-control" id="reqEnd" />
+                                <select name="request.RequestedEndTime" id="reqEnd" class="form-select">
+                                    <option value="">--:--</option>
+                                    @foreach (var t in quarterHours)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </select>
                             </div>
                         </div>
                     </div>

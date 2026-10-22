@@ -4,6 +4,8 @@
 
 @{
     ViewData["Title"] = "Manage Shift Templates";
+    // Shift times are offered in 15-minute steps only
+    var quarterHours = Enumerable.Range(0, 96).Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm")).ToList();
     var isBrandManager = User.IsInRole(Roles.BrandManager);
 }
 
@@ -120,11 +122,23 @@
                     <div class="row g-3 mb-3">
                         <div class="col">
                             <label class="form-label">Start Time</label>
-                            <input type="time" name="StartTime" class="form-control" required />
+                            <select name="StartTime" class="form-select" required>
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                         </div>
                         <div class="col">
                             <label class="form-label">End Time</label>
-                            <input type="time" name="EndTime" class="form-control" required />
+                            <select name="EndTime" class="form-select" required>
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                         </div>
                     </div>
                     <div class="form-check">
@@ -160,11 +174,23 @@
                     <div class="row g-3 mb-3">
                         <div class="col">
                             <label class="form-label">Start Time</label>
-                            <input type="time" name="StartTime" id="editStart" class="form-control" required />
+                            <select name="StartTime" id="editStart" class="form-select" required>
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                         </div>
                         <div class="col">
                             <label class="form-label">End Time</label>
-                            <input type="time" name="EndTime" id="editEnd" class="form-control" required />
+                            <select name="EndTime" id="editEnd" class="form-select" required>
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                         </div>
                     </div>
                     <div class="form-check">

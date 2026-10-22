@@ -15,6 +15,12 @@
     var weekDays     = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
     var lookup       = Model.ToDictionary(s => $"{s.AgentId}_{s.Date:yyyy-MM-dd}");
 
+    // Reduced-day times are offered in 15-minute steps only, the steps the server accepts
+    var quarterHours = Enumerable.Range(0, 96).Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm")).ToList();
+
+    // The non-breaking hyphen keeps the hours together when a long shift name wraps
+    string ShiftLabel(ShiftTemplate s) => $"{s.Name} {s.StartTime:hh\\:mm}\u2011{s.EndTime:hh\\:mm}";
+
     string EntryLabel(AgentSchedule? e)
     {
         if (e is null) return "-";
@@ -22,8 +28,8 @@
         {
             ScheduleEntryType.DayOff   => "Day Off",
             ScheduleEntryType.Vacation => "Vacation",
-            ScheduleEntryType.Custom   => $"Reduced {e.CustomStartTime:hh\\:mm}-{e.CustomEndTime:hh\\:mm}",
-            _                          => e.ShiftTemplate?.Name ?? "Working"
+            ScheduleEntryType.Custom   => $"Reduced {e.CustomStartTime:hh\\:mm}\u2011{e.CustomEndTime:hh\\:mm}",
+            _                          => e.ShiftTemplate is { } s ? ShiftLabel(s) : "Working"
         };
     }
 
@@ -186,13 +192,13 @@
                                 <optgroup label="Weekday Shifts" id="og-weekday">
                                     @foreach (var s in shifts.Where(s => !s.IsWeekendShift))
                                     {
-                                        <option value="@s.Id">@s.Name</option>
+                                        <option value="@s.Id">@ShiftLabel(s)</option>
                                     }
                                 </optgroup>
                                 <optgroup label="Weekend Shifts" id="og-weekend">
                                     @foreach (var s in shifts.Where(s => s.IsWeekendShift))
                                     {
-                                        <option value="@s.Id">@s.Name</option>
+                                        <option value="@s.Id">@ShiftLabel(s)</option>
                                     }
                                 </optgroup>
                             </select>
@@ -200,11 +206,23 @@
                         <div id="customRow" class="row g-2 mb-3" style="display:none">
                             <div class="col">
                                 <label class="form-label fw-semibold">Start</label>
-                                <input type="time" name="entry.CustomStartTime" id="modal-custom-start" class="form-control" step="900" />
+                                <select name="entry.CustomStartTime" id="modal-custom-start" class="form-select">
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                             </div>
                             <div class="col">
                                 <label class="form-label fw-semibold">End</label>
-                                <input type="time" name="entry.CustomEndTime" id="modal-custom-end" class="form-control" step="900" />
+                                <select name="entry.CustomEndTime" id="modal-custom-end" class="form-select">
+                                <option value="">--:--</option>
+                                @foreach (var t in quarterHours)
+                                {
+                                    <option value="@t">@t</option>
+                                }
+                            </select>
                             </div>
                         </div>
                         <div class="mb-1">
