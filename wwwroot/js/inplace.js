@@ -99,9 +99,11 @@
         for (var i = 0; i < names.length; i++) {
             var current = regionEl(document, names[i]);
             var next = regionEl(doc, names[i]);
+            if (!current && !next) continue;   // optional region this page does not render
             if (!current || !next) return false;
             pairs.push([current, next]);
         }
+        if (!pairs.length) return false;
 
         var focusedId = document.activeElement && document.activeElement.id;
         closeModals(names, form);
