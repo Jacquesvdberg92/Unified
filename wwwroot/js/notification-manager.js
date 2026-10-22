@@ -155,6 +155,7 @@ const NotificationManager = (() => {
             visual = true,
             toast = true,
             volume = undefined,
+            url = null, // where clicking the toast goes
             callback = null
         } = options;
 
@@ -224,7 +225,7 @@ const NotificationManager = (() => {
 
         // Show toast notification if enabled
         if (toast && (!userSettings || userSettings.toastNotificationsEnabled)) {
-            showToast(title, message, contextType);
+            showToast(title, message, contextType, url);
         }
 
         // Update bell icon if badges are enabled
@@ -336,6 +337,10 @@ const NotificationManager = (() => {
         }
     }
 
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    }
+
     function renderHeaderNotificationList() {
         const listEl = document.querySelector('#header-notification-scroll');
         const emptyEl = document.querySelector('#header-notification-empty');
@@ -356,9 +361,10 @@ const NotificationManager = (() => {
         if (emptyEl) emptyEl.classList.add('d-none');
 
         listEl.innerHTML = items.map(item => {
-            const title = item.title || 'Notification';
-            const message = item.message || '';
-            const context = item.contextType || '';
+            // Titles and messages come from user content (chat text, update titles)
+            const title = escapeHtml(item.title || 'Notification');
+            const message = escapeHtml(item.message || '');
+            const context = escapeHtml(item.contextType || '');
             const ts = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             return `
                 <li class="dropdown-item">
@@ -425,7 +431,7 @@ const NotificationManager = (() => {
     /**
      * Show toast notification
      */
-    function showToast(title, message, contextType) {
+    function showToast(title, message, contextType, url) {
         try {
             // Use Toastify if available (common library)
             if (typeof Toastify !== 'undefined') {
@@ -434,7 +440,8 @@ const NotificationManager = (() => {
                     duration: 4000,
                     gravity: 'top',
                     position: 'right',
-                    backgroundColor: '#0d6efd'
+                    backgroundColor: '#0d6efd',
+                    destination: url || undefined
                 }).showToast();
             } else {
                 console.log(`Toast: ${title} - ${message}`);
