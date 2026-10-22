@@ -25,13 +25,13 @@
     </div>
 
     @* Period filter *@
-    <form method="get" class="row g-2 mb-4">
+    <form method="get" class="row g-2 mb-4" data-inplace>
         <div class="col-auto">
             <select name="periodType" asp-items="periodTypes" class="form-select form-select-sm"
-                    onchange="this.form.submit()"></select>
+                    onchange="this.form.requestSubmit()"></select>
         </div>
         <div class="col-auto">
-            <select name="periodStart" class="form-select form-select-sm" onchange="this.form.submit()">
+            <select name="periodStart" class="form-select form-select-sm" onchange="this.form.requestSubmit()">
                 @foreach (var d in dates)
                 {
                     <option value="@d.ToString("yyyy-MM-dd")"

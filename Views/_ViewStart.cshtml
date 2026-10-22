@@ -1,3 +1,4 @@
 ﻿@{
-    Layout = "_Layout";
+    // In-place updates (wwwroot/js/inplace.js) only need the page content, not the whole layout
+    Layout = Context.Request.Headers["X-Inplace"] == "1" ? "_InplaceLayout" : "_Layout";
 }
