@@ -32,7 +32,7 @@
                         <td class="text-end">
                             @if (cat.IsCustom)
                             {
-                                <form asp-action="DeleteCategory" asp-route-id="@cat.Id"
+                                <form data-inplace asp-action="DeleteCategory" asp-route-id="@cat.Id"
                                       method="post" class="d-inline"
                                       onsubmit="return confirm('Delete this category?')">
                                     @Html.AntiForgeryToken()
@@ -49,7 +49,7 @@
     <div class="card shadow-sm">
         <div class="card-header fw-semibold">Add System Category</div>
         <div class="card-body">
-            <form asp-action="CreateCategory" method="post" class="row g-2">
+            <form data-inplace asp-action="CreateCategory" method="post" class="row g-2">
                 @Html.AntiForgeryToken()
                 <div class="col-md-5">
                     <input type="text" name="name" class="form-control"

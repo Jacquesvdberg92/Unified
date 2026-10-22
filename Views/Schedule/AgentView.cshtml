@@ -44,7 +44,9 @@
     }
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
+@* Week navigation, clock in/out and "set my day" update in place (wwwroot/js/inplace.js);
+   the modal stays outside the swapped region so schedule.js keeps its handlers *@
+<div class="container-xxl flex-grow-1 container-p-y" data-inplace-region="agent-week" data-inplace="agent-week,agent-week-start">
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold mb-0"><i class="bx bx-calendar-check me-2"></i>My Schedule</h4>
@@ -85,6 +87,7 @@
                 {
                     <form asp-controller="Attendance" asp-action="ClockIn" method="post">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                         <button type="submit" class="btn btn-success">
                             <i class="bx bx-log-in me-1"></i>Clock In
                         </button>
@@ -94,6 +97,7 @@
                 {
                     <form asp-controller="Attendance" asp-action="ClockOut" method="post">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
                         <button type="submit" class="btn btn-danger">
                             <i class="bx bx-log-out me-1"></i>Clock Out
                         </button>
@@ -275,9 +279,9 @@
 <div class="modal fade" id="myDayModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="SetMyDay" method="post">
+            <form asp-action="SetMyDay" method="post" data-inplace="agent-week,agent-week-start">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="weekStart"  value="@weekStart.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="weekStart"  value="@weekStart.ToString("yyyy-MM-dd")" data-inplace-region="agent-week-start" />
                 <input type="hidden" name="entry.Id"   id="my-entry-id" value="0" />
                 <input type="hidden" name="entry.Date" id="my-date" />
 

@@ -76,7 +76,7 @@
 <div class="d-flex gap-3 mb-5">
     @if (canClockIn)
     {
-        <form asp-action="ClockIn" method="post">
+        <form asp-action="ClockIn" method="post" data-inplace>
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-success btn-lg px-5">
                 <i class="bx bx-log-in me-2"></i>Clock In
@@ -85,7 +85,7 @@
     }
     @if (canClockOut)
     {
-        <form asp-action="ClockOut" method="post">
+        <form asp-action="ClockOut" method="post" data-inplace>
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-danger btn-lg px-5">
                 <i class="bx bx-log-out me-2"></i>Clock Out

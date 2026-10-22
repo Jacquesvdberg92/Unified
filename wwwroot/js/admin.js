@@ -1,5 +1,6 @@
-// Admin shared table initializations
-$(function () {
+// Admin shared table initializations, again after an in-place update (js/inplace.js)
+// swaps the table in
+function initAdminTables() {
     $('[data-admin-datatable]').each(function () {
         const $table = $(this);
         if ($.fn.DataTable.isDataTable(this)) {
@@ -16,4 +17,7 @@ $(function () {
             order: orderColumn !== undefined ? [[orderColumn, orderDir]] : []
         });
     });
-});
+}
+
+$(initAdminTables);
+document.addEventListener('inplace:load', initAdminTables);
