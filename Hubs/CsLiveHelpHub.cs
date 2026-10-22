@@ -13,7 +13,7 @@ namespace Unified.Hubs;
 /// - Real-time update behavior on all three pages
 ///
 /// Groups:
-///   "cs-board"     — joined by every CS agent / TL / Manager / BrandManager / SAK (receives all public updates)
+///   "cs-board"     — joined by every CS agent / TL / Manager / BrandManager (receives all public updates)
 ///   "am-{userId}"  — joined by individual AM; receives only their own card events
 ///
 /// Events pushed by the server (via IHubContext&lt;CsLiveHelpHub&gt;):
@@ -24,7 +24,7 @@ namespace Unified.Hubs;
 ///   CommentAdded       { requestId, author, body, isSystem, createdAt }  — NOT sent if IsCsInternalOnly
 ///   BroadcastBanner    { message, actor, timestamp }
 /// </summary>
-[Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+[Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
 public class CsLiveHelpHub : Hub
 {
     /// <summary>
@@ -38,8 +38,7 @@ public class CsLiveHelpHub : Hub
 
         if (user.IsInRole(Roles.CSAgent)      ||
             user.IsInRole(Roles.TeamLeader)   ||
-            user.IsInRole(Roles.BrandManager) ||
-            user.IsInRole(Roles.SwissArmyKnife))
+            user.IsInRole(Roles.BrandManager))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, "cs-board");
         }

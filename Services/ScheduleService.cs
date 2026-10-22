@@ -20,7 +20,7 @@ public class ScheduleService
     {
         var weekEnd = weekStart.AddDays(7);
 
-        // Team members + SAK agents
+        // Team members
         var agentIds = await GetTeamAgentIdsAsync(teamId);
 
         return await _db.AgentSchedules
@@ -220,11 +220,6 @@ public class ScheduleService
             .Select(at => at.AgentId)
             .ToListAsync();
 
-        var sakIds = await _db.Users
-            .Where(u => u.IsSwissArmyKnife)
-            .Select(u => u.Id)
-            .ToListAsync();
-
-        return teamMembers.Union(sakIds).Distinct().ToList();
+        return teamMembers.Distinct().ToList();
     }
 }

@@ -7,9 +7,10 @@ public class AppUser : IdentityUser
     public string DisplayName { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
     public string? Language { get; set; }
-    public bool IsSwissArmyKnife { get; set; }
     public bool HasWeekendShift  { get; set; }
     public bool HasCsLiveHelp    { get; set; }
+    /// <summary>Grants a CS agent (or any non-leader role) access to the WD List. Team leaders and brand managers always have access.</summary>
+    public bool HasWdListAccess  { get; set; }
     /// <summary>True for Account Manager users who log in from outside the internal team.</summary>
     public bool IsExternal       { get; set; }
 

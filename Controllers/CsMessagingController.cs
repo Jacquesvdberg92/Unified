@@ -10,7 +10,7 @@ using Unified.Services;
 
 namespace Unified.Controllers;
 
-[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
 public class CsMessagingController : Controller
 {
     private readonly CsMessagingService _svc;

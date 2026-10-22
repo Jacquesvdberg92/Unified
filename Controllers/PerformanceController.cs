@@ -194,12 +194,7 @@ public class PerformanceController : Controller
                 .Distinct()
                 .ToListAsync();
 
-            var sakIds = await _db.Users
-                .Where(u => u.IsSwissArmyKnife)
-                .Select(u => u.Id)
-                .ToListAsync();
-
-            allIds = agentIds.Union(sakIds).Distinct().ToList();
+            allIds = agentIds;
         }
         else
         {

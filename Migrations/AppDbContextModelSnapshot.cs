@@ -1057,6 +1057,9 @@ namespace Unified.Migrations
                     b.Property<bool>("HasCsLiveHelp")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("HasWdListAccess")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasWeekendShift")
                         .HasColumnType("bit");
 
@@ -1065,9 +1068,6 @@ namespace Unified.Migrations
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<bool>("IsExternal")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSwissArmyKnife")
                         .HasColumnType("bit");
 
                     b.Property<string>("Language")

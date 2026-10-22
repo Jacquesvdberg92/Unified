@@ -29,7 +29,7 @@ namespace Unified.Controllers;
 /// - AM comment threads are refreshed on modal open to show new CS comments without page refresh
 /// - Card assignments persist through drag-drop (UpdateStatusJson sets AssignedToId)
 /// </summary>
-[Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+[Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
 public class CsLiveHelpController : Controller
 {
     private readonly CsLiveHelpService          _svc;
@@ -427,12 +427,12 @@ public class CsLiveHelpController : Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // CS AGENT ACTIONS  (CSAgent | TeamLeader | BrandManager | SwissArmyKnife)
+    // CS AGENT ACTIONS  (CSAgent | TeamLeader | BrandManager)
     // ─────────────────────────────────────────────────────────────────────
 
     private static readonly string[] CsRoles =
     [
-        Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.SwissArmyKnife
+        Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager
     ];
 
     // ── GET /CsLiveHelp — role-appropriate landing page ──────────────────
@@ -443,7 +443,7 @@ public class CsLiveHelpController : Controller
 
     // ── GET /CsLiveHelp/Board ─────────────────────────────────────────────
 
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> Board(string? view = null)
     {
         ViewBag.ViewMode = ResolveViewMode(nameof(Board), view);
@@ -461,7 +461,7 @@ public class CsLiveHelpController : Controller
 
     // ── GET /CsLiveHelp/BoardPage — AJAX load-more (returns partial HTML) ──
 
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> BoardPage(CsRequestStatus status, int afterId = 0)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -474,7 +474,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> UpdateStatus(int id, CsRequestStatus status)
     {
         var csId = _users.GetUserId(User)!;
@@ -501,7 +501,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> Escalate(int id, int assignedTeamId)
     {
         var csId = _users.GetUserId(User)!;
@@ -552,7 +552,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> UpdateStatusJson(int id, CsRequestStatus status)
     {
         var csId = _users.GetUserId(User)!;
@@ -576,7 +576,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> CsAddComment(int id, string body, IFormFile? image)
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
@@ -680,7 +680,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> SendReset(int id)
     {
         var csId = _users.GetUserId(User)!;
@@ -710,7 +710,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> MarkPassed(int id)
     {
         var csId = _users.GetUserId(User)!;
@@ -742,18 +742,17 @@ public class CsLiveHelpController : Controller
 
     private static readonly string[] TlManagerRoles =
     [
-        Roles.TeamLeader, Roles.BrandManager, Roles.SwissArmyKnife
+        Roles.TeamLeader, Roles.BrandManager
     ];
 
     // ── GET /CsLiveHelp/RequestsAllBrands ────────────────────────────────
 
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> RequestsAllBrands(bool escalatedOnly = false, string? view = null)
     {
         ViewBag.ViewMode = ResolveViewMode(nameof(RequestsAllBrands), view);
         var isTlManager = User.IsInRole(Roles.TeamLeader)
-                       || User.IsInRole(Roles.BrandManager)
-                       || User.IsInRole(Roles.SwissArmyKnife);
+                       || User.IsInRole(Roles.BrandManager);
 
         var requests = await _svc.GetAllBrandsRequestsAsync(escalatedOnly);
         var types    = await _svc.GetRequestTypesAsync();
@@ -773,7 +772,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> ResolveEscalation(int id)
     {
         var csId = _users.GetUserId(User)!;
@@ -802,7 +801,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> CreateInternalRequest(
         int brandId, int requestTypeId, string? customDescription,
         string? clientId, int? teamId)
@@ -870,7 +869,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> InternalAddComment(int id, string body, IFormFile? image)
     {
         if (string.IsNullOrWhiteSpace(body) || body.Length > 1000)
@@ -959,7 +958,7 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/MentionCandidates/{id} — scoped @mention names ─────
 
     [HttpGet]
-    [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.AccountManager},{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> MentionCandidates(int id)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -968,7 +967,7 @@ public class CsLiveHelpController : Controller
         if (req is null) return NotFound();
 
         var userId = _users.GetUserId(User)!;
-        var isCsUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.SwissArmyKnife);
+        var isCsUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager);
 
         if (!isCsUser && req.AccountManagerId != userId)
             return Forbid();
@@ -1044,7 +1043,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> InternalUpdateStatusJson(int id, CsRequestStatus status)
     {
         var csId = _users.GetUserId(User)!;
@@ -1064,7 +1063,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> InternalUpdateStatus(int id, CsRequestStatus status)
     {
         var csId = _users.GetUserId(User)!;
@@ -1114,7 +1113,7 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/CardPartial/{id} — returns fully rendered card partial ──
 
     [HttpGet]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> CardPartial(int id, bool chat = false)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -1126,7 +1125,7 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/InternalCardPartial/{id} — internal board card partial ──
 
     [HttpGet]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> InternalCardPartial(int id, bool chat = false)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -1147,7 +1146,7 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/InternalCardModalsPartial/{id} — Requests All Brands modals for one card ──
 
     [HttpGet]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> InternalCardModalsPartial(int id)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -1159,7 +1158,7 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/CardModalsPartial/{id} — returns modal markup for one card ──
 
     [HttpGet]
-    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> CardModalsPartial(int id)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -1177,7 +1176,7 @@ public class CsLiveHelpController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.TeamLeader},{Roles.BrandManager}")]
     public async Task<IActionResult> BroadcastBanner(string message)
     {
         if (string.IsNullOrWhiteSpace(message))

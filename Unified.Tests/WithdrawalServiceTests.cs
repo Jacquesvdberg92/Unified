@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Unified.Models.EmailTemplates;
 using Unified.Models.Identity;
@@ -187,5 +189,67 @@ public class WithdrawalServiceTests
         Assert.Empty(await svc.GetBoardAsync("u1"));
         Assert.Single(await svc.GetBoardAsync("u1", search: $"WD-{wd.Id}"));
         Assert.Single(await svc.GetBoardAsync("u1", search: "CL12"));
+    }
+
+    // ── Access & notifications ────────────────────────────────────────────
+
+    private static ClaimsPrincipal Principal(string userId, string role) =>
+        new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId), new Claim(ClaimTypes.Role, role)], "test"));
+
+    [Fact]
+    public async Task CanAccess_LeadersAlways_OthersOnlyWithFlag()
+    {
+        var (db, svc, _) = await BuildAsync(nameof(CanAccess_LeadersAlways_OthersOnlyWithFlag));
+
+        Assert.True(await svc.CanAccessAsync(Principal("u1", Roles.TeamLeader), "u1"));
+        Assert.True(await svc.CanAccessAsync(Principal("u1", Roles.BrandManager), "u1"));
+        Assert.False(await svc.CanAccessAsync(Principal("u1", Roles.CSAgent), "u1"));
+        Assert.False(await svc.CanAccessAsync(Principal("u1", Roles.Finance), "u1"));
+
+        var u1 = await db.Users.FindAsync("u1");
+        u1!.HasWdListAccess = true;
+        await db.SaveChangesAsync();
+
+        Assert.True(await svc.CanAccessAsync(Principal("u1", Roles.CSAgent), "u1"));
+    }
+
+    [Fact]
+    public async Task CanAccess_ExternalUsersNeverGetIn()
+    {
+        var (db, svc, _) = await BuildAsync(nameof(CanAccess_ExternalUsersNeverGetIn));
+        var u1 = await db.Users.FindAsync("u1");
+        u1!.HasWdListAccess = true;
+        u1.IsExternal = true;
+        await db.SaveChangesAsync();
+
+        Assert.False(await svc.CanAccessAsync(Principal("u1", Roles.AccountManager), "u1"));
+    }
+
+    [Fact]
+    public async Task AccessUserIds_IncludesLeaderRolesAndFlaggedUsers()
+    {
+        var (db, svc, _) = await BuildAsync(nameof(AccessUserIds_IncludesLeaderRolesAndFlaggedUsers));
+        db.Roles.Add(new IdentityRole { Id = "r-tl", Name = Roles.TeamLeader });
+        db.Roles.Add(new IdentityRole { Id = "r-cs", Name = Roles.CSAgent });
+        db.Users.Add(new AppUser { Id = "u3", UserName = "u3", DisplayName = "Agent Three", HasWdListAccess = true });
+        db.UserRoles.Add(new IdentityUserRole<string> { UserId = "u1", RoleId = "r-tl" });
+        db.UserRoles.Add(new IdentityUserRole<string> { UserId = "u2", RoleId = "r-cs" });
+        await db.SaveChangesAsync();
+
+        var ids = await svc.GetAccessUserIdsAsync();
+
+        Assert.Equal(["u1", "u3"], ids.OrderBy(i => i));
+    }
+
+    [Fact]
+    public async Task Followers_AreOwnerAndCreator_ExcludingActor()
+    {
+        var (_, svc, brand) = await BuildAsync(nameof(Followers_AreOwnerAndCreator_ExcludingActor));
+        var wd = await CreateAsync(svc, brand);             // created by u1
+        await svc.PickUpAsync(wd.Id, "u2");
+
+        Assert.Equal(["u1"], await svc.GetFollowerIdsAsync(wd.Id, "u2"));
+        Assert.Equal(["u2"], await svc.GetFollowerIdsAsync(wd.Id, "u1"));
+        Assert.Equal(["u2", "u1"], await svc.GetFollowerIdsAsync(wd.Id, "u9"));
     }
 }

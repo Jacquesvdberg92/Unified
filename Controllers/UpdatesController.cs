@@ -167,7 +167,7 @@ public class UpdatesController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(AiContentService.RateLimitPolicy)]
-    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader}")]
     public async Task<IActionResult> ImproveWithAi([FromBody] AiImproveRequest request)
     {
         if (!ModelState.IsValid)

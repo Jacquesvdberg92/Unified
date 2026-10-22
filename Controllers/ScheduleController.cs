@@ -9,7 +9,7 @@ using Unified.Services;
 
 namespace Unified.Controllers;
 
-[Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife},{Roles.Finance}")]
+[Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.Finance}")]
 public class ScheduleController : Controller
 {
     private readonly ScheduleService      _service;
@@ -369,12 +369,7 @@ public class ScheduleController : Controller
             .Select(at => at.AgentId)
             .ToListAsync();
 
-        var sakIds = await _db.Users
-            .Where(u => u.IsSwissArmyKnife)
-            .Select(u => u.Id)
-            .ToListAsync();
-
-        var allIds = memberIds.Union(sakIds).Distinct().ToList();
+        var allIds = memberIds.Distinct().ToList();
         return await _db.Users
             .Where(u => allIds.Contains(u.Id))
             .OrderBy(u => u.DisplayName)

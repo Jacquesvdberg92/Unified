@@ -130,6 +130,24 @@
         });
     });
 
+    connection.on('WithdrawalNotification', function (evt) {
+        if (typeof NotificationManager === 'undefined') {
+            return;
+        }
+
+        NotificationManager.handleNotification({
+            type: 'notification',
+            contextType: 'WdList',
+            contextId: String(evt?.id || ''),
+            title: evt?.title || 'WD List',
+            message: evt?.message || 'A withdrawal was updated',
+            url: evt?.url || undefined,
+            sound: true,
+            visual: true,
+            toast: true
+        });
+    });
+
     connection.onreconnected(function () {
         if (!onMessagingPage && typeof NotificationManager !== 'undefined') {
             NotificationManager.updateNotificationBell();

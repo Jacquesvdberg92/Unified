@@ -89,8 +89,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddAuthorization(opts =>
 {
     opts.AddPolicy("InternalOnly", p => p.RequireRole(
-        Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent,
-        Roles.SwissArmyKnife, Roles.Finance));
+        Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.Finance));
 });
 
 builder.Services.AddScoped<Unified.Services.EmailTemplateService>();

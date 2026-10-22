@@ -5,7 +5,7 @@
     var renderedHtml    = (string)ViewBag.RenderedHtml;
     var renderedSubject = (string)ViewBag.RenderedSubject;
     var selectedBrandId = (int?)ViewBag.SelectedBrandId;
-    var canEdit  = User.IsInRole("BrandManager") || User.IsInRole("TeamLeader") || User.IsInRole("SwissArmyKnife");
+    var canEdit  = User.IsInRole("BrandManager") || User.IsInRole("TeamLeader");
     var hasBrand = selectedBrandId.HasValue;
 }
 

@@ -54,8 +54,7 @@
         <div class="d-flex align-items-center gap-2">
             <partial name="_CsViewModeToggle" model="viewMode" />
             @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
-                 User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
-                 User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
+                 User.IsInRole(Unified.Models.Identity.Roles.BrandManager))
             {
                 <button type="button" class="btn btn-outline-warning btn-sm"
                         data-bs-toggle="modal" data-bs-target="#broadcastModal">
@@ -448,8 +447,7 @@
 </div>
 
 @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
-     User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
-     User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
+     User.IsInRole(Unified.Models.Identity.Roles.BrandManager))
 {
     <div class="modal fade" id="broadcastModal" tabindex="-1" aria-labelledby="broadcastModalLabel" aria-hidden="true">
         <div class="modal-dialog">

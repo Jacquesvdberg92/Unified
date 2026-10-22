@@ -7,7 +7,7 @@ using Unified.Services;
 
 namespace Unified.Controllers;
 
-[Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.SwissArmyKnife},{Roles.Finance}")]
+[Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.Finance}")]
 public class AttendanceReportController : Controller
 {
     private readonly AttendanceService  _svc;
