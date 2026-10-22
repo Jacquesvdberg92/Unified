@@ -1,0 +1,93 @@
+@using Unified.Models.BugReports
+@model Unified.Controllers.BugReportIndexViewModel
+@{
+    ViewData["Title"] = "Bug Reports";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0"><i class="bx bx-bug me-2"></i>@(Model.ShowAll ? "All Bug Reports" : "My Bug Reports")</h4>
+        <div class="d-flex gap-2">
+            @if (Model.CanManage)
+            {
+                <a asp-action="Index" asp-route-all="@(!Model.ShowAll)" class="btn btn-outline-secondary">
+                    @(Model.ShowAll ? "Show mine" : "Show all")
+                </a>
+            }
+            <a asp-action="Create" class="btn btn-primary"><i class="bx bx-plus me-1"></i>Report a Bug</a>
+        </div>
+    </div>
+
+    @if (Model.CanManage && !Model.GitHubConfigured)
+    {
+        <div class="alert alert-warning">
+            GitHub isn't configured, so reports are only being saved here. Set <code>GitHub:Token</code> (a token with Issues and Contents read/write on the repository) to start sending them.
+        </div>
+    }
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        @if (Model.ShowAll) { <th>Reported by</th> }
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        @if (Model.ShowAll) { <th></th> }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Rows.Count == 0)
+                    {
+                        <tr><td colspan="5" class="text-center text-muted py-4">No bug reports yet.</td></tr>
+                    }
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.Title</td>
+                            @if (Model.ShowAll) { <td>@row.ReporterName</td> }
+                            <td>
+                                @if (row.Status == BugReportStatus.Sent && row.GitHubIssueUrl is not null)
+                                {
+                                    <a href="@row.GitHubIssueUrl" target="_blank" rel="noopener" class="badge bg-success-transparent text-success">
+                                        <i class="bx bxl-github me-1"></i>Issue #@row.GitHubIssueNumber
+                                    </a>
+                                }
+                                else if (row.SendAttempts >= Unified.Services.BugReportService.MaxSendAttempts)
+                                {
+                                    <span class="badge bg-danger-transparent text-danger">Not sent</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-transparent text-warning">Waiting to send</span>
+                                }
+                                @if (Model.ShowAll && row.Status == BugReportStatus.Pending && row.LastError is not null)
+                                {
+                                    <div class="small text-muted mt-1">@row.LastError</div>
+                                }
+                            </td>
+                            <td><span class="text-muted small">@row.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span></td>
+                            @if (Model.ShowAll)
+                            {
+                                <td class="text-end text-nowrap">
+                                    @if (row.Status == BugReportStatus.Pending)
+                                    {
+                                        <form asp-action="Retry" asp-route-id="@row.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Send now</button>
+                                        </form>
+                                        <form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this unsent report?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
