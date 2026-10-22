@@ -16,6 +16,15 @@ If you require prioritised support, dedicated bug fixes, custom feature developm
 
 There are known visual inconsistencies in dark mode. The author is **aware of these issues** and they are on the list to be resolved. They are not forgotten — just deferred while a break is being taken. They will be addressed in a future update.
 
+### Email Template Edit Clears the Body; Copy Signature HTML Does Nothing
+
+Three views write HTML content into a double-quoted `data-` attribute as `@Html.Raw(JsonSerializer.Serialize(...))`. The JSON's own quotes close the attribute early, so the browser always reads it as empty, and the rest of the value spills into stray attributes on the element.
+
+- **Email Templates → Edit** (`Views/EmailTemplates/Edit.cshtml`, `data-initial-html`): the body editor opens empty. Saving replaces the stored body with the empty editor contents. **Workaround:** re-enter the full body before saving an edit.
+- **Copy Signature HTML** (`Views/Brands/Manager.cshtml` and `Views/EmailTemplates/BrandManager.cshtml`, `data-sig`): clicking the button throws a JavaScript error and copies nothing. **Workaround:** copy the signature from the preview shown above the button.
+
+Because the spilled text becomes attributes, stored signature or template content can also add attributes, including event handlers, to those elements. Only Brand Managers (signatures) and Brand Managers, Team Leaders and Swiss Army Knife users (templates) can edit that content, and it is already rendered unsanitised elsewhere, so this will be fixed together with sanitising stored HTML. The fix is to drop `Html.Raw` so Razor encodes the JSON for the attribute; the page scripts read it back unchanged.
+
 ---
 
 ## Finance Department Roadmap
