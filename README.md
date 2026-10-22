@@ -6,17 +6,11 @@ Made with ❤️ by [Jacquesvdberg92](https://github.com/Jacquesvdberg92) &nbsp;
 
 ---
 
-## 🌐 Live Demo
-
-**[https://demo.jacquesvdberg.me](https://unified.jacquesvdberg.me)**
-
----
-
 ## 📚 Documentation
 
 | Document | Description |
 |---|---|
-| [Overview](docs/OVERVIEW.md) | What Unified is, its modules, tech stack, and demo link |
+| [Overview](docs/OVERVIEW.md) | What Unified is, its modules, and tech stack |
 | [Deployment Guide](docs/DEPLOYMENT.md) | Step-by-step: deploy locally with IIS or to NameCheap ASP.NET hosting |
 | [Support & Terms of Use](docs/SUPPORT.md) | Support posture, known issues, Finance roadmap, and usage terms |
 

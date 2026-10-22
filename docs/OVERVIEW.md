@@ -32,16 +32,6 @@ Rather than juggling multiple disconnected tools, Unified brings the key operati
 
 ---
 
-## Live Demo
-
-A live preview of the application is available at:
-
-**[https://demo.jacquesvdberg.me](https://demo.jacquesvdberg.me)**
-
-> The demo environment may run on limited resources. Performance on the demo is not representative of a properly provisioned production deployment.
-
----
-
 ## Author & Attribution
 
 Unified was designed and built by **Jacques van den Berg** ([@Jacquesvdberg92](https://github.com/Jacquesvdberg92)).

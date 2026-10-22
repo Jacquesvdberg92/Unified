@@ -4,7 +4,7 @@
 
 **Support for this project is currently limited.**
 
-The application has been built to a functional state and a live demo is available at [https://demo.jacquesvdberg.me](https://demo.jacquesvdberg.me). However, the author is taking a deliberate break from active development and day-to-day support. Bug reports and feature requests may not receive a timely response unless there is a financial incentive in place.
+The application has been built to a functional state. However, the author is taking a deliberate break from active development and day-to-day support. Bug reports and feature requests may not receive a timely response unless there is a financial incentive in place.
 
 If you require prioritised support, dedicated bug fixes, custom feature development, or SLA-backed assistance, please reach out directly to discuss a commercial arrangement.
 
