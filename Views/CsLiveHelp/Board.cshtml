@@ -22,6 +22,9 @@
     var onGoingCards    = requests.Where(r => r.Status == CsRequestStatus.OnGoing).ToList();
     var escalatedCards  = requests.Where(r => r.Status == CsRequestStatus.Escalated).ToList();
     var completedCards  = requests.Where(r => r.Status == CsRequestStatus.Completed).ToList();
+
+    var viewMode = (string)ViewBag.ViewMode;
+    var isChat   = viewMode == Unified.Controllers.CsLiveHelpController.ChatViewMode;
 }
 
 <div class="container-fluid">
@@ -46,6 +49,9 @@
     <div class="d-flex align-items-center mb-3">
         <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Live Help Board</h5>
         <span class="badge bg-primary ms-3">@requests.Count total</span>
+        <div class="ms-3">
+            <partial name="_CsViewModeToggle" model="viewMode" />
+        </div>
         @if (User.IsInRole(Unified.Models.Identity.Roles.TeamLeader) ||
              User.IsInRole(Unified.Models.Identity.Roles.BrandManager) ||
              User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife))
@@ -79,6 +85,21 @@
     <!-- Kanban board – 5 columns -->
     @* Hidden antiforgery token used by drag-drop fetch *@
     @Html.AntiForgeryToken()
+    @if (isChat)
+    {
+        <!-- Chat feed: requests in the order they came in, newest at the bottom -->
+        <div id="csChatFeed" class="cs-chat-feed">
+            @foreach (var r in requests.OrderBy(r => r.CreatedAt))
+            {
+                <partial name="_CsChatMessage" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "CardPartial", "_CsBoardCard" } })' />
+            }
+            <p class="text-muted small text-center my-auto cs-chat-empty" style="@(requests.Any() ? "display:none" : "")">
+                No requests yet.
+            </p>
+        </div>
+    }
+    else
+    {
     <div class="row g-3">
 
         @* ── Open ── *@
@@ -227,6 +248,7 @@
         </div>
 
     </div><!-- /row -->
+    }
 </div><!-- /container -->
 
 @* ──────────────────────────────────────────────────────────────────────────
@@ -519,6 +541,10 @@
     </script>
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/cslivehelp-chat.css" asp-append-version="true" />
+}
+
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
@@ -534,10 +560,10 @@
     function applyFilter() {
         const brandId = brandSel?.value ?? '';
         const query   = (clientInput?.value ?? '').toLowerCase().trim();
-        document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
+        document.querySelectorAll('.kanban-col [data-card-id], #csChatFeed [data-card-id]').forEach(function (card) {
             const matchBrand  = !brandId || String(card.dataset.brandId) === brandId;
             const matchClient = !query   || (card.dataset.clientId ?? '').includes(query);
-            card.style.display = (matchBrand && matchClient) ? '' : 'none';
+            (card.closest('.cs-chat-msg') ?? card).style.display = (matchBrand && matchClient) ? '' : 'none';
         });
     }
 
@@ -546,8 +572,8 @@
     clearBtn?.addEventListener('click', function () {
         if (brandSel)    brandSel.value    = '';
         if (clientInput) clientInput.value = '';
-        document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
-            card.style.display = '';
+        document.querySelectorAll('.kanban-col [data-card-id], #csChatFeed [data-card-id]').forEach(function (card) {
+            (card.closest('.cs-chat-msg') ?? card).style.display = '';
         });
     });
 

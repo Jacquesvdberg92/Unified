@@ -134,6 +134,25 @@
     }
 
     const hasAnyBoardColumn = !!document.querySelector('[id^="col-"]');
+
+    // Chat view mode: the page shows one chronological feed instead of kanban columns.
+    // Cards are the same partials wrapped in a .cs-chat-msg, so status / comment
+    // handlers below keep working; only add and delete need to know about the feed.
+    const chatFeed = document.getElementById('csChatFeed');
+
+    function chatScrollToBottom(force) {
+        if (!chatFeed) return;
+        const nearBottom = chatFeed.scrollHeight - chatFeed.scrollTop - chatFeed.clientHeight < 120;
+        if (force || nearBottom) chatFeed.scrollTop = chatFeed.scrollHeight;
+    }
+
+    function chatUpdateEmptyHint() {
+        const hint = chatFeed?.querySelector('.cs-chat-empty');
+        if (hint) hint.style.display = chatFeed.querySelector('.cs-chat-msg') ? 'none' : '';
+    }
+
+    chatScrollToBottom(true);
+
     const hasEscalatedColumn = !!document.getElementById('col-Escalated');
 
     /**
@@ -177,6 +196,9 @@
         .withUrl('/hubs/cslivehelp')
         .withAutomaticReconnect()
         .build();
+
+    // Shared with page-specific clients (cslivehelp-internal.js) so they can add handlers
+    window.csHub = connection;
 
     // ── Connection state tracking for debugging and recovery ──────────────────
 
@@ -253,6 +275,8 @@
     // ── Event: CardAdded ─────────────────────────────────────────────────────
 
     connection.on('CardAdded', function (data) {
+        if (chatFeed) { chatCardAdded(data); return; }
+
         const col = colEl(statusColumn(data.status ?? 'Open'));
         if (!col) return;
 
@@ -304,6 +328,38 @@
         });
     });
 
+    function chatCardAdded(data) {
+        if (cardEl(data.id)) return;
+
+        const partialUrl = (window.csCardPartialUrl ?? '/CsLiveHelp/CardPartial/') + data.id + '?chat=true';
+        fetch(partialUrl, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (res) {
+            if (!res.ok) throw new Error('partial failed');
+            return res.text();
+        })
+        .then(function (html) {
+            if (cardEl(data.id)) return;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html.trim();
+            const msg = wrap.firstElementChild;
+            if (!msg) return;
+            msg.querySelector('[data-card-id]')?.classList.add('new-card-notice');
+            chatFeed.appendChild(msg);
+            chatUpdateEmptyHint();
+            chatScrollToBottom(false);
+            ensureCardModals(data.id).finally(function () {
+                wireCommentModal(data.id);
+                wireCsCommentModal(data.id);
+                showToastMsg('New request #' + data.id + ' (' + escHtml(data.brandName ?? '') + ').', true);
+            });
+        })
+        .catch(function () {
+            showToastMsg('New request #' + data.id + ' — refresh to see it.', true);
+        });
+    }
+
     // ── Event: CardUpdated ───────────────────────────────────────────────────
 
     connection.on('CardUpdated', function (data) {
@@ -323,7 +379,8 @@
 
         const col = card.closest('.kanban-col');
         const deletedStatus = col?.dataset.status;
-        card.remove();
+        (card.closest('.cs-chat-msg') ?? card).remove();
+        chatUpdateEmptyHint();
         ['statusModal-', 'csCommentModal-', 'escalateModal-', 'resetModal-', 'passedModal-']
             .forEach(function (prefix) {
                 const el = document.getElementById(prefix + data.id);
@@ -794,6 +851,10 @@
             if (form) ajaxFormSetup(form, modal);
         });
 
+        // Chat composer (same CreateRequest form as the create modal)
+        const composerForm = document.querySelector('#csChatComposer form[action$="/CreateRequest"]');
+        if (composerForm) ajaxFormSetup(composerForm, null);
+
         // Delete confirm modals (deleteModal-*)
         document.querySelectorAll('[id^="deleteModal-"]').forEach(function (modal) {
             const form = modal.querySelector('form');
@@ -809,7 +870,7 @@
 
     wireAmForms();
 
-    if (!hasAnyBoardColumn) return;
+    if (!hasAnyBoardColumn && !chatFeed) return;
 
     function wireCsCommentModals() {
         // Wire all csCommentModal-* forms (CS Board page)

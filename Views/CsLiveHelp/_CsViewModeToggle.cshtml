@@ -1,0 +1,21 @@
+@*
+    Chat / Board view-mode switch shared by the CS Live Help pages.
+    Model: the current mode ("chat" or "board"). The links go back to the current
+    action with ?view=…, which the controller remembers in a cookie.
+*@
+@model string
+@{
+    var isChat = Model == Unified.Controllers.CsLiveHelpController.ChatViewMode;
+}
+<div class="btn-group btn-group-sm" role="group" aria-label="View mode">
+    <a asp-route-view="@Unified.Controllers.CsLiveHelpController.ChatViewMode"
+       class="btn @(isChat ? "btn-primary" : "btn-outline-primary")"
+       aria-current="@(isChat ? "true" : null)" title="Chat view">
+        <i class="bx bx-chat me-1"></i>Chat
+    </a>
+    <a asp-route-view="@Unified.Controllers.CsLiveHelpController.BoardViewMode"
+       class="btn @(!isChat ? "btn-primary" : "btn-outline-primary")"
+       aria-current="@(!isChat ? "true" : null)" title="Kanban board view">
+        <i class="bx bx-columns me-1"></i>Board
+    </a>
+</div>

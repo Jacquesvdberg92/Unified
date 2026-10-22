@@ -55,9 +55,10 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/Requests — AM Kanban (own cards + read-only Others) ──
 
     [Authorize(Roles = Roles.AccountManager)]
-    public async Task<IActionResult> Requests()
+    public async Task<IActionResult> Requests(string? view = null)
     {
         var amId = _users.GetUserId(User)!;
+        ViewBag.ViewMode = ResolveViewMode(nameof(Requests), view);
 
         var own    = await _svc.GetAmRequestsAsync(amId);
         var others = await _svc.GetOtherAmOpenRequestsAsync(amId);
@@ -392,6 +393,39 @@ public class CsLiveHelpController : Controller
     private string GetClientIp()
         => HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
+    // ── View mode (chat / board) ──────────────────────────────────────────
+    //
+    // Each page can be shown as a chat-style feed (the legacy way requests were
+    // handled) or as the kanban board. Same data, same actions — only the layout
+    // differs. The choice is remembered per page in a cookie so redirects after
+    // non-AJAX posts land back in the same mode.
+
+    public const string ChatViewMode  = "chat";
+    public const string BoardViewMode = "board";
+    private const string DefaultViewMode = ChatViewMode;
+
+    private string ResolveViewMode(string page, string? requested)
+    {
+        var cookieName = $"cslh-view-{page.ToLowerInvariant()}";
+
+        if (requested is ChatViewMode or BoardViewMode)
+        {
+            Response.Cookies.Append(cookieName, requested, new CookieOptions
+            {
+                Expires  = DateTimeOffset.UtcNow.AddYears(1),
+                HttpOnly = true,
+                IsEssential = true,
+                SameSite = SameSiteMode.Lax,
+                Secure   = Request.IsHttps
+            });
+            return requested;
+        }
+
+        return Request.Cookies[cookieName] is ChatViewMode or BoardViewMode
+            ? Request.Cookies[cookieName]!
+            : DefaultViewMode;
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // CS AGENT ACTIONS  (CSAgent | TeamLeader | BrandManager | SwissArmyKnife)
     // ─────────────────────────────────────────────────────────────────────
@@ -410,8 +444,9 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/Board ─────────────────────────────────────────────
 
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> Board()
+    public async Task<IActionResult> Board(string? view = null)
     {
+        ViewBag.ViewMode = ResolveViewMode(nameof(Board), view);
         var requests = await _svc.GetBoardRequestsAsync();
         var teamAllocationTeams = await _db.Teams
             .OrderBy(t => t.Name)
@@ -697,8 +732,9 @@ public class CsLiveHelpController : Controller
     // ── GET /CsLiveHelp/RequestsAllBrands ────────────────────────────────
 
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> RequestsAllBrands(bool escalatedOnly = false)
+    public async Task<IActionResult> RequestsAllBrands(bool escalatedOnly = false, string? view = null)
     {
+        ViewBag.ViewMode = ResolveViewMode(nameof(RequestsAllBrands), view);
         var isTlManager = User.IsInRole(Roles.TeamLeader)
                        || User.IsInRole(Roles.BrandManager)
                        || User.IsInRole(Roles.SwissArmyKnife);
@@ -1023,14 +1059,14 @@ public class CsLiveHelpController : Controller
 
     [HttpGet]
     [Authorize(Roles = Roles.AccountManager)]
-    public async Task<IActionResult> AmCardPartial(int id)
+    public async Task<IActionResult> AmCardPartial(int id, bool chat = false)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
         var amId = _users.GetUserId(User)!;
         var req = await _svc.GetRequestAsync(id);
         if (req is null || req.AccountManagerId != amId) return NotFound();
         ViewData["ShowActions"] = true;
-        return PartialView("_CsRequestCard", req);
+        return CardOrChatPartial("_CsRequestCard", req, chat, isMine: true);
     }
 
     // ── GET /CsLiveHelp/AmCardModalsPartial/{id} — AM comment modal partial ─
@@ -1050,24 +1086,33 @@ public class CsLiveHelpController : Controller
 
     [HttpGet]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> CardPartial(int id)
+    public async Task<IActionResult> CardPartial(int id, bool chat = false)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
         var req = await _svc.GetRequestAsync(id);
         if (req is null) return NotFound();
-        return PartialView("_CsBoardCard", req);
+        return CardOrChatPartial("_CsBoardCard", req, chat);
     }
 
     // ── GET /CsLiveHelp/InternalCardPartial/{id} — internal board card partial ──
 
     [HttpGet]
     [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
-    public async Task<IActionResult> InternalCardPartial(int id)
+    public async Task<IActionResult> InternalCardPartial(int id, bool chat = false)
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
         var req = await _svc.GetRequestAsync(id);
         if (req is null) return NotFound();
-        return PartialView("_InternalBoardCard", req);
+        return CardOrChatPartial("_InternalBoardCard", req, chat);
+    }
+
+    /// <summary>Returns the card partial on its own (board mode) or wrapped in a chat message (chat mode).</summary>
+    private PartialViewResult CardOrChatPartial(string cardPartial, CsRequest req, bool chat, bool isMine = false)
+    {
+        if (!chat) return PartialView(cardPartial, req);
+        ViewData["CardPartial"] = cardPartial;
+        ViewData["IsMine"]      = isMine;
+        return PartialView("_CsChatMessage", req);
     }
 
     // ── GET /CsLiveHelp/CardModalsPartial/{id} — returns modal markup for one card ──

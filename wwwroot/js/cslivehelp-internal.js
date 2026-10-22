@@ -3,7 +3,7 @@
  * Dedicated client for RequestsAllBrands.cshtml (internal CS page only).
  * 
  * Responsibilities:
- * - 4-column kanban (Open, InProgress, OnGoing, Completed)
+ * - 4-column kanban (Open, InProgress, OnGoing, Completed), or the chat feed in chat view mode
  * - Internal comment threads + documents (pdf/doc/xlsx support)
  * - Drag-drop card movement with status updates
  * - Brand/ClientID filtering
@@ -394,10 +394,10 @@
     function applyFilter() {
         const brandId = brandSel?.value ?? '';
         const query = (clientInput?.value ?? '').toLowerCase().trim();
-        document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
+        document.querySelectorAll('.kanban-col [data-card-id], #csChatFeed [data-card-id]').forEach(function (card) {
             const matchBrand = !brandId || String(card.dataset.brandId) === brandId;
             const matchClient = !query || (card.dataset.clientId ?? '').includes(query);
-            card.style.display = (matchBrand && matchClient) ? '' : 'none';
+            (card.closest('.cs-chat-msg') ?? card).style.display = (matchBrand && matchClient) ? '' : 'none';
         });
     }
 
@@ -406,8 +406,8 @@
     clearBtn?.addEventListener('click', function () {
         if (brandSel) brandSel.value = '';
         if (clientInput) clientInput.value = '';
-        document.querySelectorAll('.kanban-col [data-card-id]').forEach(function (card) {
-            card.style.display = '';
+        document.querySelectorAll('.kanban-col [data-card-id], #csChatFeed [data-card-id]').forEach(function (card) {
+            (card.closest('.cs-chat-msg') ?? card).style.display = '';
         });
     });
 

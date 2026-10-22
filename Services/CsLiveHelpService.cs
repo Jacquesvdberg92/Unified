@@ -286,6 +286,7 @@ public class CsLiveHelpService
         return await q
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AccountManager)
             .Include(r => r.AssignedTo)
             .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
                 .ThenInclude(c => c.Author)
@@ -299,6 +300,7 @@ public class CsLiveHelpService
         => await _db.CsRequests
             .Include(r => r.Brand)
             .Include(r => r.RequestType)
+            .Include(r => r.AccountManager)
             .Include(r => r.AssignedTo)
             .Include(r => r.Comments.OrderBy(c => c.CreatedAt))
                 .ThenInclude(c => c.Author)
