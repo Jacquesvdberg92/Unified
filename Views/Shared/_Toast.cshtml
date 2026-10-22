@@ -11,7 +11,7 @@
             {
                 <text>
                 Toastify({
-                    text: "@Html.Raw(success.Replace("\"", "\\\""))",
+                    text: @Json.Serialize(success),
                     duration: 4000,
                     gravity: "top",
                     position: "right",
@@ -24,7 +24,7 @@
             {
                 <text>
                 Toastify({
-                    text: "@Html.Raw(warning.Replace("\"", "\\\""))",
+                    text: @Json.Serialize(warning),
                     duration: 5000,
                     gravity: "top",
                     position: "right",
@@ -37,7 +37,7 @@
             {
                 <text>
                 Toastify({
-                    text: "@Html.Raw(error.Replace("\"", "\\\""))",
+                    text: @Json.Serialize(error),
                     duration: 6000,
                     gravity: "top",
                     position: "right",
