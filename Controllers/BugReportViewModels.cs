@@ -23,6 +23,9 @@ public sealed class BugReportInputModel
     [StringLength(1000)]
     public string? PageUrl { get; set; }
 
+    /// <summary>The ErrorLogs row when the report was started from the error page.</summary>
+    public long? ErrorId { get; set; }
+
     /// <summary>JSON gathered by the browser: screen size, time zone, recent console errors, etc.</summary>
     [StringLength(20000)]
     public string? ClientInfo { get; set; }
