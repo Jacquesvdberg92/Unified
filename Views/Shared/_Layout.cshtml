@@ -12,6 +12,17 @@
 		<!-- TITLE -->
 		<title>@ViewData["Title"] — Unified</title>
 
+        <!-- THEME SYNC: mirror the theme's dark mode onto Bootstrap's colour mode so Bootstrap
+             components (tables, *-subtle badges, close buttons, selects) follow it too -->
+        <script>
+            (function () {
+                var html = document.documentElement;
+                function sync() { html.setAttribute('data-bs-theme', html.getAttribute('data-theme-mode') === 'dark' ? 'dark' : 'light'); }
+                sync();
+                new MutationObserver(sync).observe(html, { attributes: true, attributeFilter: ['data-theme-mode'] });
+            })();
+        </script>
+
 		<!-- FAVICON -->
         <link rel="icon" type="image/png" href="@Url.Content("~/fav.png")">
 

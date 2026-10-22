@@ -12,9 +12,7 @@ If you require prioritised support, dedicated bug fixes, custom feature developm
 
 ## Known Issues
 
-### Dark Mode Anomalies
-
-There are known visual inconsistencies in dark mode. The author is **aware of these issues** and they are on the list to be resolved. They are not forgotten — just deferred while a break is being taken. They will be addressed in a future update.
+There are no open known issues at the moment.
 
 ---
 
