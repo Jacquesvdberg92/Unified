@@ -10,6 +10,7 @@ namespace Unified.Controllers;
 public class ProfileController : Controller
 {
     private readonly UserManager<AppUser> _userManager;
+    private readonly SignInManager<AppUser> _signInManager;
     private readonly ILogger<ProfileController> _logger;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
@@ -19,10 +20,12 @@ public class ProfileController : Controller
 
     public ProfileController(
         UserManager<AppUser> userManager,
+        SignInManager<AppUser> signInManager,
         ILogger<ProfileController> logger,
         IWebHostEnvironment webHostEnvironment)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _logger = logger;
         _webHostEnvironment = webHostEnvironment;
     }
@@ -55,6 +58,58 @@ public class ProfileController : Controller
         }
 
         return View(user);
+    }
+
+    /// <summary>
+    /// GET /Profile/ChangePassword - Change the current user's password
+    /// </summary>
+    [HttpGet("/Profile/ChangePassword")]
+    public IActionResult ChangePassword() => View("ChangePassword");
+
+    /// <summary>
+    /// POST /Profile/ChangePassword
+    /// </summary>
+    [HttpPost("/Profile/ChangePassword")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(
+        [FromForm] string? currentPassword,
+        [FromForm] string? newPassword,
+        [FromForm] string? confirmPassword)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound("User not found");
+        }
+
+        if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
+        {
+            ModelState.AddModelError(string.Empty, "Enter your current password and a new password.");
+            return View("ChangePassword");
+        }
+
+        if (newPassword != confirmPassword)
+        {
+            ModelState.AddModelError(string.Empty, "The new password and confirmation don't match.");
+            return View("ChangePassword");
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View("ChangePassword");
+        }
+
+        // Changing the password rotates the security stamp; re-issue this browser's cookie
+        await _signInManager.RefreshSignInAsync(user);
+        _logger.LogInformation("User {UserId} changed their password", user.Id);
+
+        TempData["SuccessMessage"] = "Your password has been changed.";
+        return RedirectToAction("View");
     }
 
     /// <summary>
