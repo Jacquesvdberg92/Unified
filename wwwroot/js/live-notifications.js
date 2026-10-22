@@ -107,6 +107,29 @@
         });
     });
 
+    connection.on('UpdatePosted', function (evt) {
+        if (!evt?.id) {
+            return;
+        }
+
+        window.UnifiedUpdatesUnread?.add(evt.id);
+
+        if (typeof NotificationManager === 'undefined') {
+            return;
+        }
+
+        NotificationManager.handleNotification({
+            type: 'update',
+            contextType: 'Updates',
+            title: evt.isPinned ? 'New pinned update' : 'New update posted',
+            message: `${evt.title || 'Untitled'} (by ${evt.authorName || 'Someone'})`,
+            url: `/Updates/Detail/${evt.id}`,
+            sound: true,
+            visual: true,
+            toast: true
+        });
+    });
+
     connection.on('WithdrawalNotification', function (evt) {
         if (typeof NotificationManager === 'undefined') {
             return;
@@ -118,6 +141,7 @@
             contextId: String(evt?.id || ''),
             title: evt?.title || 'WD List',
             message: evt?.message || 'A withdrawal was updated',
+            url: evt?.url || undefined,
             sound: true,
             visual: true,
             toast: true

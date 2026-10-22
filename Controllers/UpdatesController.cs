@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Unified.Data;
+using Unified.Hubs;
 using Unified.Models.Identity;
 using Unified.Models.Updates;
 using Unified.Services;
@@ -18,13 +20,18 @@ public class UpdatesController : Controller
     private readonly AppDbContext         _db;
     private readonly UserManager<AppUser> _users;
     private readonly AiContentService     _ai;
+    private readonly IHubContext<CsMessagingHub> _hub;
+    private readonly HubConnectionTracker _connections;
 
-    public UpdatesController(UpdateService service, AppDbContext db, UserManager<AppUser> users, AiContentService ai)
+    public UpdatesController(UpdateService service, AppDbContext db, UserManager<AppUser> users, AiContentService ai,
+        IHubContext<CsMessagingHub> hub, HubConnectionTracker connections)
     {
-        _service = service;
-        _db      = db;
-        _users   = users;
-        _ai      = ai;
+        _service     = service;
+        _db          = db;
+        _users       = users;
+        _ai          = ai;
+        _hub         = hub;
+        _connections = connections;
     }
 
     // GET: /Updates
@@ -87,6 +94,19 @@ public class UpdatesController : Controller
         update.SetTags(ParseTags(tags));
 
         await _service.PostUpdateAsync(update, brandIds ?? []);
+
+        // Everyone online except the author gets a sound, a toast and the sidebar unread badge
+        var author = await _users.GetUserAsync(User);
+        await _hub.Clients
+            .GroupExcept("cs-messaging", _connections.GetConnections(update.AuthorId).ToList())
+            .SendAsync("UpdatePosted", new
+            {
+                id         = update.Id,
+                title      = update.Title,
+                authorName = author?.DisplayName ?? "Someone",
+                isPinned   = update.IsPinned
+            });
+
         TempData["Success"] = $"Update \"{update.Title}\" posted.";
         return RedirectToAction(nameof(Feed));
     }
