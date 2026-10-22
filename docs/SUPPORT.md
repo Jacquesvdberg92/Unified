@@ -25,6 +25,10 @@ Three views write HTML content into a double-quoted `data-` attribute as `@Html.
 
 Because the spilled text becomes attributes, stored signature or template content can also add attributes, including event handlers, to those elements. Only Brand Managers (signatures) and Brand Managers, Team Leaders and Swiss Army Knife users (templates) can edit that content, and it is already rendered unsanitised elsewhere, so this will be fixed together with sanitising stored HTML. The fix is to drop `Html.Raw` so Razor encodes the JSON for the attribute; the page scripts read it back unchanged.
 
+### CS Messaging: Removed Members Keep Receiving Live Updates
+
+When a member is removed from a CS Messaging conversation, any browser tab they already have open stays subscribed to that conversation's real-time updates. Until that connection drops or they reload the page, they continue to see new messages, edits, reactions and member changes for the conversation. Opening the conversation or loading its history is blocked as soon as they are removed; only the already-open live connection is affected. A fix requires tracking each user's open connections so they can be removed from the conversation group (`conv-{id}` in `CsMessagingHub`) at the time of removal.
+
 ---
 
 ## Finance Department Roadmap
