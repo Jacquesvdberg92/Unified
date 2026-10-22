@@ -1,0 +1,128 @@
+@using Unified.Models.CsLiveHelp
+@model CsRequest
+@* Per-card modals for Requests All Brands (move, internal thread, resolve escalation).
+   Rendered for every card on page load and fetched through InternalCardModalsPartial
+   when a card arrives live, so its buttons work without a refresh. *@
+@{
+    var r           = Model;
+    var isTlManager = User.IsInRole(Unified.Models.Identity.Roles.TeamLeader)
+                   || User.IsInRole(Unified.Models.Identity.Roles.BrandManager)
+                   || User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife);
+}
+
+@* Status move modal *@
+<div class="modal fade" id="intStatusModal-@r.Id" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title">Move card #@r.Id</h6>
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body d-grid gap-2">
+                @foreach (var s in Enum.GetValues<CsRequestStatus>())
+                {
+                    if (s == r.Status || s == CsRequestStatus.Completed) continue;
+                    <form asp-action="InternalUpdateStatus" asp-route-id="@r.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="status" value="@s" />
+                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100">→ @s</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Comment modal *@
+<div class="modal fade" id="intCommentModal-@r.Id" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title">Thread — #@r.Id @(r.IsInternal ? "(Internal)" : "")</h6>
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="InternalAddComment" asp-route-id="@r.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    @* Always render the thread container so live comments have a place to land *@
+                    <div class="thread-body mb-3 border rounded p-2 small" id="threadBody-@r.Id" style="max-height:200px;overflow-y:auto">
+                    @if (!r.Comments.Any(c => c.IsCsInternalOnly))
+                    {
+                        <p class="text-muted mb-0">No comments yet.</p>
+                    }
+                        @foreach (var c in r.Comments.Where(c => c.IsCsInternalOnly).OrderBy(c => c.CreatedAt))
+                        {
+                            <div class="mb-2 @(c.IsSystemMessage ? "text-muted fst-italic" : "")">
+                                <div class="d-flex gap-1 align-items-center mb-1" style="font-size:.7rem">
+                                    @if (c.IsSystemMessage)
+                                    {
+                                        <span class="badge bg-secondary" style="font-size:.65rem">System</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-semibold">@(c.Author?.DisplayName ?? c.Author?.UserName ?? "Deleted user")</span>
+                                    }
+                                    <span class="text-muted">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
+                                </div>
+                                <div>@c.Body</div>
+                                @if (!string.IsNullOrWhiteSpace(c.ImagePath))
+                                            {
+                                                var attachExt = System.IO.Path.GetExtension(c.ImagePath).ToLowerInvariant();
+                                                var isImg = new[]{ ".jpg",".jpeg",".png",".gif",".webp" }.Contains(attachExt);
+                                                <div class="mt-1">
+                                                    @if (isImg)
+                                                    {
+                                                        <a href="@c.ImagePath" target="_blank" rel="noopener">
+                                                            <img src="@c.ImagePath" alt="Attachment" class="img-fluid rounded" style="max-height:160px" />
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a href="@c.ImagePath" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                                                            <i class="bx bx-file me-1"></i>@System.IO.Path.GetFileName(c.ImagePath)
+                                                        </a>
+                                                    }
+                                                </div>
+                                            }
+                            </div>
+                        }
+                    </div>
+                    <textarea name="body" class="form-control form-control-sm" rows="3"
+                              placeholder="Your comment…" maxlength="1000" required></textarea>
+                    <div class="mt-2">
+                        <input type="file" name="image" class="form-control form-control-sm"
+                               accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.doc,.docx,.xls,.xlsx" />
+                        <div class="form-text">Optional · jpg/png/gif/webp/pdf/doc/docx/xls/xlsx · max 5 MB for images, 20 MB for documents</div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Resolve Escalation modal — TL/Manager only *@
+@if (isTlManager && r.Status == CsRequestStatus.Escalated)
+{
+    <div class="modal fade" id="intResolveModal-@r.Id" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h6 class="modal-title">Resolve escalation #@r.Id?</h6>
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body small">Marks the card Completed and posts a system comment.</div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-action="ResolveEscalation" asp-route-id="@r.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-sm">Resolve</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

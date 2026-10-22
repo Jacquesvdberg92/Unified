@@ -1144,6 +1144,18 @@ public class CsLiveHelpController : Controller
         return PartialView("_CsChatMessage", req);
     }
 
+    // ── GET /CsLiveHelp/InternalCardModalsPartial/{id} — Requests All Brands modals for one card ──
+
+    [HttpGet]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> InternalCardModalsPartial(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null) return NotFound();
+        return PartialView("_InternalBoardCardModals", req);
+    }
+
     // ── GET /CsLiveHelp/CardModalsPartial/{id} — returns modal markup for one card ──
 
     [HttpGet]
