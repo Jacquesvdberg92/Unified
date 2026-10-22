@@ -110,9 +110,8 @@ namespace Unified.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                // Failed attempts count towards lockout (Identity default: 5 failures → 5 minutes)
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -124,7 +123,7 @@ namespace Unified.Areas.Identity.Pages.Account
                         if (await _userManager.IsInRoleAsync(user, Roles.AccountManager))
                             return LocalRedirect("/CsLiveHelp/Requests");   // Phase 1d destination
                         if (await _userManager.IsInRoleAsync(user, Roles.Finance))
-                            return LocalRedirect("/Reports");
+                            return LocalRedirect("/Reports/Dashboard");
                     }
 
                     return LocalRedirect(returnUrl);
@@ -135,15 +134,17 @@ namespace Unified.Areas.Identity.Pages.Account
                 }
                 if (result.IsLockedOut)
                 {
+                    // Pending Account Managers are locked until a Brand Manager approves them (role added on approval)
                     var user = await _userManager.FindByEmailAsync(Input.Email);
-                    if (user != null && user.IsExternal)
+                    if (user != null && user.IsExternal && !await _userManager.IsInRoleAsync(user, Roles.AccountManager))
                     {
                         ModelState.AddModelError(string.Empty, "Your account is pending approval. Please check back in 15–30 minutes.");
                         return Page();
                     }
 
                     _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
+                    ModelState.AddModelError(string.Empty, "This account is locked. Wait a few minutes and try again, or ask a Brand Manager to unlock it.");
+                    return Page();
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");

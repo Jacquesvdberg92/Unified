@@ -227,6 +227,7 @@ public class AdminController : Controller
         if (user == null) return NotFound();
 
         await _userManager.SetLockoutEndDateAsync(user, null);
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         TempData["Success"] = $"{user.DisplayName} has been unlocked.";
         return RedirectToAction(nameof(Users));
