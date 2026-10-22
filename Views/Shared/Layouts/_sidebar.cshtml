@@ -10,6 +10,7 @@
                 <div class="main-sidebar-header">
                     <a asp-controller="Home" asp-action="index" class="header-logo">
                         <span class="fw-bold fs-5 app-brand-text">Unified</span>
+                        <span class="fw-bold fs-5 app-brand-text-short">U</span>
                     </a>
                 </div>
                 <!-- End::main-sidebar-header -->
@@ -143,7 +144,7 @@
                                                     <span class="side-menu__label">CS Live Help</span>
                                                 </a>
                                                 <button type="button"
-                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        class="btn btn-sm btn-link p-0 ms-2 me-2 notification-mute-btn"
                                                         data-notification-mute-btn="Requests"
                                                         title="Mute/unmute Requests notifications"
                                                         aria-label="Mute/unmute Requests notifications"
@@ -160,7 +161,7 @@
                                                     <span class="side-menu__label">CS Live Help</span>
                                                 </a>
                                                 <button type="button"
-                                                        class="btn btn-sm btn-link text-muted p-0 ms-2 me-2 notification-mute-btn"
+                                                        class="btn btn-sm btn-link p-0 ms-2 me-2 notification-mute-btn"
                                                         data-notification-mute-btn="Board"
                                                         title="Mute/unmute Board notifications"
                                                         aria-label="Mute/unmute Board notifications"
@@ -224,7 +225,7 @@
                                         </li>
                                         @if (recentChats.Any())
                                         {
-                                            <li class="slide mt-2 px-3 no-drag" data-no-drag="true">
+                                            <li class="slide mt-2 px-3 no-drag sidebar-chat-recent-heading" data-no-drag="true">
                                                 <div class="d-flex align-items-center gap-2 text-muted text-uppercase" style="font-size:.65rem; letter-spacing:.06em;">
                                                     <i class="bx bx-time-five"></i>
                                                     <span>Chat Recent (@recentChatLimit)</span>
@@ -459,6 +460,64 @@
 
                 .sidebar-chat-unread {
                     min-width: 1.25rem;
+                }
+
+                /* mute bell: follow the menu colours instead of the page's card colours */
+                .app-sidebar .notification-mute-btn {
+                    background-color: transparent;
+                    border-color: var(--menu-border-color);
+                    color: var(--menu-prime-color);
+                }
+                .app-sidebar .notification-mute-btn:hover {
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+                .app-sidebar .notification-mute-btn.is-muted {
+                    background-color: var(--primary01);
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+
+                .app-brand-text-short {
+                    display: none;
+                }
+
+                /* collapsed (icon-only) sidebar */
+                @@media (min-width: 992px) {
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .app-brand-text {
+                        display: none;
+                    }
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .app-brand-text-short {
+                        display: inline;
+                    }
+                    /* extra controls widen the menu past 5rem and push every icon off-centre */
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .category-toggle-icon,
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .notification-mute-btn,
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .sidebar-chat-recent-heading {
+                        display: none !important;
+                    }
+                    /* categories can't be expanded from the dots, so always show their icons */
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .slide__category-group.collapsed .category-items {
+                        max-height: none;
+                        opacity: 1;
+                        pointer-events: auto;
+                    }
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar [data-chat-recent-item] .side-menu__item {
+                        padding-inline-start: 1.25rem !important;
+                    }
+                    /* unread count becomes a dot on the chat icon */
+                    [data-vertical-style=overlay][data-toggled=icon-overlay-close]:not([data-icon-overlay=open]) .app-sidebar .side-menu__item .sidebar-chat-unread {
+                        display: block;
+                        position: absolute;
+                        inset-block-start: 0.45rem;
+                        inset-inline-end: 1.4rem;
+                        width: 0.5rem;
+                        height: 0.5rem;
+                        min-width: 0;
+                        padding: 0;
+                        font-size: 0;
+                        border-radius: 50%;
+                    }
                 }
             </style>
 
