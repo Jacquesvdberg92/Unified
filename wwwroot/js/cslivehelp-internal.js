@@ -236,10 +236,15 @@
         const dt = new Date(data.createdAt);
         const ts = isNaN(dt.getTime()) ? '(timestamp unavailable)' : dt.toLocaleString();
         const div = document.createElement('div');
-        div.className = 'mb-1 ' + (data.isSystem ? 'text-muted fst-italic' : '');
+        div.className = 'mb-2 ' + (data.isSystem ? 'text-muted fst-italic' : '');
         div.innerHTML =
-            '<span class="fw-semibold">' + escHtml(ts) + ':</span> ' +
-            escHtml(data.body);
+            '<div class="d-flex gap-1 align-items-center mb-1" style="font-size:.7rem">' +
+                (data.isSystem
+                    ? '<span class="badge bg-secondary" style="font-size:.65rem">System</span>'
+                    : '<span class="fw-semibold">' + escHtml(data.author ?? '') + '</span>') +
+                '<span class="text-muted">' + escHtml(ts) + '</span>' +
+            '</div>' +
+            '<div>' + escHtml(data.body) + '</div>';
 
         // Add image/document if provided
         if (data.imagePath) {

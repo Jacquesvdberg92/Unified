@@ -459,7 +459,6 @@ namespace Unified.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AuthorId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Body")
@@ -2396,8 +2395,7 @@ namespace Unified.Migrations
                     b.HasOne("Unified.Models.Identity.AppUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Unified.Models.CsLiveHelp.CsRequest", "Request")
                         .WithMany("Comments")

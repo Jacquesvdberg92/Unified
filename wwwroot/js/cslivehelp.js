@@ -107,13 +107,15 @@
     }
 
     // The CS board's per-card action modals (see wireCsActionForms)
-    const csActionModalPrefixes = ['statusModal-', 'escalateModal-', 'resetModal-', 'passedModal-'];
+    const csActionModalPrefixes = ['statusModal-', 'escalateModal-', 'resetModal-', 'passedModal-',
+                                   'intStatusModal-', 'intResolveModal-'];
 
     // force: fetch even though some of the card's modals exist, adding only the missing ones
     function ensureCardModals(id, force) {
         if (!force && (document.getElementById('statusModal-' + id) ||
             document.getElementById('csCommentModal-' + id) ||
-            document.getElementById('commentModal-' + id))) {
+            document.getElementById('commentModal-' + id) ||
+            document.getElementById('intCommentModal-' + id))) {
             return Promise.resolve();
         }
 
@@ -945,10 +947,11 @@
     }
 
     function wireCsCommentModal(id) {
-        const modal = document.getElementById('csCommentModal-' + id);
-        if (!modal) return;
-        const form = modal.querySelector('form');
-        if (form && !form.dataset.ajaxWired) ajaxFormSetup(form, modal);
+        ['csCommentModal-', 'intCommentModal-'].forEach(function (prefix) {
+            const modal = document.getElementById(prefix + id);
+            const form  = modal?.querySelector('form');
+            if (form && !form.dataset.ajaxWired) ajaxFormSetup(form, modal);
+        });
     }
 
     function wireAmForms() {
@@ -1006,7 +1009,7 @@
     // for everyone, and this user's own card is moved and re-rendered from the response.
 
     function wireCsActionForms() {
-        const modalSelector = csActionModalPrefixes.concat(['intStatusModal-', 'intResolveModal-'])
+        const modalSelector = csActionModalPrefixes
             .map(function (p) { return '[id^="' + p + '"]'; }).join(', ');
         document.querySelectorAll(modalSelector).forEach(function (modal) {
             modal.querySelectorAll('form').forEach(function (form) {

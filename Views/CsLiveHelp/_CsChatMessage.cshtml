@@ -16,7 +16,7 @@
     var sender      = ViewData["SenderLabel"] as string
                       ?? (isMine ? "You"
                           : Model.IsInternal ? "Internal request"
-                          : Model.AccountManager?.DisplayName ?? Model.AccountManager?.UserName ?? "Account Manager");
+                          : Model.AccountManager?.DisplayName ?? Model.AccountManager?.UserName ?? "Deleted user");
     // Who picked it up — drives the ➕ reaction (✅ follows the status)
     var pickedBy = Model.AssignedTo?.DisplayName ?? Model.AssignedTo?.UserName;
     var initials = string.Concat(sender.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));

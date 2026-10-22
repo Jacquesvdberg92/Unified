@@ -1008,7 +1008,7 @@ public class CsLiveHelpController : Controller
         foreach (var c in comments)
         {
             var timestamp = c.CreatedAt.ToString("MMM dd, HH:mm");
-            var author = c.Author?.DisplayName ?? c.AuthorId;
+            var author = c.Author?.DisplayName ?? c.Author?.UserName ?? "Deleted user";
             var bgClass = c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light";
 
             html.AppendLine($"<div class=\"mb-2 p-2 rounded {bgClass}\">");
@@ -1142,6 +1142,18 @@ public class CsLiveHelpController : Controller
         ViewData["CardPartial"] = cardPartial;
         ViewData["IsMine"]      = isMine;
         return PartialView("_CsChatMessage", req);
+    }
+
+    // ── GET /CsLiveHelp/InternalCardModalsPartial/{id} — Requests All Brands modals for one card ──
+
+    [HttpGet]
+    [Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+    public async Task<IActionResult> InternalCardModalsPartial(int id)
+    {
+        if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
+        var req = await _svc.GetRequestAsync(id);
+        if (req is null) return NotFound();
+        return PartialView("_InternalBoardCardModals", req);
     }
 
     // ── GET /CsLiveHelp/CardModalsPartial/{id} — returns modal markup for one card ──
