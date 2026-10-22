@@ -234,6 +234,42 @@ public class AdminController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetUserPassword(string id, string? newPassword, string? confirmPassword)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null) return NotFound();
+
+        if (_userManager.GetUserId(User) == user.Id)
+        {
+            TempData["Error"] = "Use Profile → Change Password to change your own password.";
+            return RedirectToAction(nameof(EditUser), new { id });
+        }
+
+        if (string.IsNullOrEmpty(newPassword) || newPassword != confirmPassword)
+        {
+            TempData["Error"] = "Enter the new password twice; both entries must match.";
+            return RedirectToAction(nameof(EditUser), new { id });
+        }
+
+        // Also rotates the security stamp, which signs the user out of their other sessions
+        var token  = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+        {
+            TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
+            return RedirectToAction(nameof(EditUser), new { id });
+        }
+
+        // Clear failed attempts and any temporary lockout, but keep a deliberate lock in place
+        await _userManager.ResetAccessFailedCountAsync(user);
+        if (user.LockoutEnd is { } lockoutEnd && lockoutEnd != DateTimeOffset.MaxValue)
+            await _userManager.SetLockoutEndDateAsync(user, null);
+
+        TempData["Success"] = "Password reset. Share it with the user securely and ask them to change it from their profile.";
+        return RedirectToAction(nameof(EditUser), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteUser(string id)
     {
         var user = await _userManager.FindByIdAsync(id);

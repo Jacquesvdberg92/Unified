@@ -180,6 +180,7 @@ Browse to your domain. The Unified login page should load. If you see a 500 erro
 ## Common Post-Deployment Steps (Both Paths)
 
 - **Roles and the first admin** are seeded automatically on first start. Sign in with `Seed:AdminEmail` / `Seed:AdminPassword` and change the password under **Profile → Change Password**.
+- **Forgotten passwords:** a Brand Manager can set a new one under **Admin → Users → Edit → Reset Password**.
 - **HTTPS** — strongly recommended. On IIS, use a certificate via **IIS → Server Certificates**. On NameCheap/Plesk, use the **Free SSL** option (Let's Encrypt) available in Plesk.
 
 ---

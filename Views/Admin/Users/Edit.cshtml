@@ -1,4 +1,5 @@
 @model Unified.Models.Identity.AppUser
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Edit User";
 }
@@ -70,5 +71,36 @@
             <button type="submit" class="btn btn-primary">Save</button>
             <a asp-action="Users" class="btn btn-secondary">Cancel</a>
         </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="mb-1">Reset Password</h5>
+        @if (Model.Id == User.FindFirstValue(ClaimTypes.NameIdentifier))
+        {
+            <p class="text-muted mb-0">To change your own password, use <a href="/Profile/ChangePassword">Profile → Change Password</a>.</p>
+        }
+        else
+        {
+            <p class="text-muted small">
+                Sets a new password for this user and signs them out of their other sessions. A temporary lockout
+                from failed sign-ins is cleared; a lock you applied stays in place.
+            </p>
+            <form asp-action="ResetUserPassword" asp-route-id="@Model.Id" method="post" autocomplete="off">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="newPassword">New password</label>
+                        <input type="password" id="newPassword" name="newPassword" class="form-control" autocomplete="new-password" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="confirmPassword">Confirm new password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" autocomplete="new-password" required />
+                    </div>
+                </div>
+                <div class="form-text mb-3">At least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.</div>
+                <button type="submit" class="btn btn-warning">Reset Password</button>
+            </form>
+        }
     </div>
 </div>
