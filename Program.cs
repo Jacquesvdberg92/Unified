@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
 using Unified.Hubs;
@@ -90,7 +92,19 @@ builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddScoped<Unified.Services.CsMessagingService>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient(AiContentService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(60));
 builder.Services.AddScoped<Unified.Services.AiContentService>();
+
+// Per-user cap on AI rewrites so a single account can't run up the OpenRouter bill
+builder.Services.AddRateLimiter(opts =>
+{
+    opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    opts.AddPolicy(AiContentService.RateLimitPolicy, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(10) }));
+    opts.OnRejected = (ctx, ct) => new ValueTask(ctx.HttpContext.Response.WriteAsJsonAsync(
+        new { message = "You've reached the AI limit for now. Please try again in a few minutes." }, ct));
+});
 builder.Services.AddScoped<Unified.Services.TelegramService>();
 builder.Services.AddHostedService<Unified.Services.CsRequestArchiveService>();
 builder.Services.AddSingleton<IActivityLogQueue, ActivityLogQueueService>();
@@ -135,6 +149,7 @@ app.UseOutputCache();
 app.UseAuthentication();
 app.UseMiddleware<ActivityLoggingMiddleware>();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseSession();
 
 // Map controllers with attribute routing (for API)
