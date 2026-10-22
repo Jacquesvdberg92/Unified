@@ -37,6 +37,7 @@
     const emojiPickerPopoverEl = document.getElementById('emojiPickerPopover');
     const emojiPickerBodyEl = document.getElementById('emojiPickerBody');
     const emojiSearchInputEl = document.getElementById('emojiSearchInput');
+    const emojiPickerTabsEl = document.getElementById('emojiPickerTabs');
     const mentionSuggestionsEl = document.getElementById('mentionSuggestions');
     const gifSearchInputEl = document.getElementById('gifSearchInput');
     const gifSearchBtn = document.getElementById('gifSearchBtn');
@@ -75,9 +76,14 @@
     let emojiPickMode = 'compose';
     let activeConversationCache = new Map();
     let markReadTimerId = 0;
-    let emojiSet = ['😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😢', '😡', '👍', '👏', '🙌', '🔥', '❤️', '💯', '🎉', '🙏', '👀', '🤝', '✅', '❌', '👑'];
-    let emojiCatalog = emojiSet.map(e => ({ emoji: e, search: e.toLowerCase() }));
-    const maxEmojiCount = 800;
+    const fallbackEmojis = ['😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤔', '😢', '😡', '👍', '👏', '🙌', '🔥', '❤️', '💯', '🎉', '🙏', '👀', '🤝', '✅', '❌', '👑'];
+    // Groups of { name, icon, emojis: [[emoji, searchText], ...] }; the full list loads on first open
+    let emojiGroups = [{ name: 'Smileys & People', icon: '😀', emojis: fallbackEmojis.map(e => [e, '']) }];
+    let emojiListLoad = null;
+    let activeEmojiGroup = 'recent';
+    const recentEmojiKey = 'cs-messaging-recent-emojis';
+    const maxRecentEmojis = 24;
+    const maxEmojiSearchResults = 160;
     let emojiSearchText = '';
 
     const gifModal = window.bootstrap ? new bootstrap.Modal(document.getElementById('gifPickerModal')) : null;
@@ -281,6 +287,7 @@
                 `<div class="cs-msg-meta">` +
                     `<span class="cs-msg-author">${escapeHtml(m.authorName || 'User')}</span>` +
                     `<span class="cs-msg-time">${escapeHtml(dateText)}</span>` +
+                    (m.isEdited && !m.isDeleted ? `<span class="cs-msg-edited text-muted ms-1" style="font-size:.7rem">(edited)</span>` : '') +
                     statusHtml +
                     actionsHtml +
                 `</div>` +
@@ -370,8 +377,20 @@
 
         markReadTimerId = window.setTimeout(async function () {
             markReadTimerId = 0;
-            await postJson(urls.markRead, { conversationId });
+            // The endpoint binds conversationId from the query string, not the JSON body
+            await postJson(`${urls.markRead}?conversationId=${encodeURIComponent(conversationId)}`, {});
         }, Math.max(0, delayMs || 0));
+    }
+
+    let conversationsRefreshTimerId = 0;
+
+    // Several events often arrive together (message + read receipt), so refetch the list once
+    function scheduleConversationsRefresh() {
+        if (conversationsRefreshTimerId) window.clearTimeout(conversationsRefreshTimerId);
+        conversationsRefreshTimerId = window.setTimeout(function () {
+            conversationsRefreshTimerId = 0;
+            refreshConversations();
+        }, 400);
     }
 
     async function refreshConversations() {
@@ -660,11 +679,12 @@
 
             gifSearchResultsEl.innerHTML = gifs.map(g =>
                 `<div class="col-6 col-md-4 col-lg-3">` +
-                    `<button type="button" class="btn p-0 border w-100 gif-pick" data-url="${escapeAttribute(g.previewUrl || '')}">` +
-                        `<img src="${escapeAttribute(g.previewUrl || '')}" class="img-fluid rounded" alt="GIF" />` +
+                    `<button type="button" class="btn p-0 border w-100 gif-pick" data-url="${escapeAttribute(g.url || g.previewUrl || '')}" title="${escapeAttribute(g.title || 'GIF')}">` +
+                        `<img src="${escapeAttribute(g.previewUrl || '')}" class="img-fluid rounded" alt="${escapeAttribute(g.title || 'GIF')}" loading="lazy" />` +
                     `</button>` +
                 `</div>`
-            ).join('');
+            ).join('') +
+                '<div class="col-12 text-end small text-muted">Powered by GIPHY</div>';
         } catch {
             gifSearchResultsEl.innerHTML = '<div class="col-12 text-danger small">GIF search failed.</div>';
         }
@@ -746,6 +766,7 @@
         emojiPickMode = mode || 'compose';
         reactionPickerTargetMessageId = targetMessageId || 0;
         emojiSearchText = '';
+        activeEmojiGroup = 'recent';
 
         if (emojiSearchInputEl) {
             emojiSearchInputEl.value = '';
@@ -755,9 +776,23 @@
         emojiPickerPopoverEl.classList.remove('d-none');
         positionEmojiPicker(anchorEl || openEmojiPickerBtn || messageBodyEl);
 
+        loadEmojiListAsync().then(function () {
+            if (!emojiPickerPopoverEl.classList.contains('d-none')) renderEmojiPicker();
+        });
+
         if (emojiSearchInputEl) {
             emojiSearchInputEl.focus();
         }
+    }
+
+    function insertAtCursor(text) {
+        const value = messageBodyEl.value || '';
+        const start = messageBodyEl.selectionStart ?? value.length;
+        const end = messageBodyEl.selectionEnd ?? value.length;
+        messageBodyEl.value = value.slice(0, start) + text + value.slice(end);
+        const caret = start + text.length;
+        messageBodyEl.focus();
+        messageBodyEl.setSelectionRange(caret, caret);
     }
 
     function escapeHtml(s) {
@@ -909,75 +944,89 @@
         });
     }
 
-    function normalizeEmojiData(raw) {
-        if (!raw || typeof raw !== 'object') return [];
-
-        const values = [];
-        Object.keys(raw).forEach(groupName => {
-            const group = raw[groupName];
-            if (!Array.isArray(group)) return;
-
-            group.forEach(item => {
-                const emoji = item?.emoji;
-                if (!emoji) return;
-
-                const keywords = Array.isArray(item.keywords) ? item.keywords.join(' ') : '';
-                const description = item.description || '';
-
-                values.push({
-                    emoji,
-                    search: `${emoji} ${description} ${keywords}`.toLowerCase()
-                });
-            });
-        });
-
-        const seen = new Set();
-        const unique = [];
-        values.forEach(v => {
-            if (!v.emoji || seen.has(v.emoji)) return;
-            seen.add(v.emoji);
-            unique.push(v);
-        });
-
-        return unique;
+    function getRecentEmojis() {
+        try {
+            const stored = JSON.parse(window.localStorage.getItem(recentEmojiKey) || '[]');
+            return Array.isArray(stored) ? stored.filter(e => typeof e === 'string').slice(0, maxRecentEmojis) : [];
+        } catch {
+            return [];
+        }
     }
 
-    async function loadEmojiSetAsync() {
-        const listUrl = urls.emojiList;
-        if (!listUrl) return;
-
+    function rememberEmoji(emoji) {
+        const recent = [emoji, ...getRecentEmojis().filter(e => e !== emoji)].slice(0, maxRecentEmojis);
         try {
-            const res = await fetch(listUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            if (!res.ok) return;
-            const raw = await res.json();
-            const parsed = normalizeEmojiData(raw);
-            if (parsed.length) {
-                emojiCatalog = parsed.slice(0, maxEmojiCount);
-                emojiSet = emojiCatalog.map(x => x.emoji);
-            }
+            window.localStorage.setItem(recentEmojiKey, JSON.stringify(recent));
         } catch {
-            // Keep fallback set
+            // Recents are a convenience only
         }
+    }
+
+    function loadEmojiListAsync() {
+        if (emojiListLoad || !urls.emojiList) return emojiListLoad || Promise.resolve();
+
+        emojiListLoad = fetch(urls.emojiList)
+            .then(res => res.ok ? res.json() : null)
+            .then(groups => {
+                if (Array.isArray(groups) && groups.length) {
+                    emojiGroups = groups.filter(g => g && Array.isArray(g.emojis) && g.emojis.length);
+                }
+            })
+            .catch(function () {
+                emojiListLoad = null; // Keep the fallback set and retry on the next open
+            });
+
+        return emojiListLoad;
+    }
+
+    function renderEmojiTabs() {
+        if (!emojiPickerTabsEl) return;
+
+        const tabs = [{ key: 'recent', icon: '🕘', name: 'Recently used' }]
+            .concat(emojiGroups.map(g => ({ key: g.name, icon: g.icon || g.emojis[0][0], name: g.name })));
+
+        emojiPickerTabsEl.innerHTML = tabs.map(t =>
+            `<button type="button" class="cs-emoji-tab${t.key === activeEmojiGroup ? ' active' : ''}" data-group="${escapeAttribute(t.key)}" title="${escapeAttribute(t.name)}">${escapeHtml(t.icon)}</button>`
+        ).join('');
+        emojiPickerTabsEl.classList.toggle('d-none', !!emojiSearchText.trim());
     }
 
     function renderEmojiPicker() {
         if (!emojiPickerBodyEl) return;
 
-        const q = (emojiSearchText || '').trim().toLowerCase();
-        const filteredCatalog = !q
-            ? emojiCatalog
-            : emojiCatalog.filter(item => item.search.includes(q));
-        const filtered = filteredCatalog.map(item => item.emoji);
+        renderEmojiTabs();
 
-        if (!filtered.length) {
+        // Only one category (or a capped set of search hits) is in the DOM at a time, so opening
+        // the picker stays quick on slow machines
+        const q = (emojiSearchText || '').trim().toLowerCase();
+        let emojis;
+        if (q) {
+            emojis = [];
+            for (const group of emojiGroups) {
+                for (const [emoji, search] of group.emojis) {
+                    if (emoji === q || search.includes(q)) emojis.push(emoji);
+                    if (emojis.length >= maxEmojiSearchResults) break;
+                }
+                if (emojis.length >= maxEmojiSearchResults) break;
+            }
+        } else if (activeEmojiGroup === 'recent') {
+            emojis = getRecentEmojis();
+            if (!emojis.length) emojis = fallbackEmojis;
+        } else {
+            const group = emojiGroups.find(g => g.name === activeEmojiGroup) || emojiGroups[0];
+            emojis = group ? group.emojis.map(e => e[0]) : [];
+        }
+
+        if (!emojis.length) {
             emojiPickerBodyEl.innerHTML = '<div class="small text-muted px-1 py-2">No emoji found.</div>';
             return;
         }
 
         emojiPickerBodyEl.innerHTML =
             `<div class="cs-emoji-grid">` +
-            filtered.slice(0, maxEmojiCount).map(e => `<button type="button" class="btn btn-light border btn-sm emoji-pick" data-emoji="${escapeAttribute(e)}">${escapeHtml(e)}</button>`).join('') +
+            emojis.map(e => `<button type="button" class="emoji-pick" data-emoji="${escapeAttribute(e)}">${escapeHtml(e)}</button>`).join('') +
             `</div>`;
+        emojiPickerBodyEl.scrollTop = 0;
     }
 
     const sharedConnection = window.UnifiedLiveNotifications?.connection || null;
@@ -995,11 +1044,8 @@
         connection.on('MessageAdded', async function (evt) {
             if (!evt) return;
 
-            console.log(`[SignalR] MessageAdded event received:`, evt);
-
             const isIncomingForActive = evt.conversationId === activeConversationId && evt.message?.authorUserId !== currentUserId;
             if (evt.conversationId === activeConversationId && evt.message) {
-                console.log(`[SignalR] Rendering message for active conversation`, evt.conversationId);
                 messageThreadEl.appendChild(renderMessageCard(evt.message));
                 messageThreadEl.scrollTop = messageThreadEl.scrollHeight;
             }
@@ -1011,7 +1057,6 @@
                 ? (existing?.unreadCount || 0)
                 : (evt.conversationId === activeConversationId ? 0 : ((existing?.unreadCount || 0) + 1));
 
-            console.log(`[SignalR] Updating conversation list for conv-${evt.conversationId}, unread: ${nextUnread}`);
             updateConversationListItemSnapshot(evt.conversationId, {
                 unreadCount: nextUnread,
                 lastMessagePreview: previewText.length > 80 ? `${previewText.slice(0, 80)}…` : previewText,
@@ -1033,8 +1078,8 @@
             markMineAsReadForDirectConversation(evt.readerUserId);
         });
 
-        connection.on('ConversationChanged', async function () {
-            await refreshConversations();
+        connection.on('ConversationChanged', function () {
+            scheduleConversationsRefresh();
         });
 
         connection.on('MessageEdited', function (evt) {
@@ -1095,9 +1140,8 @@
                 const id = parseInt(conversationBtn.dataset.conversationId || '0', 10);
                 if (!id) return;
 
-                if (connection && activeConversationId && activeConversationId !== id) {
-                    try { await connection.invoke('LeaveConversation', activeConversationId); } catch (_) {}
-                }
+                // Stay subscribed to the previous conversation: its list entry and notifications
+                // still need live updates after switching away
                 await loadConversation(id);
                 return;
             }
@@ -1135,18 +1179,28 @@
             const emoji = pick.dataset.emoji || '';
             if (!emoji) return;
 
+            rememberEmoji(emoji);
+
             if (emojiPickMode === 'reaction') {
                 if (reactionPickerTargetMessageId) {
                     await toggleReaction(reactionPickerTargetMessageId, emoji);
                 }
             } else {
-                messageBodyEl.value += emoji;
-                messageBodyEl.focus();
+                insertAtCursor(emoji);
             }
 
             if (emojiPickerPopoverEl) {
                 emojiPickerPopoverEl.classList.add('d-none');
             }
+        });
+    }
+
+    if (emojiPickerTabsEl) {
+        emojiPickerTabsEl.addEventListener('click', function (e) {
+            const tab = e.target.closest('.cs-emoji-tab');
+            if (!tab) return;
+            activeEmojiGroup = tab.dataset.group || 'recent';
+            renderEmojiPicker();
         });
     }
 
@@ -1205,7 +1259,8 @@
     document.addEventListener('click', function (e) {
         if (!emojiPickerPopoverEl || emojiPickerPopoverEl.classList.contains('d-none')) return;
 
-        const clickedInsidePicker = !!e.target.closest('#emojiPickerPopover');
+        // composedPath still holds the picker when the clicked tab was re-rendered away
+        const clickedInsidePicker = e.composedPath().includes(emojiPickerPopoverEl);
         const clickedEmojiTrigger = !!e.target.closest('#openEmojiPickerBtn, .quick-reaction[data-emoji="+"]');
         if (clickedInsidePicker || clickedEmojiTrigger) return;
 
@@ -1474,10 +1529,6 @@
             });
         }
     }
-
-    loadEmojiSetAsync().then(function () {
-        renderEmojiPicker();
-    });
 
     if (activeConversationId) {
         loadConversation(activeConversationId);

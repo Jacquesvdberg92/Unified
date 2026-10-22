@@ -109,6 +109,7 @@ builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddScoped<Unified.Services.CsMessagingService>();
 builder.Services.AddScoped<Unified.Services.WithdrawalService>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient(Unified.Controllers.CsMessagingController.GiphyHttpClientName, c => c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddHttpClient(AiContentService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(60));
 builder.Services.AddScoped<Unified.Services.AiContentService>();
 builder.Services.AddHttpClient(GitHubIssueService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(30));

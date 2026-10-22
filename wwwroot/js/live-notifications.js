@@ -10,7 +10,8 @@
 
     const app = document.getElementById('csMessagingApp');
     const currentUserId = app?.dataset.currentUserId || null;
-    const activeConversationId = app ? (parseInt(app.dataset.activeConversationId || '0', 10) || 0) : 0;
+    // Read on each event: the chat page switches conversations without reloading
+    const getActiveConversationId = () => app ? (parseInt(app.dataset.activeConversationId || '0', 10) || 0) : 0;
     const activePath = (window.location.pathname || '').toLowerCase();
     const onMessagingPage = activePath.startsWith('/csmessaging');
 
@@ -57,12 +58,12 @@
             return;
         }
 
-        if (onMessagingPage && activeConversationId && evt.conversationId === activeConversationId) {
+        if (onMessagingPage && evt.conversationId === getActiveConversationId()) {
             return;
         }
 
         const previewText = getPreviewText(message);
-        const authorName = message?.authorUser?.displayName || 'Someone';
+        const authorName = message.authorName || 'Someone';
 
         NotificationManager.handleNotification({
             type: 'newMessage',

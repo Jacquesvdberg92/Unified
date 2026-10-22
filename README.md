@@ -48,6 +48,7 @@ Set these in `appsettings.json`, environment variables (`Section__Key`) or user 
 | `ConnectionStrings:DefaultConnection` | SQL Server connection string |
 | `Seed:AdminEmail` / `Seed:AdminPassword` | Bootstrap Brand Manager account, created only when the database has no users |
 | `AI:ApiKey` | [OpenRouter](https://openrouter.ai/keys) API key for "Improve with AI". Leave empty to disable |
+| `Giphy:ApiKey` | [GIPHY](https://developers.giphy.com/dashboard/) API key for GIF search in Chat. Leave empty to hide the GIF button |
 | `AI:Model` / `AI:FallbackModels` | Defaults to `anthropic/claude-haiku-5.5`, falling back to `openai/gpt-6-luna` |
 | `DataProtection:KeysPath` | Folder for the encryption key ring (Vault passwords, login cookies). Back it up with the database |
 | `ForwardedHeaders:KnownProxies` | Extra reverse-proxy IPs to trust; proxies on the same machine are trusted already |

@@ -673,8 +673,28 @@
                         }
                     }
 
+                    let badgeRefreshTimerId = 0;
+                    function scheduleRecentChatBadgesRefresh() {
+                        if (badgeRefreshTimerId) clearTimeout(badgeRefreshTimerId);
+                        badgeRefreshTimerId = setTimeout(function () {
+                            badgeRefreshTimerId = 0;
+                            refreshRecentChatBadges();
+                        }, 400);
+                    }
+
                     function wireSidebarChatRealtime() {
                         if (!isChatUser) return;
+
+                        // Reuse the page's existing chat connection rather than opening a second one.
+                        // The server sends ConversationChanged to a conversation's members only,
+                        // including the reader's own tabs when they mark it read.
+                        const shared = window.UnifiedLiveNotifications?.connection;
+                        if (shared) {
+                            shared.on('ConversationChanged', scheduleRecentChatBadgesRefresh);
+                            shared.onreconnected(scheduleRecentChatBadgesRefresh);
+                            return;
+                        }
+
                         if (typeof window.signalR === 'undefined' || !window.signalR?.HubConnectionBuilder) return;
 
                         const connection = new window.signalR.HubConnectionBuilder()
@@ -682,9 +702,9 @@
                             .withAutomaticReconnect()
                             .build();
 
-                        connection.on('ConversationChanged', refreshRecentChatBadges);
-                        connection.on('ConversationReadUpdated', refreshRecentChatBadges);
-                        connection.start().then(refreshRecentChatBadges).catch(function () {});
+                        connection.on('ConversationChanged', scheduleRecentChatBadgesRefresh);
+                        connection.onreconnected(scheduleRecentChatBadgesRefresh);
+                        connection.start().catch(function () {});
                     }
 
                     /* ── main init ── */
@@ -720,8 +740,8 @@
                             });
                         });
 
+                        // Badges are rendered fresh by the server; only live changes need a refetch
                         wireSidebarChatRealtime();
-                        refreshRecentChatBadges();
                     }
 
                     if (document.readyState === 'loading') {

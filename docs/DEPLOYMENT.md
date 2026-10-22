@@ -72,6 +72,7 @@ Also set the following (see [Configuration Reference](#configuration-reference) 
 - `Seed:AdminEmail` and `Seed:AdminPassword`, required for a fresh database
 - `DataProtection:KeysPath`, recommended
 - `AI:ApiKey`, optional
+- `Giphy:ApiKey`, optional, enables GIF search in Chat
 - `GitHub:Token`, needed for Report a bug to create GitHub issues
 
 ### Step 6 — Apply Database Migrations
@@ -199,6 +200,8 @@ Settings can go in `appsettings.json`, in `appsettings.Production.json`, or in e
 | `AI:FallbackModels` | `["openai/gpt-6-luna"]` | Tried in order if the main model fails or is unavailable |
 | `AI:ReasoningEffort` | `none` | Leave as `none` for rewriting; reasoning tokens are billed as output |
 | `AI:MaxOutputTokens` | `4000` | Upper bound on each response |
+| `Giphy:ApiKey` | *(empty)* | GIPHY key from https://developers.giphy.com/dashboard/ (create an API app). Empty hides the GIF button in Chat. The server must reach `api.giphy.com` and browsers `media*.giphy.com` |
+| `Giphy:Rating` | `g` | Highest content rating returned (`g`, `pg`, `pg-13`, `r`) |
 | `GitHub:Token` | *(empty)* | Fine-grained token with **Issues** and **Contents** read/write on the repo below. Empty keeps bug reports in the app until it's set |
 | `GitHub:Owner` / `GitHub:Repo` | `Jacquesvdberg92` / `Unified` | Where Report a bug creates issues |
 | `GitHub:IssueLabels` | `["bug", "user-report"]` | Labels added to every reported issue |

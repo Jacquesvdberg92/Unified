@@ -19,7 +19,7 @@
      data-delete-message-url-base="@Url.Action("DeleteMessage", "CsMessaging", new { id = 0 })"
      data-add-member-url-base="@Url.Action("AddMember", "CsMessaging", new { id = 0 })"
      data-remove-member-url-base="@Url.Action("RemoveMember", "CsMessaging", new { id = 0 })"
-     data-emoji-list-url="~/assets/js/full-emoji-list.json"
+     data-emoji-list-url="@Url.Content("~/assets/js/chat-emoji.json")"
      data-active-conversation-id="@(active?.ConversationId)"
      data-current-user-id="@Model.CurrentUserId">
 
@@ -204,6 +204,10 @@
                                 <div class="cs-msg-meta">
                                     <span class="cs-msg-author">@msg.AuthorName</span>
                                     <span class="cs-msg-time">@msg.CreatedAt.ToLocalTime().ToString("g")</span>
+                                    @if (msg.IsEdited && !msg.IsDeleted)
+                                    {
+                                        <span class="cs-msg-edited text-muted ms-1" style="font-size:.7rem">(edited)</span>
+                                    }
                                     @if (msg.IsMine)
                                     {
                                         <span class="cs-msg-status" title="@(msg.IsReadByAllOthers ? "Read" : "Sent")">@(msg.IsReadByAllOthers ? "✓✓" : "✓")</span>
@@ -249,7 +253,7 @@
                 </div>
             </div>
 
-            <footer class="chat-footer cs-chat-composer">
+            <footer class="chat-footer cs-chat-composer @(Model.GifSearchEnabled ? "" : "no-gif")">
                 <input type="file" id="attachmentInput" class="d-none" accept="image/png,image/jpeg,image/jpg,image/webp" />
                 <button type="button" aria-label="attachment" class="btn btn-primary1-light me-2 btn-icon btn-send" id="openAttachmentBtn">
                     <i class="ri-attachment-2"></i>
@@ -257,9 +261,12 @@
                 <button type="button" aria-label="emoji" class="btn btn-icon me-2 btn-primary2 emoji-picker" id="openEmojiPickerBtn">
                     <i class="ri-emotion-line"></i>
                 </button>
-                <button type="button" aria-label="gif" class="btn btn-icon me-2 btn-primary3-light" id="openGifPickerBtn">
-                    <i class="ri-movie-2-line"></i>
-                </button>
+                @if (Model.GifSearchEnabled)
+                {
+                    <button type="button" aria-label="gif" class="btn btn-icon me-2 btn-primary3-light" id="openGifPickerBtn">
+                        <i class="ri-movie-2-line"></i>
+                    </button>
+                }
                 <div class="position-relative flex-fill">
                     <textarea id="messageBody" class="form-control chat-message-space" rows="1" maxlength="5000" placeholder="Type your message here..."></textarea>
                     <div id="mentionSuggestions" class="cs-mention-suggestions d-none"></div>
@@ -281,6 +288,7 @@
         <div class="cs-emoji-popover-search p-2 border-bottom">
             <input id="emojiSearchInput" class="form-control form-control-sm" placeholder="Search emoji..." />
         </div>
+        <div class="cs-emoji-tabs border-bottom" id="emojiPickerTabs"></div>
         <div class="cs-emoji-popover-body" id="emojiPickerBody"></div>
     </div>
 
@@ -610,6 +618,10 @@
             background: var(--chat-surface);
         }
 
+        .chat-footer.no-gif {
+            grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+        }
+
         .chat-message-space {
             min-height: 40px;
             max-height: 140px;
@@ -692,7 +704,44 @@
             height: 32px;
             line-height: 1;
             padding: 0;
+            font-size: 1.25rem;
+            border: 0;
+            border-radius: .35rem;
+            background: transparent;
+        }
+
+        .emoji-pick:hover,
+        .emoji-pick:focus-visible {
+            background: rgba(13, 110, 253, .1);
+        }
+
+        .cs-emoji-tabs {
+            display: flex;
+            gap: .15rem;
+            padding: .25rem .5rem;
+            overflow-x: auto;
+        }
+
+        .cs-emoji-tab {
+            flex: 0 0 auto;
+            width: 32px;
+            height: 30px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
             font-size: 1.1rem;
+            line-height: 1;
+            padding: 0;
+            opacity: .6;
+        }
+
+        .cs-emoji-tab:hover,
+        .cs-emoji-tab.active {
+            opacity: 1;
+        }
+
+        .cs-emoji-tab.active {
+            border-bottom-color: var(--primary-color, #0d6efd);
         }
 
         @@media (max-width: 991.98px) {
@@ -706,6 +755,10 @@
 
             .chat-footer {
                 grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+            }
+
+            .chat-footer.no-gif {
+                grid-template-columns: auto auto minmax(0, 1fr) auto;
             }
 
             .cs-attachment-preview-card {

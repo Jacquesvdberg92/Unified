@@ -136,9 +136,19 @@ public class CsMessagingService
         };
     }
 
+    public Task<List<string>> GetActiveMemberIdsAsync(int conversationId) =>
+        _db.CsConversationMembers
+            .Where(m => m.ConversationId == conversationId && m.IsActive)
+            .Select(m => m.UserId)
+            .ToListAsync();
+
     public async Task<int?> StartDirectAsync(string currentUserId, string otherUserId)
     {
-        if (currentUserId == otherUserId) return null;
+        if (string.IsNullOrWhiteSpace(otherUserId) || currentUserId == otherUserId) return null;
+
+        // Same rule as groups: direct chats are only with other chat users
+        var eligible = await GetEligibleUsersAsync(currentUserId);
+        if (!eligible.Any(u => u.UserId == otherUserId)) return null;
 
         var existing = await _db.CsConversations
             .Where(c => !c.IsGroup && !c.IsArchived)
@@ -533,20 +543,26 @@ public class CsMessagingService
         return 3;
     }
 
-    private static string? NormalizeGifUrl(string? gifUrl)
+    // Only pasted uploads and GIPHY media may be shown inline, so a crafted request can't make
+    // every member's browser load an arbitrary external image.
+    private const string PastedUploadPrefix = "/uploads/cs-messages/";
+
+    public static string? NormalizeGifUrl(string? gifUrl)
     {
         if (string.IsNullOrWhiteSpace(gifUrl)) return null;
         var value = gifUrl.Trim();
 
-        // Allow app-relative media URLs (e.g. pasted uploads under /uploads/...)
-        if (value.StartsWith('/'))
-            return value;
+        if (value.StartsWith(PastedUploadPrefix, StringComparison.OrdinalIgnoreCase))
+            return value.Contains("..", StringComparison.Ordinal) ? null : value;
 
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)) return null;
-        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             return null;
-        return value;
+
+        var host = uri.Host;
+        var isGiphy = string.Equals(host, "giphy.com", StringComparison.OrdinalIgnoreCase) ||
+                      host.EndsWith(".giphy.com", StringComparison.OrdinalIgnoreCase);
+        return isGiphy ? value : null;
     }
 
     private static CsMessageViewModel ToMessageViewModel(CsMessage message, string currentUserId, IReadOnlyCollection<CsConversationMember> activeMembers)

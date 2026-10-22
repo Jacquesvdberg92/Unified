@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Memory;
 using Unified.Hubs;
 using Unified.Models.CsMessaging;
 using Unified.Models.Identity;
@@ -19,6 +20,10 @@ public class CsMessagingController : Controller
     private readonly IWebHostEnvironment _env;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly HubConnectionTracker _connections;
+    private readonly IConfiguration _configuration;
+    private readonly IMemoryCache _cache;
+
+    public const string GiphyHttpClientName = "giphy";
 
     public CsMessagingController(
         CsMessagingService svc,
@@ -26,7 +31,9 @@ public class CsMessagingController : Controller
         IHubContext<CsMessagingHub> hub,
         IWebHostEnvironment env,
         IHttpClientFactory httpClientFactory,
-        HubConnectionTracker connections)
+        HubConnectionTracker connections,
+        IConfiguration configuration,
+        IMemoryCache cache)
     {
         _svc = svc;
         _users = users;
@@ -34,6 +41,36 @@ public class CsMessagingController : Controller
         _env = env;
         _httpClientFactory = httpClientFactory;
         _connections = connections;
+        _configuration = configuration;
+        _cache = cache;
+    }
+
+    private string? GiphyApiKey => _configuration["Giphy:ApiKey"] is { Length: > 0 } key ? key : null;
+
+    /// <summary>
+    /// Tells only the conversation's members (all their open tabs) that its list entry changed,
+    /// instead of every chat user, so a message in one chat doesn't make every client refetch.
+    /// </summary>
+    private async Task NotifyConversationChangedAsync(int conversationId, params string[] extraUserIds)
+    {
+        var userIds = (await _svc.GetActiveMemberIdsAsync(conversationId))
+            .Concat(extraUserIds)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (userIds.Count == 0) return;
+
+        await _hub.Clients.Users(userIds).SendAsync("ConversationChanged", new { conversationId });
+    }
+
+    /// <summary>
+    /// Adds the members' already-open connections to a new conversation's group, so they get its
+    /// messages live without a reload (the hub only joins groups when a connection starts).
+    /// </summary>
+    private async Task SubscribeMembersAsync(int conversationId)
+    {
+        foreach (var userId in await _svc.GetActiveMemberIdsAsync(conversationId))
+            foreach (var connectionId in _connections.GetConnections(userId))
+                await _hub.Groups.AddToGroupAsync(connectionId, $"conv-{conversationId}");
     }
 
     [HttpGet]
@@ -60,7 +97,8 @@ public class CsMessagingController : Controller
             CurrentUserId = userId,
             Conversations = conversations,
             ActiveConversation = activeConversation,
-            EligibleUsers = eligibleUsers
+            EligibleUsers = eligibleUsers,
+            GifSearchEnabled = GiphyApiKey is not null
         };
 
         return View(model);
@@ -102,7 +140,8 @@ public class CsMessagingController : Controller
         if (!conversationId.HasValue)
             return BadRequest(new { success = false, error = "Failed to start direct conversation." });
 
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = conversationId.Value });
+        await SubscribeMembersAsync(conversationId.Value);
+        await NotifyConversationChangedAsync(conversationId.Value);
         return Json(new { success = true, conversationId = conversationId.Value });
     }
 
@@ -119,7 +158,8 @@ public class CsMessagingController : Controller
         if (!result.Success || !result.ConversationId.HasValue)
             return BadRequest(new { success = false, error = result.Error ?? "Failed to create group." });
 
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = result.ConversationId.Value });
+        await SubscribeMembersAsync(result.ConversationId.Value);
+        await NotifyConversationChangedAsync(result.ConversationId.Value);
         return Json(new { success = true, conversationId = result.ConversationId.Value });
     }
 
@@ -135,19 +175,13 @@ public class CsMessagingController : Controller
         if (!result.Success || result.Message is null)
             return BadRequest(new { success = false, error = result.Error ?? "Failed to post message." });
 
-        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Message added to conversation {id} by user {userId}");
-
         await _hub.Clients.Group($"conv-{id}").SendAsync("MessageAdded", new
         {
             conversationId = id,
             message = result.Message
         });
 
-        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Broadcast MessageAdded to group conv-{id}");
-
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
-
-        System.Diagnostics.Debug.WriteLine($"[CsMessaging] Broadcast ConversationChanged to cs-messaging group");
+        await NotifyConversationChangedAsync(id);
 
         return Json(new { success = true, message = result.Message });
     }
@@ -229,7 +263,7 @@ public class CsMessagingController : Controller
             conversationId = id,
             member = result.Member
         });
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
+        await NotifyConversationChangedAsync(id);
 
         return Json(new { success = true, member = result.Member });
     }
@@ -254,7 +288,8 @@ public class CsMessagingController : Controller
         foreach (var connectionId in _connections.GetConnections(userId))
             await _hub.Groups.RemoveFromGroupAsync(connectionId, $"conv-{id}");
 
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
+        // The removed member is included so the group drops out of their lists
+        await NotifyConversationChangedAsync(id, userId);
 
         return Json(new { success = true });
     }
@@ -272,7 +307,8 @@ public class CsMessagingController : Controller
             conversationId,
             readerUserId = userId
         });
-        await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId });
+        // Only the reader's own unread counts changed, so only their tabs need to refresh
+        await _hub.Clients.User(userId).SendAsync("ConversationChanged", new { conversationId });
 
         return Json(new { success = true });
     }
@@ -283,44 +319,53 @@ public class CsMessagingController : Controller
         var term = (q ?? string.Empty).Trim();
         if (term.Length < 2)
             return Json(new { success = true, gifs = Array.Empty<object>() });
+        if (term.Length > 50)
+            term = term[..50];
 
-        var apiKey = "LIVDSRZULELA";
-        var url = $"https://g.tenor.com/v1/search?q={Uri.EscapeDataString(term)}&key={apiKey}&limit=20&media_filter=minimal";
+        var apiKey = GiphyApiKey;
+        if (apiKey is null)
+            return Json(new { success = false, error = "GIF search is not set up. Add a GIPHY API key under Giphy:ApiKey." });
+
+        // Cached so repeated searches don't use up the GIPHY rate limit or wait on the network again
+        var cacheKey = "giphy-search:" + term.ToLowerInvariant();
+        if (_cache.TryGetValue(cacheKey, out List<GifResult>? cached) && cached is not null)
+            return Json(new { success = true, gifs = cached });
+
+        var rating = _configuration["Giphy:Rating"] is { Length: > 0 } r ? r : "g";
+        var url = $"https://api.giphy.com/v1/gifs/search?api_key={Uri.EscapeDataString(apiKey)}&q={Uri.EscapeDataString(term)}&limit=20&rating={Uri.EscapeDataString(rating)}&bundle=messaging_non_clips";
 
         try
         {
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(GiphyHttpClientName);
             using var resp = await client.GetAsync(url);
             if (!resp.IsSuccessStatusCode)
                 return Json(new { success = false, error = "GIF provider is unavailable right now." });
 
-            var json = await resp.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
+            await using var stream = await resp.Content.ReadAsStreamAsync();
+            using var doc = await JsonDocument.ParseAsync(stream);
 
-            var results = new List<object>();
-            if (doc.RootElement.TryGetProperty("results", out var arr) && arr.ValueKind == JsonValueKind.Array)
+            var results = new List<GifResult>();
+            if (doc.RootElement.TryGetProperty("data", out var arr) && arr.ValueKind == JsonValueKind.Array)
             {
                 foreach (var item in arr.EnumerateArray())
                 {
-                    if (!item.TryGetProperty("media", out var media) || media.ValueKind != JsonValueKind.Array || media.GetArrayLength() == 0)
+                    if (!item.TryGetProperty("images", out var images) || images.ValueKind != JsonValueKind.Object)
                         continue;
 
-                    var media0 = media[0];
-                    var tiny = media0.TryGetProperty("tinygif", out var tinyGif) ? tinyGif : media0.TryGetProperty("gif", out var gif) ? gif : default;
-                    if (tiny.ValueKind == JsonValueKind.Undefined) continue;
+                    // Small renditions keep the picker and the chat light on slow connections
+                    var sendUrl = GetGiphyImageUrl(images, "fixed_width") ?? GetGiphyImageUrl(images, "downsized");
+                    if (sendUrl is null) continue;
+                    var previewUrl = GetGiphyImageUrl(images, "fixed_width_small") ?? sendUrl;
 
-                    var previewUrl = tiny.TryGetProperty("url", out var purl) ? purl.GetString() : null;
-                    if (string.IsNullOrWhiteSpace(previewUrl)) continue;
-
-                    results.Add(new
-                    {
-                        id = item.TryGetProperty("id", out var idEl) ? idEl.GetString() : null,
+                    results.Add(new GifResult(
+                        item.TryGetProperty("id", out var idEl) ? idEl.GetString() : null,
                         previewUrl,
-                        title = item.TryGetProperty("title", out var t) ? t.GetString() : "GIF"
-                    });
+                        sendUrl,
+                        item.TryGetProperty("title", out var t) && t.GetString() is { Length: > 0 } title ? title : "GIF"));
                 }
             }
 
+            _cache.Set(cacheKey, results, TimeSpan.FromMinutes(30));
             return Json(new { success = true, gifs = results });
         }
         catch
@@ -328,6 +373,13 @@ public class CsMessagingController : Controller
             return Json(new { success = false, error = "GIF search failed." });
         }
     }
+
+    private static string? GetGiphyImageUrl(JsonElement images, string rendition) =>
+        images.TryGetProperty(rendition, out var r) && r.TryGetProperty("url", out var u) && u.GetString() is { Length: > 0 } value
+            ? value
+            : null;
+
+    private sealed record GifResult(string? Id, string PreviewUrl, string Url, string Title);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
