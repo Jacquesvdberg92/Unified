@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Unified.Data;
@@ -141,6 +142,7 @@ public class UpdatesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AiContentService.RateLimitPolicy)]
     [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.SwissArmyKnife}")]
     public async Task<IActionResult> ImproveWithAi([FromBody] AiImproveRequest request)
     {
@@ -152,10 +154,11 @@ public class UpdatesController : Controller
 
         try
         {
-            var improved = await _ai.ImproveAsync(request.InputText, request.Prompt ?? string.Empty, request.Context ?? "update");
+            var improved = await _ai.ImproveAsync(request.InputText, request.Prompt ?? string.Empty,
+                request.Context ?? "update", HttpContext.RequestAborted);
             return Ok(new { result = improved });
         }
-        catch (Exception ex)
+        catch (AiContentException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
