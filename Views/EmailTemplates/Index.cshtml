@@ -3,7 +3,7 @@
     ViewData["Title"] = "Email Templates";
     var brands = (List<Unified.Models.EmailTemplates.Brand>)ViewBag.Brands;
     var selectedBrandId = (int?)ViewBag.SelectedBrandId;
-    var canEdit = User.IsInRole("BrandManager") || User.IsInRole("TeamLeader") || User.IsInRole("SwissArmyKnife");
+    var canEdit = User.IsInRole("BrandManager") || User.IsInRole("TeamLeader");
 }
 
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">

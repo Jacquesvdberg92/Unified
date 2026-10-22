@@ -6,8 +6,7 @@
 @{
     var r           = Model;
     var isTlManager = User.IsInRole(Unified.Models.Identity.Roles.TeamLeader)
-                   || User.IsInRole(Unified.Models.Identity.Roles.BrandManager)
-                   || User.IsInRole(Unified.Models.Identity.Roles.SwissArmyKnife);
+                   || User.IsInRole(Unified.Models.Identity.Roles.BrandManager);
 }
 
 @* Status move modal *@

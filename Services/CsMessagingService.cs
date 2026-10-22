@@ -12,8 +12,7 @@ public class CsMessagingService
     [
         Roles.CSAgent,
         Roles.TeamLeader,
-        Roles.BrandManager,
-        Roles.SwissArmyKnife
+        Roles.BrandManager
     ];
 
     private readonly AppDbContext _db;
@@ -529,7 +528,7 @@ public class CsMessagingService
 
     private static int GetGroupLimit(IReadOnlyCollection<string> roles)
     {
-        if (roles.Contains(Roles.BrandManager) || roles.Contains(Roles.SwissArmyKnife)) return 10;
+        if (roles.Contains(Roles.BrandManager)) return 10;
         if (roles.Contains(Roles.TeamLeader)) return 5;
         return 3;
     }

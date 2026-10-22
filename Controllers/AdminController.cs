@@ -56,7 +56,7 @@ public class AdminController : Controller
                 || normalizedFilter.Equals("all", StringComparison.OrdinalIgnoreCase)
                 || normalizedFilter.Equals("internal", StringComparison.OrdinalIgnoreCase) && !user.IsExternal
                 || normalizedFilter.Equals("accountmanagers", StringComparison.OrdinalIgnoreCase) && role == Roles.AccountManager
-                || normalizedFilter.Equals("cs", StringComparison.OrdinalIgnoreCase) && (role == Roles.CSAgent || role == Roles.TeamLeader || role == Roles.SwissArmyKnife);
+                || normalizedFilter.Equals("cs", StringComparison.OrdinalIgnoreCase) && (role == Roles.CSAgent || role == Roles.TeamLeader );
 
             return matchesSearch && matchesFilter;
         }).ToList();
@@ -139,7 +139,6 @@ public class AdminController : Controller
         }
 
         await _userManager.AddToRoleAsync(user, role);
-        if (role == Roles.SwissArmyKnife) user.IsSwissArmyKnife = true;
 
         foreach (var tid in teamIds)
             _db.AgentTeams.Add(new AgentTeam { AgentId = user.Id, TeamId = tid });
@@ -183,7 +182,6 @@ public class AdminController : Controller
         user.HasWeekendShift = hasWeekendShift;
         user.HasCsLiveHelp   = hasCsLiveHelp;
         user.HasWdListAccess = hasWdListAccess;
-        user.IsSwissArmyKnife = role == Roles.SwissArmyKnife;
         user.AnydeskId       = anydeskId?.Trim();
 
         var currentRoles = await _userManager.GetRolesAsync(user);
@@ -579,7 +577,6 @@ public class AdminController : Controller
         {
             await _userManager.AddToRoleAsync(user, role);
         }
-        if (role == Roles.SwissArmyKnife) user.IsSwissArmyKnife = true;
         if (role == Roles.AccountManager) user.IsExternal = true;
 
         if (teamIds?.Length > 0)
@@ -713,8 +710,7 @@ public class AdminController : Controller
     {
         ViewBag.AllRoles = new SelectList(new[]
         {
-            Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent,
-            Roles.SwissArmyKnife, Roles.AccountManager, Roles.Finance
+            Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.AccountManager, Roles.Finance
         }, selectedRole);
         ViewBag.AllTeams = _db.Teams.OrderBy(t => t.Name).ToList();
         ViewBag.AllBrands = _db.Brands.OrderBy(b => b.Name).ToList();

@@ -6,7 +6,7 @@ using Unified.Models.Identity;
 
 namespace Unified.Hubs;
 
-[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager},{Roles.SwissArmyKnife}")]
+[Authorize(Roles = $"{Roles.CSAgent},{Roles.TeamLeader},{Roles.BrandManager}")]
 public class CsMessagingHub : Hub
 {
     private readonly AppDbContext _dbContext;

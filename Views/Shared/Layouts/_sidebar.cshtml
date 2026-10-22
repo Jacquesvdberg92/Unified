@@ -23,7 +23,7 @@
                     <nav class="main-menu-container nav nav-pills flex-column sub-open">
                         <ul class="main-menu">
                             @{
-                                var isChatUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager) || User.IsInRole(Roles.SwissArmyKnife);
+                                var isChatUser = User.IsInRole(Roles.CSAgent) || User.IsInRole(Roles.TeamLeader) || User.IsInRole(Roles.BrandManager);
                                 var sidebarChatUserId = isChatUser ? UserManager.GetUserId(User) : null;
                                 var recentChatLimit = 8;
                                 var recentChats = isChatUser && !string.IsNullOrWhiteSpace(sidebarChatUserId)
@@ -123,7 +123,7 @@
                             } @* end !AccountManager *@
 
                             @* ── CS Support ── *@
-                            @if (User.IsInRole("AccountManager") || User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                            @if (User.IsInRole("AccountManager") || User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager"))
                             {
                                 <li class="slide__category-group">
                                     <div class="slide__category" data-category="cs-support">
@@ -148,7 +148,7 @@
                                                 </button>
                                             </li>
                                         }
-                                        @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                        @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager"))
                                         {
                                             <li class="slide d-flex align-items-center">
                                                 <a asp-controller="CsLiveHelp" asp-action="Board" class="side-menu__item flex-grow-1">
@@ -168,7 +168,7 @@
                                                 <a asp-controller="CsLiveHelp" asp-action="RequestsAllBrands" class="side-menu__item">
                                                     <i class="bx bx-globe side-menu__icon"></i>
                                                     <span class="side-menu__label">
-                                                        @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife"))
+                                                        @if (User.IsInRole("TeamLeader") || User.IsInRole("BrandManager"))
                                                         {
                                                             <text>Requests All Brands</text>
                                                         }

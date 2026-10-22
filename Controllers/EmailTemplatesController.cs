@@ -45,7 +45,7 @@ public class EmailTemplatesController : Controller
     }
 
     // GET /EmailTemplates/Create
-    [Authorize(Roles = "BrandManager,TeamLeader,SwissArmyKnife")]
+    [Authorize(Roles = "BrandManager,TeamLeader")]
     public async Task<IActionResult> Create()
     {
         ViewBag.Brands = await _service.GetAllBrandsAsync();
@@ -54,7 +54,7 @@ public class EmailTemplatesController : Controller
 
     // POST /EmailTemplates/Create
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = "BrandManager,TeamLeader,SwissArmyKnife")]
+    [Authorize(Roles = "BrandManager,TeamLeader")]
     public async Task<IActionResult> Create(EmailTemplate model)
     {
         if (!ModelState.IsValid)
@@ -69,7 +69,7 @@ public class EmailTemplatesController : Controller
     }
 
     // GET /EmailTemplates/Edit/5
-    [Authorize(Roles = "BrandManager,TeamLeader,SwissArmyKnife")]
+    [Authorize(Roles = "BrandManager,TeamLeader")]
     public async Task<IActionResult> Edit(int id)
     {
         var template = await _service.GetByIdAsync(id);
@@ -80,7 +80,7 @@ public class EmailTemplatesController : Controller
 
     // POST /EmailTemplates/Edit/5
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = "BrandManager,TeamLeader,SwissArmyKnife")]
+    [Authorize(Roles = "BrandManager,TeamLeader")]
     public async Task<IActionResult> Edit(int id, EmailTemplate model)
     {
         if (id != model.Id) return BadRequest();
@@ -98,7 +98,7 @@ public class EmailTemplatesController : Controller
 
     // POST /EmailTemplates/Delete/5
     [HttpPost, ValidateAntiForgeryToken]
-    [Authorize(Roles = "BrandManager,TeamLeader,SwissArmyKnife")]
+    [Authorize(Roles = "BrandManager,TeamLeader")]
     public async Task<IActionResult> Delete(int id)
     {
         await _service.DeleteAsync(id);

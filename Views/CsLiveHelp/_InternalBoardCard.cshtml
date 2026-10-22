@@ -15,7 +15,7 @@
         CsRequestStatus.Escalated => "Passed to CS",
         _                         => Model.Status.ToString()
     };
-    var isTlManager = User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife");
+    var isTlManager = User.IsInRole("TeamLeader") || User.IsInRole("BrandManager");
     var assignedName = Model.AssignedTo?.DisplayName ?? Model.AssignedTo?.UserName;
     var teamAllocationName = Model.Comments
         .Where(c => c.IsSystemMessage && c.Body.Contains("Team allocation:"))

@@ -183,9 +183,7 @@ public class ReportsController : Controller
             var ids = await _db.AgentTeams
                 .Where(at => teamIds.Contains(at.TeamId)).Select(at => at.AgentId)
                 .Distinct().ToListAsync();
-            var sakIds = await _db.Users.Where(u => u.IsSwissArmyKnife)
-                .Select(u => u.Id).ToListAsync();
-            var all = ids.Union(sakIds).Distinct().ToList();
+            var all = ids;
             query = _db.Users.Where(u => all.Contains(u.Id));
         }
 

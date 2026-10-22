@@ -2,7 +2,7 @@
 @using Unified.Models.Identity
 @{
     ViewData["Title"] = "Account Requests";
-    var allRoles = new[] { Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.AccountManager, Roles.Finance, Roles.SwissArmyKnife };
+    var allRoles = new[] { Roles.CSAgent, Roles.TeamLeader, Roles.BrandManager, Roles.AccountManager, Roles.Finance };
     var pendingCount = Model.Count(r => r.Status == AccountRequestStatus.Pending);
 }
 

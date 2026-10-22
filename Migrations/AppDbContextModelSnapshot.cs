@@ -1070,9 +1070,6 @@ namespace Unified.Migrations
                     b.Property<bool>("IsExternal")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsSwissArmyKnife")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Language")
                         .HasColumnType("nvarchar(max)");
 

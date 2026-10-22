@@ -77,7 +77,7 @@ public class WorkDistributionController : Controller
 
     // GET /WorkDistribution/MentionCandidates
     [HttpGet]
-    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent},{Roles.SwissArmyKnife}")]
+    [Authorize(Roles = $"{Roles.BrandManager},{Roles.TeamLeader},{Roles.CSAgent}")]
     public async Task<IActionResult> MentionCandidates()
     {
         if (!Request.Headers.ContainsKey("X-Requested-With")) return BadRequest();
@@ -179,14 +179,12 @@ public class WorkDistributionController : Controller
         var bmUsers      = await _users.GetUsersInRoleAsync(Roles.BrandManager);
         var tlUsers      = await _users.GetUsersInRoleAsync(Roles.TeamLeader);
         var csUsers      = await _users.GetUsersInRoleAsync(Roles.CSAgent);
-        var sakUsers     = await _users.GetUsersInRoleAsync(Roles.SwissArmyKnife);
 
         var excludedIds  = amUsers.Select(u => u.Id).ToHashSet();
 
         return bmUsers
             .Concat(tlUsers)
             .Concat(csUsers)
-            .Concat(sakUsers)
             .Where(u => !u.IsExternal)
             .Where(u => !excludedIds.Contains(u.Id))
             .DistinctBy(u => u.Id)

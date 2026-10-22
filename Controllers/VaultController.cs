@@ -280,13 +280,7 @@ public class VaultController : Controller
                 .Distinct()
                 .ToListAsync();
 
-            var sakIds = await _db.Users
-                .Where(u => u.IsSwissArmyKnife)
-                .Select(u => u.Id)
-                .ToListAsync();
-
-            var allIds = agentIds.Union(sakIds).Distinct().ToList();
-            query = _db.Users.Where(u => allIds.Contains(u.Id));
+            query = _db.Users.Where(u => agentIds.Contains(u.Id));
         }
 
         return await query

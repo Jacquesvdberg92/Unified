@@ -33,7 +33,7 @@ public static class SeedData
         }
 
         // -- Roles --------------------------------------------------------
-        string[] roles = [Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.SwissArmyKnife, Roles.AccountManager, Roles.Finance];
+        string[] roles = [Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent, Roles.AccountManager, Roles.Finance];
         foreach (var role in roles)
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));

@@ -33,7 +33,7 @@ public class WithdrawalService
     // ── Access ────────────────────────────────────────────────────────────
 
     /// <summary>Roles that always see the WD List. Everyone else needs <see cref="AppUser.HasWdListAccess"/>.</summary>
-    public static readonly string[] AlwaysAllowedRoles = [Roles.TeamLeader, Roles.BrandManager, Roles.SwissArmyKnife];
+    public static readonly string[] AlwaysAllowedRoles = [Roles.TeamLeader, Roles.BrandManager];
 
     public async Task<bool> CanAccessAsync(ClaimsPrincipal user, string? userId)
     {

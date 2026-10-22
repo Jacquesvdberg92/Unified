@@ -14,7 +14,7 @@ public class ScheduleServiceTests
         var team  = new Team { Name = "Alpha" };
         db.Teams.Add(team);
 
-        var agent = new AppUser { Id = "agent-1", UserName = "agent1", DisplayName = "Agent One", HasWeekendShift = false, IsSwissArmyKnife = false };
+        var agent = new AppUser { Id = "agent-1", UserName = "agent1", DisplayName = "Agent One", HasWeekendShift = false };
         db.Users.Add(agent);
         await db.SaveChangesAsync();
 
@@ -32,7 +32,7 @@ public class ScheduleServiceTests
         var (db, svc, _, _) = await BuildAsync(nameof(EligibleAgents_ExcludesHasWeekendShift));
 
         // Add an agent who already has a fixed weekend shift
-        db.Users.Add(new AppUser { Id = "agent-2", UserName = "agent2", DisplayName = "Weekend Agent", HasWeekendShift = true, IsSwissArmyKnife = false });
+        db.Users.Add(new AppUser { Id = "agent-2", UserName = "agent2", DisplayName = "Weekend Agent", HasWeekendShift = true });
         await db.SaveChangesAsync();
 
         var eligible = await svc.GetAgentsEligibleForWeekendAsync();
@@ -58,24 +58,6 @@ public class ScheduleServiceTests
         var candidates = await svc.SpinWheelCandidatesAsync(weekStart);
 
         Assert.DoesNotContain(candidates, u => u.Id == agent.Id);
-    }
-
-    // ── SAK union ─────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task GetWeeklySchedule_IncludesSAKAgents()
-    {
-        var (db, svc, team, _) = await BuildAsync(nameof(GetWeeklySchedule_IncludesSAKAgents));
-
-        var sak = new AppUser { Id = "sak-1", UserName = "sak1", DisplayName = "Swiss Knife", IsSwissArmyKnife = true, HasWeekendShift = false };
-        db.Users.Add(sak);
-        var weekStart = new DateTime(2025, 1, 6);
-        db.AgentSchedules.Add(new AgentSchedule { AgentId = sak.Id, Date = weekStart, Type = ScheduleEntryType.Regular });
-        await db.SaveChangesAsync();
-
-        var schedule = await svc.GetWeeklyScheduleAsync(team.Id, weekStart);
-
-        Assert.Contains(schedule, s => s.AgentId == sak.Id);
     }
 
     // ── Time-off overlap guard ─────────────────────────────────────────────

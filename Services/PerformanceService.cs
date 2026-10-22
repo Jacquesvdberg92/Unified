@@ -86,7 +86,7 @@ public class PerformanceService
 
     /// <summary>
     /// Returns agents ordered by average rating descending, optionally scoped to a team
-    /// and/or a review category.  SAK agents are included in all team queries.
+    /// and/or a review category.
     /// </summary>
     public async Task<List<(AppUser Agent, double AvgRating)>> GetTopRatedAgentsAsync(
         int? teamId = null, ReviewCategory? category = null)
@@ -100,12 +100,7 @@ public class PerformanceService
                 .Select(at => at.AgentId)
                 .ToListAsync();
 
-            var sakIds = await _db.Users
-                .Where(u => u.IsSwissArmyKnife)
-                .Select(u => u.Id)
-                .ToListAsync();
-
-            agentIds = teamMembers.Union(sakIds).Distinct().ToList();
+            agentIds = teamMembers.Distinct().ToList();
         }
 
         var itemQuery = _db.ReviewItems
