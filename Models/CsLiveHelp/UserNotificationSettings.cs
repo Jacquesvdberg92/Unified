@@ -9,7 +9,7 @@ namespace Unified.Models.CsLiveHelp
         /// <summary>
         /// The user ID this settings record belongs to
         /// </summary>
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Enable/disable audio notifications globally

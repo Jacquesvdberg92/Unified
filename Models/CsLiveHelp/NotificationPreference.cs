@@ -9,17 +9,17 @@ namespace Unified.Models.CsLiveHelp
         /// <summary>
         /// The user ID this preference belongs to
         /// </summary>
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Context type: "page" (Requests, Board, etc), "request" (specific request), "conversation" (messaging), "group" (messaging group)
         /// </summary>
-        public string ContextType { get; set; }
+        public string ContextType { get; set; } = string.Empty;
 
         /// <summary>
         /// The ID of the context (page name, request ID, conversation ID, group ID)
         /// </summary>
-        public string ContextId { get; set; }
+        public string ContextId { get; set; } = string.Empty;
 
         /// <summary>
         /// Whether notifications are muted for this context

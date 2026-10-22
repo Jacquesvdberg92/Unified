@@ -34,7 +34,7 @@ public class ProfileController : Controller
     /// GET /Profile - View current user's profile
     /// </summary>
     [HttpGet("/Profile")]
-    public async Task<IActionResult> View()
+    public async Task<IActionResult> Index()
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -42,7 +42,7 @@ public class ProfileController : Controller
             return NotFound("User not found");
         }
 
-        return View(user);
+        return View("View", user);
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class ProfileController : Controller
     /// GET /Profile/ChangePassword - Change the current user's password
     /// </summary>
     [HttpGet("/Profile/ChangePassword")]
-    public IActionResult ChangePassword() => View("ChangePassword");
+    public IActionResult ChangePassword() => View();
 
     /// <summary>
     /// POST /Profile/ChangePassword
@@ -85,13 +85,13 @@ public class ProfileController : Controller
         if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword))
         {
             ModelState.AddModelError(string.Empty, "Enter your current password and a new password.");
-            return View("ChangePassword");
+            return View();
         }
 
         if (newPassword != confirmPassword)
         {
             ModelState.AddModelError(string.Empty, "The new password and confirmation don't match.");
-            return View("ChangePassword");
+            return View();
         }
 
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
@@ -101,7 +101,7 @@ public class ProfileController : Controller
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            return View("ChangePassword");
+            return View();
         }
 
         // Changing the password rotates the security stamp; re-issue this browser's cookie
@@ -109,7 +109,7 @@ public class ProfileController : Controller
         _logger.LogInformation("User {UserId} changed their password", user.Id);
 
         TempData["SuccessMessage"] = "Your password has been changed.";
-        return RedirectToAction("View");
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -252,6 +252,6 @@ public class ProfileController : Controller
         _logger.LogInformation("User {UserId} updated their profile", user.Id);
 
         TempData["SuccessMessage"] = "Your profile has been updated successfully.";
-        return RedirectToAction("View");
+        return RedirectToAction(nameof(Index));
     }
 }
