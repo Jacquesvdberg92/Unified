@@ -594,6 +594,6 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasQueryFilter(u => !u.IsArchived);
 
         builder.Entity<UpdateBrand>()
-            .HasQueryFilter(ub => !ub.Update.IsArchived);
+            .HasQueryFilter(ub => !ub.Update!.IsArchived);
     }
 }

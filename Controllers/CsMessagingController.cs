@@ -107,8 +107,10 @@ public class CsMessagingController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateGroup([FromBody] CreateGroupInputModel input)
     {
-        var creatorId = _users.GetUserId(User)!;
-        var roleList = (await _users.GetRolesAsync(await _users.GetUserAsync(User)!)).ToList();
+        var creator = await _users.GetUserAsync(User);
+        if (creator is null) return Unauthorized();
+        var creatorId = creator.Id;
+        var roleList = (await _users.GetRolesAsync(creator)).ToList();
 
         var result = await _svc.CreateGroupAsync(creatorId, input.Name, input.MemberUserIds, roleList);
         if (!result.Success || !result.ConversationId.HasValue)

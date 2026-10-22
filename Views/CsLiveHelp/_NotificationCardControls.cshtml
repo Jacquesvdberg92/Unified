@@ -4,7 +4,7 @@
 
     var requestId = ViewData["RequestId"] as string;
     var pageContext = ViewData["PageContext"] as string ?? "Board";
-    var showClear = ViewData.ContainsKey("ShowClear") ? (bool)ViewData["ShowClear"] : true;
+    var showClear = ViewData["ShowClear"] as bool? ?? true;
 }
 
 @if (!string.IsNullOrEmpty(requestId))

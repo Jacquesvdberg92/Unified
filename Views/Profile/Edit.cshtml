@@ -93,7 +93,7 @@
                                 @if (ViewData.ModelState["displayName"]?.Errors.Any() == true)
                                 {
                                     <div class="invalid-feedback d-block">
-                                        @ViewData.ModelState["displayName"].Errors[0].ErrorMessage
+                                        @ViewData.ModelState["displayName"]!.Errors[0].ErrorMessage
                                     </div>
                                 }
                                 <small class="form-hint">Your name as it will appear to other users.</small>
@@ -126,7 +126,7 @@
                                 @if (ViewData.ModelState["anydeskId"]?.Errors.Any() == true)
                                 {
                                     <div class="invalid-feedback d-block">
-                                        @ViewData.ModelState["anydeskId"].Errors[0].ErrorMessage
+                                        @ViewData.ModelState["anydeskId"]!.Errors[0].ErrorMessage
                                     </div>
                                 }
                                 <small class="form-hint">Your AnyDesk ID for remote access. This is shown to managers and support staff when you request a login via the dashboard widget.</small>
@@ -146,7 +146,7 @@
                                 @if (ViewData.ModelState["avatarFile"]?.Errors.Any() == true)
                                 {
                                     <div class="invalid-feedback d-block">
-                                        @ViewData.ModelState["avatarFile"].Errors[0].ErrorMessage
+                                        @ViewData.ModelState["avatarFile"]!.Errors[0].ErrorMessage
                                     </div>
                                 }
                                 <small class="form-hint">
