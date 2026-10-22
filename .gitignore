@@ -5,6 +5,7 @@ bin/
 .localpilot/
 node_modules/
 .vs/
+.idea/
 *.db
 *.db-shm
 *.db-wal
