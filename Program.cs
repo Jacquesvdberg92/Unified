@@ -107,6 +107,7 @@ builder.Services.AddScoped<Unified.Services.DashboardService>();
 builder.Services.AddScoped<Unified.Services.ReferenceDataService>();
 builder.Services.AddScoped<Unified.Services.CsLiveHelpService>();
 builder.Services.AddScoped<Unified.Services.CsMessagingService>();
+builder.Services.AddScoped<Unified.Services.WithdrawalService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient(AiContentService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(60));
 builder.Services.AddScoped<Unified.Services.AiContentService>();

@@ -17,7 +17,7 @@ Rather than juggling multiple disconnected tools, Unified brings the key operati
 | **Process Templates** | Define and track repeatable internal workflows |
 | **CS Live Allocation** | Real-time customer service allocation and tracking |
 | **POI Simulation** | Point-of-interest simulation with a full activity log |
-| **Finance Workflows** | Finance-department tooling (actively being scoped and expanded) |
+| **Finance Workflows** | Finance-department tooling (actively being scoped and expanded). Includes the **WD List** (beta): a board where staff pick up client withdrawals, track missing documents (POI, POR, POD, CC, BD, CRP), link related tickets and comment |
 | **Identity & Roles** | User authentication, registration, and role-based access via ASP.NET Core Identity |
 
 ---
