@@ -1,0 +1,131 @@
+@model Unified.Controllers.BugReportInputModel
+@{
+    ViewData["Title"] = "Report a Bug";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Bug Reports</a></li>
+            <li class="breadcrumb-item active">Report a Bug</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0"><i class="bx bx-bug me-2"></i>Report a Bug</h5></div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="bugReportForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="PageUrl" />
+                <input type="hidden" asp-for="ClientInfo" id="bugClientInfo" />
+
+                <div class="alert alert-warning">
+                    <div class="fw-semibold mb-1">Before you submit</div>
+                    <ul class="mb-0 ps-3">
+                        <li>Your report becomes a <strong>public</strong> GitHub issue, together with your name, the page you were on, browser details, recent errors and any screenshot. Leave out passwords and client personal details.</li>
+                        <li>Say what you were doing, what happened, and what you expected to happen.</li>
+                        <li>System details are added automatically, so you don't need to include them.</li>
+                    </ul>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.PageUrl))
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Page</label>
+                        <div class="form-control-plaintext text-break small">@Model.PageUrl</div>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" maxlength="120" placeholder="e.g. Saving a withdrawal shows an error" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="6" maxlength="4000"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StepsToReproduce" class="form-label"></label>
+                    <textarea asp-for="StepsToReproduce" class="form-control" rows="4" maxlength="2000" placeholder="1. Go to ...&#10;2. Click ...&#10;3. See error"></textarea>
+                    <span asp-validation-for="StepsToReproduce" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="bugScreenshot">Screenshot (optional)</label>
+                    <input type="file" name="screenshot" id="bugScreenshot" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp,image/*" />
+                    <div class="form-text">You can also paste a screenshot (Ctrl+V) anywhere on this page. Allowed: jpg, png, gif, webp. Max 5 MB.</div>
+                    <span class="text-danger" data-valmsg-for="screenshot" data-valmsg-replace="true"></span>
+                    <img id="bugScreenshotPreview" class="img-thumbnail mt-2 d-none" style="max-height: 240px" alt="Screenshot preview" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" id="bugSubmit"><i class="bx bx-send me-1"></i>Send Report</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var form = document.getElementById('bugReportForm');
+            var fileInput = document.getElementById('bugScreenshot');
+            var preview = document.getElementById('bugScreenshotPreview');
+
+            function showPreview() {
+                var file = fileInput.files && fileInput.files[0];
+                if (!file || !file.type.startsWith('image/')) { preview.classList.add('d-none'); return; }
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('d-none');
+            }
+            fileInput.addEventListener('change', showPreview);
+
+            // Ctrl+V a screenshot straight from the clipboard into the file input
+            document.addEventListener('paste', function (e) {
+                var items = (e.clipboardData && e.clipboardData.items) || [];
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].kind !== 'file' || !items[i].type.startsWith('image/')) continue;
+                    var blob = items[i].getAsFile();
+                    var ext = (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+                    var dt = new DataTransfer();
+                    dt.items.add(new File([blob], 'pasted-screenshot.' + ext, { type: blob.type }));
+                    fileInput.files = dt.files;
+                    showPreview();
+                    e.preventDefault();
+                    return;
+                }
+            });
+
+            form.addEventListener('submit', function () {
+                var errors = [];
+                try { errors = JSON.parse(sessionStorage.getItem('unified.recentErrors') || '[]'); } catch (_) { }
+                var info = {
+                    screen: screen.width + 'x' + screen.height,
+                    viewport: window.innerWidth + 'x' + window.innerHeight,
+                    pixelRatio: window.devicePixelRatio,
+                    platform: (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform,
+                    language: navigator.language,
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    theme: document.documentElement.getAttribute('data-theme-mode') || 'light',
+                    online: navigator.onLine,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    referrer: document.referrer,
+                    localTime: new Date().toString(),
+                    consoleErrors: errors
+                };
+                document.getElementById('bugClientInfo').value = JSON.stringify(info);
+                if ($(form).valid && !$(form).valid()) return;
+                document.getElementById('bugSubmit').disabled = true;
+            });
+        })();
+    </script>
+}

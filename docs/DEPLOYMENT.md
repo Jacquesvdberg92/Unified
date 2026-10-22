@@ -72,6 +72,7 @@ Also set the following (see [Configuration Reference](#configuration-reference) 
 - `Seed:AdminEmail` and `Seed:AdminPassword`, required for a fresh database
 - `DataProtection:KeysPath`, recommended
 - `AI:ApiKey`, optional
+- `GitHub:Token`, needed for Report a bug to create GitHub issues
 
 ### Step 6 — Apply Database Migrations
 
@@ -198,12 +199,21 @@ Settings can go in `appsettings.json`, in `appsettings.Production.json`, or in e
 | `AI:FallbackModels` | `["openai/gpt-6-luna"]` | Tried in order if the main model fails or is unavailable |
 | `AI:ReasoningEffort` | `none` | Leave as `none` for rewriting; reasoning tokens are billed as output |
 | `AI:MaxOutputTokens` | `4000` | Upper bound on each response |
+| `GitHub:Token` | *(empty)* | Fine-grained token with **Issues** and **Contents** read/write on the repo below. Empty keeps bug reports in the app until it's set |
+| `GitHub:Owner` / `GitHub:Repo` | `Jacquesvdberg92` / `Unified` | Where Report a bug creates issues |
+| `GitHub:IssueLabels` | `["bug", "user-report"]` | Labels added to every reported issue |
+| `GitHub:ScreenshotBranch` | `bug-report-screenshots` | Branch that screenshots are committed to (created from the default branch on first use) |
+| `GitHub:RetryEveryMinutes` | `15` | How often reports that couldn't reach GitHub are retried (up to 10 attempts) |
 | `DataProtection:KeysPath` | *(platform default)* | Folder for the key ring that encrypts Vault passwords and login cookies |
 | `ForwardedHeaders:KnownProxies` | *(loopback only)* | IPs of reverse proxies on other machines, e.g. `["10.0.0.5"]` |
 | `ForwardedHeaders:KnownNetworks` | *(none)* | Proxy networks in CIDR form, e.g. `["10.0.0.0/24"]` |
 | `ForwardedHeaders:TrustAllProxies` | `false` | Old behaviour (trust any client's `X-Forwarded-*`). Only if the app is reachable solely through the proxy |
 
 "Improve with AI" is limited to 20 requests per user per 10 minutes.
+
+### Report a bug
+
+Every signed-in user can open **System → Report a Bug**. Each report becomes a GitHub issue with the page, browser and server details, the user's recent browser and server errors, and an optional screenshot. If the repository is public, so are the reports. Screenshots wait in `App_Data/bug-reports` until they are uploaded, so the app pool needs write access there. Brand Managers and Team Leaders see all reports, and can resend or delete unsent ones, under **Bug Reports**.
 
 ### Data Protection keys
 

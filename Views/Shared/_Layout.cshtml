@@ -23,6 +23,36 @@
             })();
         </script>
 
+        <!-- ERROR CAPTURE: keep the last few browser errors so Report a bug can attach them -->
+        <script>
+            (function () {
+                var key = 'unified.recentErrors';
+                function remember(text) {
+                    try {
+                        var list = JSON.parse(sessionStorage.getItem(key) || '[]');
+                        list.push(new Date().toISOString() + ' ' + location.pathname + ' ' + String(text).slice(0, 400));
+                        sessionStorage.setItem(key, JSON.stringify(list.slice(-10)));
+                    } catch (_) { }
+                }
+                window.addEventListener('error', function (e) {
+                    remember((e.message || 'Error') + (e.filename ? ' (' + e.filename + ':' + e.lineno + ':' + e.colno + ')' : ''));
+                });
+                window.addEventListener('unhandledrejection', function (e) {
+                    remember('Unhandled promise rejection: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason));
+                });
+                var original = console.error;
+                function describe(a) {
+                    if (a instanceof Error) return a.stack || a.message;
+                    if (a && typeof a === 'object') { try { return JSON.stringify(a); } catch (_) { return String(a); } }
+                    return a;
+                }
+                console.error = function () {
+                    remember(Array.prototype.map.call(arguments, describe).join(' '));
+                    return original.apply(console, arguments);
+                };
+            })();
+        </script>
+
 		<!-- FAVICON -->
         <link rel="icon" type="image/png" href="@Url.Content("~/fav.png")">
 

@@ -11,3 +11,6 @@ node_modules/
 *.db-wal
 wwwroot/uploads/**
 !wwwroot/uploads/profiles/.gitkeep
+
+# Pending bug report screenshots (uploaded to GitHub, then deleted)
+App_Data/bug-reports/

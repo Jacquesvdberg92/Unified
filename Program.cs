@@ -111,6 +111,10 @@ builder.Services.AddScoped<Unified.Services.WithdrawalService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient(AiContentService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(60));
 builder.Services.AddScoped<Unified.Services.AiContentService>();
+builder.Services.AddHttpClient(GitHubIssueService.HttpClientName, c => c.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddScoped<Unified.Services.GitHubIssueService>();
+builder.Services.AddScoped<Unified.Services.BugReportService>();
+builder.Services.AddHostedService<Unified.Services.BugReportRetryService>();
 
 // Per-user cap on AI rewrites so a single account can't run up the OpenRouter bill
 builder.Services.AddRateLimiter(opts =>

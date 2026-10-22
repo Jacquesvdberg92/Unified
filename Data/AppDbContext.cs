@@ -14,6 +14,7 @@ using Unified.Models.Dashboard;
 using Unified.Models.CsLiveHelp;
 using Unified.Models.Logging;
 using Unified.Models.Sip;
+using Unified.Models.BugReports;
 using Unified.Models;
 using Unified.Models.CsMessaging;
 using Unified.Models.Withdrawals;
@@ -88,7 +89,11 @@ public class AppDbContext : IdentityDbContext<AppUser>
     // Telegram bot configuration
     public DbSet<TelegramBotSettings> TelegramBotSettings  => Set<TelegramBotSettings>();
 
-    // SIP (System Improvement Proposals)
+    // Bug reports (sent to GitHub as issues)
+    public DbSet<BugReport> BugReports => Set<BugReport>();
+
+    // SIP (System Improvement Proposals) – retired in favour of bug reports; the tables are
+    // kept so existing proposals aren't lost
     public DbSet<Sip> SipItems => Set<Sip>();
     public DbSet<SipVote> SipVotes => Set<SipVote>();
 
@@ -516,6 +521,22 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasIndex(w => w.ClientId);
         builder.Entity<WithdrawalRequest>()
             .HasIndex(w => w.AssignedToId);
+
+        // Bug reports
+        builder.Entity<BugReport>()
+            .Property(r => r.Status)
+            .HasConversion<string>();
+
+        builder.Entity<BugReport>()
+            .HasOne(r => r.Reporter)
+            .WithMany()
+            .HasForeignKey(r => r.ReporterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<BugReport>()
+            .HasIndex(r => r.Status);
+        builder.Entity<BugReport>()
+            .HasIndex(r => r.ReporterId);
 
         // SIP
         builder.Entity<Sip>()

@@ -36,7 +36,7 @@
                         <strong>Current status:</strong> Core roadmap scope is delivered.
                         Active focus is now <strong>Finance workflow uplift</strong> (working hours + payslip flow discovery)
                         and continuous <strong>UI polish &amp; bug fixes</strong>.
-                        <a asp-controller="Sip" asp-action="Index" class="alert-link ms-1">Use SIP</a> to log improvements and bugs.
+                        <a asp-controller="BugReports" asp-action="Create" class="alert-link ms-1">Report a bug</a> to log issues.
                     </div>
 
                     <!-- Phase 0 -->
@@ -98,7 +98,7 @@
                         <div class="progress" role="progressbar" aria-label="UI polish and bug fixes" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Continuous ongoing work">
                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 100%;">∞ Ongoing</div>
                         </div>
-                        <small class="text-muted d-block mt-2">Found an issue or improvement idea? Submit it in <a asp-controller="Sip" asp-action="Index">SIP</a>.</small>
+                        <small class="text-muted d-block mt-2">Found an issue? <a asp-controller="BugReports" asp-action="Create">Report a bug</a>.</small>
                     </div>
 
                     <!-- Phase 1d – CS Live Help Overhaul -->
@@ -344,8 +344,11 @@
                     <div class="mb-4">
                         <h6 class="text-uppercase fw-semibold mb-3 border-bottom pb-2">
                             <i class="bx bx-bulb me-1"></i>Phase 4 – System Improvement Proposals (SIP)
-                            <span class="badge bg-success ms-2">Complete</span>
+                            <span class="badge bg-secondary ms-2">Retired</span>
                         </h6>
+                        <p class="text-muted small mb-3">
+                            <strong>Replaced by Report a bug</strong>, which sends each report to GitHub as an issue with system details and an optional screenshot. Existing SIP data is kept in the database.
+                        </p>
                         <p class="text-muted small mb-3">
                             Internal users (all roles except Account Managers) can submit improvement proposals or bug reports.
                             Colleagues cast <strong>upvotes / downvotes</strong>. The owner reviews community feedback and decides whether to schedule each item for implementation.
@@ -687,7 +690,7 @@
                         <div class="alert alert-success mt-4 mb-0" role="alert">
                             <i class="bx bx-heart-circle me-2"></i>
                                 <strong>Roadmap delivery is in a strong place.</strong> Main remaining active work is Finance workflow uplift and continuous UI/bug-fix iteration.
-                                Please submit ideas and issues through <a asp-controller="Sip" asp-action="Index" class="alert-link">SIP</a>.
+                                Please report issues through <a asp-controller="BugReports" asp-action="Create" class="alert-link">Report a bug</a>.
                             </div>
 
                     </div>
@@ -696,7 +699,7 @@
                     <div class="alert alert-info mt-4 mb-0">
                         <i class="bx bx-info-circle me-2"></i>
                         Full checklist with subtasks tracked in <code>ROADMAP.md</code> at the repository root.
-                        Last updated: <strong>2026-05 — Core roadmap delivered | Phase 3 notifications partially live | Active focus: Finance workflow uplift + continuous UI polish &amp; bug fixes | Use SIP for improvements</strong>
+                        Last updated: <strong>2026-05 — Core roadmap delivered | Phase 3 notifications partially live | Active focus: Finance workflow uplift + continuous UI polish &amp; bug fixes | Use Report a bug for issues</strong>
                     </div>
 
                 </div>
