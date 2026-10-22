@@ -56,70 +56,24 @@ public class CsMessagingHub : Hub
         }
     }
 
-    public Task JoinConversation(int conversationId)
-        => Groups.AddToGroupAsync(Context.ConnectionId, $"conv-{conversationId}");
+    /// <summary>
+    /// Join a conversation's group. Only active members may join, otherwise any CS user
+    /// could subscribe to another conversation's messages.
+    /// </summary>
+    public async Task JoinConversation(int conversationId)
+    {
+        var userId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            throw new HubException("Not a member of this conversation.");
+
+        var isMember = await _dbContext.CsConversationMembers
+            .AnyAsync(m => m.ConversationId == conversationId && m.UserId == userId && m.IsActive);
+        if (!isMember)
+            throw new HubException("Not a member of this conversation.");
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"conv-{conversationId}");
+    }
 
     public Task LeaveConversation(int conversationId)
         => Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conv-{conversationId}");
-
-    /// <summary>
-    /// Broadcast new message notification with metadata.
-    /// </summary>
-    public async Task NotifyNewMessage(int conversationId, string author, string preview, bool isGroupMessage = false)
-    {
-        await Clients.Group($"conv-{conversationId}").SendAsync("MessageNotification", new
-        {
-            type = isGroupMessage ? "groupMessage" : "directMessage",
-            conversationId,
-            author,
-            preview,
-            timestamp = DateTime.UtcNow
-        });
-    }
-
-    /// <summary>
-    /// Broadcast mention notification with metadata.
-    /// </summary>
-    public async Task NotifyMention(int conversationId, string author, string mentionedUser, string messagePreview)
-    {
-        await Clients.Group($"conv-{conversationId}").SendAsync("MentionNotification", new
-        {
-            type = "mention",
-            conversationId,
-            author,
-            mentionedUser,
-            messagePreview,
-            timestamp = DateTime.UtcNow
-        });
-    }
-
-    /// <summary>
-    /// Broadcast direct message notification.
-    /// </summary>
-    public async Task NotifyDirectMessage(string recipientUserId, string senderName, string messagePreview)
-    {
-        await Clients.User(recipientUserId).SendAsync("DirectMessageNotification", new
-        {
-            type = "directMessage",
-            sender = senderName,
-            preview = messagePreview,
-            timestamp = DateTime.UtcNow
-        });
-    }
-
-    /// <summary>
-    /// Broadcast group message notification to all members except sender.
-    /// </summary>
-    public async Task NotifyGroupMessage(int conversationId, string senderUserId, string senderName, string messagePreview)
-    {
-        await Clients.GroupExcept($"conv-{conversationId}", new[] { Context.ConnectionId })
-            .SendAsync("GroupMessageNotification", new
-            {
-                type = "groupMessage",
-                conversationId,
-                sender = senderName,
-                preview = messagePreview,
-                timestamp = DateTime.UtcNow
-            });
-    }
 }
