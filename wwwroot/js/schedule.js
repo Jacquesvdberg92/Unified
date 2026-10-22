@@ -35,6 +35,14 @@ function schedToggle(val) {
     if (customRow) customRow.style.display = val === '1' ? '' : 'none';
 }
 
+// AgentView: show the shift picker or the custom hours for the chosen day type
+function myToggle(val) {
+    var shiftRow  = document.getElementById('my-shiftRow');
+    var customRow = document.getElementById('my-customRow');
+    if (shiftRow)  shiftRow.style.display  = val === '0' ? '' : 'none';
+    if (customRow) customRow.style.display = val === '1' ? '' : 'none';
+}
+
 // AgentView: my-day modal + clock
 (function () {
     var myDayModal = document.getElementById('myDayModal');
@@ -53,14 +61,19 @@ function schedToggle(val) {
             var ogWeekend = document.getElementById('my-og-weekend');
             if (ogWeekday) ogWeekday.style.display = isWeekend ? 'none' : '';
             if (ogWeekend) ogWeekend.style.display = isWeekend ? ''     : 'none';
+            myToggle(btn.dataset.entryType || '0');
         });
     }
 
+    // Looked up on every tick: in-place week changes replace these elements
     function agentTick() {
-        var el = document.getElementById('agentLiveClock');
-        if (el) el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        var now    = new Date();
+        var clock  = document.getElementById('sched-live-clock');
+        var date   = document.getElementById('sched-clock-date');
+        if (clock) clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        if (date)  date.textContent  = now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
     }
-    if (document.getElementById('agentLiveClock')) {
+    if (document.getElementById('sched-live-clock')) {
         agentTick();
         setInterval(agentTick, 1000);
     }
