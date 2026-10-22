@@ -39,6 +39,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<Unified.Hubs.HubConnectionTracker>();
 
 // Allow large file uploads (30 MB) for brand document uploads
 builder.WebHost.ConfigureKestrel(opts =>

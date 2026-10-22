@@ -18,19 +18,22 @@ public class CsMessagingController : Controller
     private readonly IHubContext<CsMessagingHub> _hub;
     private readonly IWebHostEnvironment _env;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HubConnectionTracker _connections;
 
     public CsMessagingController(
         CsMessagingService svc,
         UserManager<AppUser> users,
         IHubContext<CsMessagingHub> hub,
         IWebHostEnvironment env,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        HubConnectionTracker connections)
     {
         _svc = svc;
         _users = users;
         _hub = hub;
         _env = env;
         _httpClientFactory = httpClientFactory;
+        _connections = connections;
     }
 
     [HttpGet]
@@ -217,6 +220,10 @@ public class CsMessagingController : Controller
         if (!result.Success || result.Member is null)
             return BadRequest(new { success = false, error = result.Error ?? "Failed to add member." });
 
+        // Subscribe the new member's already-open tabs so they get live updates without a reload
+        foreach (var connectionId in _connections.GetConnections(input.UserId))
+            await _hub.Groups.AddToGroupAsync(connectionId, $"conv-{id}");
+
         await _hub.Clients.Group($"conv-{id}").SendAsync("MemberAdded", new
         {
             conversationId = id,
@@ -241,6 +248,12 @@ public class CsMessagingController : Controller
             conversationId = id,
             userId
         });
+
+        // Unsubscribe the removed member's open tabs, or they would keep receiving the
+        // conversation's messages until they reconnect
+        foreach (var connectionId in _connections.GetConnections(userId))
+            await _hub.Groups.RemoveFromGroupAsync(connectionId, $"conv-{id}");
+
         await _hub.Clients.Group("cs-messaging").SendAsync("ConversationChanged", new { conversationId = id });
 
         return Json(new { success = true });

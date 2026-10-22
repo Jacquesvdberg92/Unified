@@ -10,14 +10,20 @@ namespace Unified.Hubs;
 public class CsMessagingHub : Hub
 {
     private readonly AppDbContext _dbContext;
+    private readonly HubConnectionTracker _connections;
 
-    public CsMessagingHub(AppDbContext dbContext)
+    public CsMessagingHub(AppDbContext dbContext, HubConnectionTracker connections)
     {
         _dbContext = dbContext;
+        _connections = connections;
     }
 
     public override async Task OnConnectedAsync()
     {
+        // Tracked so membership changes can update this user's open connections
+        if (Context.UserIdentifier is { } connectedUserId)
+            _connections.Add(connectedUserId, Context.ConnectionId);
+
         await Groups.AddToGroupAsync(Context.ConnectionId, "cs-messaging");
 
         // Join all conversations for the current user
@@ -76,4 +82,11 @@ public class CsMessagingHub : Hub
 
     public Task LeaveConversation(int conversationId)
         => Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conv-{conversationId}");
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (Context.UserIdentifier is { } userId)
+            _connections.Remove(userId, Context.ConnectionId);
+        return base.OnDisconnectedAsync(exception);
+    }
 }
