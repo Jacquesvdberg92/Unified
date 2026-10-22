@@ -6,6 +6,7 @@ public class CsMessagingIndexViewModel
     public CsConversationDetailViewModel? ActiveConversation { get; set; }
     public List<CsUserOptionViewModel> EligibleUsers { get; set; } = new();
     public string CurrentUserId { get; set; } = string.Empty;
+    public bool GifSearchEnabled { get; set; }
 }
 
 public class CsConversationListItemViewModel
