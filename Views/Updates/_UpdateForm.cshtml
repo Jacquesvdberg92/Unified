@@ -17,7 +17,7 @@
 
 <div class="mb-3">
     <label class="form-label">Body</label>
-    <div id="quillEditor" style="min-height:200px;">@Html.Raw(Model.Body)</div>
+    <div id="quillEditor" style="min-height:200px;">@Html.Raw(HtmlContent.Sanitize(Model.Body))</div>
     <input type="hidden" asp-for="Body" id="bodyInput" />
     <span asp-validation-for="Body" class="text-danger small"></span>
 </div>

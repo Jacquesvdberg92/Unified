@@ -94,6 +94,7 @@ public class UpdatesController : Controller
     {
         var update = await _service.GetByIdAsync(id);
         if (update is null) return NotFound();
+        update.Body = HtmlContent.Sanitize(update.Body);   // loaded into the editor via innerHTML
         await PopulateViewBagAsync(update);
         return View(update);
     }

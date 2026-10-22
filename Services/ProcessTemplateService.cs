@@ -52,6 +52,8 @@ public class ProcessTemplateService
 
     public async Task<ProcessTemplate> CreateTemplateAsync(ProcessTemplate template, IEnumerable<int> brandIds)
     {
+        if (template.GuidanceNotes is not null)
+            template.GuidanceNotes = HtmlContent.Sanitize(template.GuidanceNotes);
         template.CreatedAt = DateTime.UtcNow;
         template.UpdatedAt = DateTime.UtcNow;
         _db.ProcessTemplates.Add(template);
@@ -62,6 +64,8 @@ public class ProcessTemplateService
 
     public async Task UpdateTemplateAsync(ProcessTemplate template, IEnumerable<int> brandIds)
     {
+        if (template.GuidanceNotes is not null)
+            template.GuidanceNotes = HtmlContent.Sanitize(template.GuidanceNotes);
         template.UpdatedAt = DateTime.UtcNow;
         _db.ProcessTemplates.Update(template);
         await _db.SaveChangesAsync();

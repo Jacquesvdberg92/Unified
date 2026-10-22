@@ -163,7 +163,8 @@ public class AiContentService
             for (var i = images.Count; i >= 1; i--)
                 result = result.Replace($"IMAGE_PLACEHOLDER_{i}", images[i - 1]);
 
-            return result;
+            // The result is applied to the editor via innerHTML
+            return HtmlContent.Sanitize(result);
         }
     }
 }
