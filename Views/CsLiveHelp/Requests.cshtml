@@ -23,6 +23,12 @@
     var openCards      = own.Where(r => r.Status == CsRequestStatus.Open).ToList();
     var inProgressCards = own.Where(r => r.Status == CsRequestStatus.InProgress || r.Status == CsRequestStatus.OnGoing || r.Status == CsRequestStatus.Escalated).ToList();
     var doneCards      = own.Where(r => r.Status == CsRequestStatus.Completed).ToList();
+
+    var viewMode = (string)ViewBag.ViewMode;
+    var isChat   = viewMode == Unified.Controllers.CsLiveHelpController.ChatViewMode;
+    // Chat mode: one feed, oldest first, own requests and others' open ones interleaved.
+    var ownIds   = own.Select(r => r.Id).ToHashSet();
+    var chatFeed = own.Concat(others).OrderBy(r => r.CreatedAt).ToList();
 }
 
 <div class="container-fluid">
@@ -44,11 +50,14 @@
 
     <div id="csBroadcastBannerHost" class="mb-3" style="display:none"></div>
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h5 class="mb-0"><i class="bx bx-support me-2"></i>CS Requests</h5>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
-            <i class="bx bx-plus me-1"></i>New Request
-        </button>
+        <div class="d-flex align-items-center gap-2">
+            <partial name="_CsViewModeToggle" model="viewMode" />
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
+                <i class="bx bx-plus me-1"></i>New Request
+            </button>
+        </div>
     </div>
 
     <!-- Filter bar -->
@@ -70,6 +79,73 @@
         </button>
     </div>
 
+    @if (isChat)
+    {
+        <!-- Chat feed -->
+        <div id="csChatFeed" class="cs-chat-feed">
+            @foreach (var r in chatFeed)
+            {
+                var mine = ownIds.Contains(r.Id);
+                <partial name="_CsChatMessage" model="r" view-data='@(new ViewDataDictionary(ViewData) {
+                    { "CardPartial", "_CsRequestCard" },
+                    { "ShowActions", mine && r.Status == CsRequestStatus.Open },
+                    { "IsMine", mine },
+                    { "SenderLabel", mine ? null : "Another account manager" } })' />
+            }
+            <p class="text-muted small text-center my-auto cs-chat-empty" style="@(chatFeed.Any() ? "display:none" : "")">
+                No requests yet. Send one below.
+            </p>
+        </div>
+
+        <!-- Chat composer: sends a new request, same as the New Request modal -->
+        <div id="csChatComposer" class="cs-chat-composer">
+            <form asp-action="CreateRequest" asp-controller="CsLiveHelp" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Client ID <small class="text-danger">*</small></label>
+                        <input type="text" name="clientId" class="form-control form-control-sm" maxlength="100"
+                               placeholder="Client / player ID" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Brand</label>
+                        <select name="brandId" class="form-select form-select-sm" required>
+                            <option value="">— select brand —</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label form-label-sm mb-1">Request Type</label>
+                        <select name="requestTypeId" class="form-select form-select-sm" id="chatTypeSelect" required>
+                            <option value="">— select type —</option>
+                            @foreach (var t in types)
+                            {
+                                <option value="@t.Id" data-is-other="@t.IsOther.ToString().ToLower()">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-send me-1"></i>Send</button>
+                    </div>
+                    <div class="col-12" id="chatDescGroup" style="display:none">
+                        <textarea name="customDescription" class="form-control form-control-sm" rows="2" maxlength="500"
+                                  id="chatDescInput" placeholder="Describe the request (English only, max 500 chars)"></textarea>
+                    </div>
+                </div>
+            </form>
+            @if (others.Any())
+            {
+                <div class="form-text mt-2">
+                    <i class="bx bx-info-circle me-1"></i>Other AMs' open requests for your brands are shown read-only. Submit a new request only if yours differs.
+                </div>
+            }
+        </div>
+    }
+    else
+    {
     <!-- Kanban board -->
     <div class="row g-3">
 
@@ -164,6 +240,7 @@
         </div>
 
     </div>
+    }
 </div>
 
 <!-- ── Create Request Modal ─────────────────────────────────────────────── -->
@@ -378,8 +455,24 @@
     </div>
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/cslivehelp-chat.css" asp-append-version="true" />
+}
+
 @section Scripts {
 <script>
+    // Chat composer: show/hide description field based on type selection
+    document.getElementById('chatTypeSelect')?.addEventListener('change', function () {
+        const isOther = this.options[this.selectedIndex]?.dataset.isOther === 'true';
+        document.getElementById('chatDescGroup').style.display = isOther ? '' : 'none';
+        document.getElementById('chatDescInput').required      = isOther;
+    });
+    // The composer is reset after a successful send — hide the description again
+    document.querySelector('#csChatComposer form')?.addEventListener('reset', function () {
+        document.getElementById('chatDescGroup').style.display = 'none';
+        document.getElementById('chatDescInput').required      = false;
+    });
+
     // Create modal: show/hide description field based on type selection
     document.getElementById('createTypeSelect').addEventListener('change', function () {
         const isOther = this.options[this.selectedIndex]?.dataset.isOther === 'true';
@@ -452,7 +545,7 @@
             document.querySelectorAll('[data-card-id]').forEach(function (card) {
                 const matchBrand  = !brandId || String(card.dataset.brandId) === brandId;
                 const matchClient = !query   || (card.dataset.clientId ?? '').includes(query);
-                card.style.display = (matchBrand && matchClient) ? '' : 'none';
+                (card.closest('.cs-chat-msg') ?? card).style.display = (matchBrand && matchClient) ? '' : 'none';
             });
         }
 
@@ -462,7 +555,7 @@
             if (brandSel)    brandSel.value    = '';
             if (clientInput) clientInput.value = '';
             document.querySelectorAll('[data-card-id]').forEach(function (card) {
-                card.style.display = '';
+                (card.closest('.cs-chat-msg') ?? card).style.display = '';
             });
         });
     })();

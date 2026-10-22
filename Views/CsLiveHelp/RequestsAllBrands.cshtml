@@ -26,6 +26,9 @@
     var inProgressCards = requests.Where(r => r.Status == CsRequestStatus.InProgress).ToList();
     var onGoingCards    = requests.Where(r => r.Status == CsRequestStatus.OnGoing).ToList();
     var completedCards  = requests.Where(r => r.Status == CsRequestStatus.Completed).ToList();
+
+    var viewMode = (string)ViewBag.ViewMode;
+    var isChat   = viewMode == Unified.Controllers.CsLiveHelpController.ChatViewMode;
 }
 
 <div class="container-fluid">
@@ -51,6 +54,7 @@
             <span class="badge bg-primary">@requests.Count shown</span>
         </div>
         <div class="d-flex gap-2">
+            <partial name="_CsViewModeToggle" model="viewMode" />
             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newInternalRequestModal">
                 <i class="bx bx-plus me-1"></i>New Request
             </button>
@@ -79,6 +83,72 @@
         </button>
     </div>
 
+    @if (isChat)
+    {
+        <!-- Chat feed: requests in the order they came in, newest at the bottom -->
+        <div id="csChatFeed" class="cs-chat-feed">
+            @foreach (var r in requests.OrderBy(r => r.CreatedAt))
+            {
+                <partial name="_CsChatMessage" model="r" view-data='@(new ViewDataDictionary(ViewData) { { "CardPartial", "_InternalBoardCard" } })' />
+            }
+            <p class="text-muted small text-center my-auto cs-chat-empty" style="@(requests.Any() ? "display:none" : "")">
+                No requests yet. Send one below.
+            </p>
+        </div>
+
+        <!-- Chat composer: creates an internal request, same as the New Request modal -->
+        <div id="csChatComposer" class="cs-chat-composer">
+            <form asp-action="CreateInternalRequest" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Brand <span class="text-danger">*</span></label>
+                        <select name="brandId" class="form-select form-select-sm" required>
+                            <option value="">— select brand —</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Request Type <span class="text-danger">*</span></label>
+                        <select name="requestTypeId" id="chatIntReqType" class="form-select form-select-sm" required>
+                            <option value="">— select type —</option>
+                            @foreach (var t in types)
+                            {
+                                <option value="@t.Id" data-isother="@t.IsOther.ToString().ToLower()">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Client ID <span class="text-muted">(optional)</span></label>
+                        <input type="text" name="clientId" class="form-control form-control-sm" maxlength="100" placeholder="e.g. 123456" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label form-label-sm mb-1">Team Allocation <span class="text-muted">(optional)</span></label>
+                        <select name="teamId" class="form-select form-select-sm">
+                            <option value="">— no specific team —</option>
+                            @foreach (var t in teams)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-10">
+                        <textarea name="customDescription" id="chatIntDescription" class="form-control form-control-sm"
+                                  rows="2" maxlength="500"
+                                  placeholder="Describe the issue or ask a question (optional — max 500 chars)…"></textarea>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-send me-1"></i>Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
+    else
+    {
     <div class="row g-3">
 
         @* ── Open ── *@
@@ -142,6 +212,7 @@
         </div>
 
     </div><!-- /row -->
+    }
 </div><!-- /container -->
 
 @* ── New Internal Request Modal ─────────────────────────────────────────── *@
@@ -319,8 +390,24 @@
     }
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/cslivehelp-chat.css" asp-append-version="true" />
+}
+
 @section Scripts {
     <script>
+        // Chat composer: description is required only for the "Other" type
+        document.getElementById('chatIntReqType')?.addEventListener('change', function () {
+            const isOther = this.options[this.selectedIndex].dataset.isother === 'true';
+            const ta = document.getElementById('chatIntDescription');
+            if (ta) {
+                ta.required = isOther;
+                ta.placeholder = isOther
+                    ? 'Describe the request (required for this type — max 500 chars)…'
+                    : 'Describe the issue or ask a question (optional — max 500 chars)…';
+            }
+        });
+
         // Modal form interactivity: show description field only for "Other" type
         document.getElementById('intReqType')?.addEventListener('change', function () {
             const opt = this.options[this.selectedIndex];
