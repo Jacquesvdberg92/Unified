@@ -53,7 +53,7 @@
                                         }
                                         else
                                         {
-                                            <span class="fw-semibold">@(c.Author?.DisplayName ?? c.Author?.UserName ?? "—")</span>
+                                            <span class="fw-semibold">@(c.Author?.DisplayName ?? c.Author?.UserName ?? "Deleted user")</span>
                                         }
                                         <span class="text-muted">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
                                     </div>

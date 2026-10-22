@@ -375,7 +375,7 @@
                             {
                                 <div class="mb-2 p-2 rounded @(c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light")">
                                     <div class="d-flex justify-content-between mb-1">
-                                        <strong class="small">@(c.Author?.DisplayName ?? c.AuthorId)</strong>
+                                        <strong class="small">@(c.Author?.DisplayName ?? c.Author?.UserName ?? "Deleted user")</strong>
                                         <span class="text-muted small">@c.CreatedAt.ToString("MMM dd, HH:mm") UTC</span>
                                     </div>
                                     <p class="mb-0 small">@c.Body

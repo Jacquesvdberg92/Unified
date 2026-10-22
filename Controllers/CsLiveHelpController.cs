@@ -1008,7 +1008,7 @@ public class CsLiveHelpController : Controller
         foreach (var c in comments)
         {
             var timestamp = c.CreatedAt.ToString("MMM dd, HH:mm");
-            var author = c.Author?.DisplayName ?? c.AuthorId;
+            var author = c.Author?.DisplayName ?? c.Author?.UserName ?? "Deleted user";
             var bgClass = c.IsSystemMessage ? "bg-warning bg-opacity-10" : "bg-light";
 
             html.AppendLine($"<div class=\"mb-2 p-2 rounded {bgClass}\">");

@@ -9,7 +9,8 @@ public class CsRequestComment
     public int    RequestId        { get; set; }
     public CsRequest? Request      { get; set; }
 
-    public string AuthorId         { get; set; } = string.Empty;
+    /// <summary>Null once the author's account has been deleted — the comment is kept and shown as "Deleted user".</summary>
+    public string? AuthorId        { get; set; }
     public AppUser? Author         { get; set; }
 
     public string Body             { get; set; } = string.Empty;

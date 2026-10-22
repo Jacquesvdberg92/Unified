@@ -292,15 +292,19 @@ public class AdminController : Controller
         _db.TeamReports.RemoveRange(_db.TeamReports.Where(x => x.ReportedByLeaderId == user.Id));
         _db.AgentStats.RemoveRange(_db.AgentStats.Where(x => x.AgentId == user.Id));
         _db.PoiSimulations.RemoveRange(_db.PoiSimulations.Where(x => x.LoggedById == user.Id || x.ReceivedById == user.Id));
-        // Requests this user picked up stay on the boards, just unassigned (the FK has no
-        // ON DELETE action, so leaving them would make the user delete fail)
+        // Requests this user picked up stay on the boards, just unassigned
         await _db.CsRequests.Where(x => x.AssignedToId == user.Id)
             .ExecuteUpdateAsync(u => u.SetProperty(x => x.AssignedToId, (string?)null));
         await _db.CsRequestArchives.Where(x => x.AssignedToId == user.Id)
             .ExecuteUpdateAsync(u => u.SetProperty(x => x.AssignedToId, (string?)null));
-        _db.CsRequests.RemoveRange(_db.CsRequests.Where(x => x.AccountManagerId == user.Id));
-        _db.CsRequestComments.RemoveRange(_db.CsRequestComments.Where(x => x.AuthorId == user.Id));
-        _db.CsRequestArchives.RemoveRange(_db.CsRequestArchives.Where(x => x.AccountManagerId == user.Id));
+        // CS Live Help history is kept: the user's requests and comments stay and show as
+        // "Deleted user" (these FKs have no ON DELETE action, so they are cleared here)
+        await _db.CsRequests.Where(x => x.AccountManagerId == user.Id)
+            .ExecuteUpdateAsync(u => u.SetProperty(x => x.AccountManagerId, (string?)null));
+        await _db.CsRequestComments.Where(x => x.AuthorId == user.Id)
+            .ExecuteUpdateAsync(u => u.SetProperty(x => x.AuthorId, (string?)null));
+        await _db.CsRequestArchives.Where(x => x.AccountManagerId == user.Id)
+            .ExecuteUpdateAsync(u => u.SetProperty(x => x.AccountManagerId, (string?)null));
         _db.AmAuditLogs.RemoveRange(_db.AmAuditLogs.Where(x => x.UserId == user.Id));
         _db.DashboardWidgets.RemoveRange(_db.DashboardWidgets.Where(x => x.UserId == user.Id));
         _db.WorkDistributions.RemoveRange(_db.WorkDistributions.Where(x => x.CreatedById == user.Id));
