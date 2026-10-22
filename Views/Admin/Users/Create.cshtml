@@ -32,6 +32,11 @@
                 <label class="form-label">Role</label>
                 <select name="role" class="form-select" asp-items="ViewBag.AllRoles"></select>
             </div>
+            <div class="mb-3 form-check">
+                <input class="form-check-input" type="checkbox" name="hasWdListAccess" value="true" id="hasWdListAccess" />
+                <label class="form-check-label" for="hasWdListAccess">WD List access</label>
+                <div class="form-text">Team leaders and brand managers always have access. Tick this to give anyone else access.</div>
+            </div>
             <div class="mb-3">
                 <label class="form-label">Teams</label>
                 @foreach (var team in (IEnumerable<Unified.Models.Identity.Team>)ViewBag.AllTeams)

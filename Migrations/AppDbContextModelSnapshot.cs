@@ -1057,6 +1057,9 @@ namespace Unified.Migrations
                     b.Property<bool>("HasCsLiveHelp")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("HasWdListAccess")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasWeekendShift")
                         .HasColumnType("bit");
 

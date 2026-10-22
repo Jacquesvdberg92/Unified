@@ -125,11 +125,11 @@ public class AdminController : Controller
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateUser(string displayName, string email, string password,
-        string role, int[] teamIds, int[] brandIds, string? anydeskId)
+        string role, int[] teamIds, int[] brandIds, string? anydeskId, bool hasWdListAccess)
     {
         if (!ModelState.IsValid) { PopulateRolesAndTeams(); return View(); }
 
-        var user = new AppUser { UserName = email, Email = email, DisplayName = displayName, EmailConfirmed = true, AnydeskId = anydeskId?.Trim() };
+        var user = new AppUser { UserName = email, Email = email, DisplayName = displayName, EmailConfirmed = true, AnydeskId = anydeskId?.Trim(), HasWdListAccess = hasWdListAccess };
         var result = await _userManager.CreateAsync(user, password);
         if (!result.Succeeded)
         {
@@ -163,13 +163,14 @@ public class AdminController : Controller
         ViewBag.CurrentRole = roles.FirstOrDefault();
         PopulateRolesAndTeams(
             user.Teams.Select(t => t.TeamId).ToArray(),
-            user.Brands.Select(b => b.BrandId).ToArray());
+            user.Brands.Select(b => b.BrandId).ToArray(),
+            ViewBag.CurrentRole as string);
         return View("Users/Edit", user);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> EditUser(string id, string displayName, string? language,
-        bool hasWeekendShift, bool hasCsLiveHelp, string role, int[] teamIds, int[] brandIds, string? anydeskId)
+        bool hasWeekendShift, bool hasCsLiveHelp, bool hasWdListAccess, string role, int[] teamIds, int[] brandIds, string? anydeskId)
     {
         var user = await _db.Users
             .Include(u => u.Teams)
@@ -181,6 +182,7 @@ public class AdminController : Controller
         user.Language        = language;
         user.HasWeekendShift = hasWeekendShift;
         user.HasCsLiveHelp   = hasCsLiveHelp;
+        user.HasWdListAccess = hasWdListAccess;
         user.IsSwissArmyKnife = role == Roles.SwissArmyKnife;
         user.AnydeskId       = anydeskId?.Trim();
 
@@ -707,13 +709,13 @@ public class AdminController : Controller
         return RedirectToAction(nameof(TelegramSettings));
     }
 
-    private void PopulateRolesAndTeams(int[]? selectedTeams = null, int[]? selectedBrands = null)
+    private void PopulateRolesAndTeams(int[]? selectedTeams = null, int[]? selectedBrands = null, string? selectedRole = null)
     {
         ViewBag.AllRoles = new SelectList(new[]
         {
             Roles.BrandManager, Roles.TeamLeader, Roles.CSAgent,
             Roles.SwissArmyKnife, Roles.AccountManager, Roles.Finance
-        });
+        }, selectedRole);
         ViewBag.AllTeams = _db.Teams.OrderBy(t => t.Name).ToList();
         ViewBag.AllBrands = _db.Brands.OrderBy(b => b.Name).ToList();
         ViewBag.SelectedTeams = selectedTeams ?? Array.Empty<int>();

@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Unified.Data;
+using Unified.Models.Identity;
 using Unified.Models.Withdrawals;
 
 namespace Unified.Services;
@@ -27,6 +29,44 @@ public class WithdrawalService
     private readonly AppDbContext _db;
 
     public WithdrawalService(AppDbContext db) => _db = db;
+
+    // ── Access ────────────────────────────────────────────────────────────
+
+    /// <summary>Roles that always see the WD List. Everyone else needs <see cref="AppUser.HasWdListAccess"/>.</summary>
+    public static readonly string[] AlwaysAllowedRoles = [Roles.TeamLeader, Roles.BrandManager, Roles.SwissArmyKnife];
+
+    public async Task<bool> CanAccessAsync(ClaimsPrincipal user, string? userId)
+    {
+        if (AlwaysAllowedRoles.Any(user.IsInRole)) return true;
+        if (userId is null) return false;
+        return await _db.Users.AnyAsync(u => u.Id == userId && u.HasWdListAccess && !u.IsExternal);
+    }
+
+    /// <summary>Ids of everyone who can open the WD List (leader roles plus users given access).</summary>
+    public async Task<List<string>> GetAccessUserIdsAsync()
+    {
+        var byRole = from ur in _db.UserRoles
+                     join r in _db.Roles on ur.RoleId equals r.Id
+                     where AlwaysAllowedRoles.Contains(r.Name!)
+                     select ur.UserId;
+        var byFlag = _db.Users.Where(u => u.HasWdListAccess && !u.IsExternal).Select(u => u.Id);
+        return (await byRole.ToListAsync()).Union(await byFlag.ToListAsync()).Distinct().ToList();
+    }
+
+    /// <summary>People to notify about a change on a withdrawal: its owner and its creator, never the person who made the change.</summary>
+    public async Task<List<string>> GetFollowerIdsAsync(int id, string actorId)
+    {
+        var wd = await _db.WithdrawalRequests.AsNoTracking()
+            .Where(w => w.Id == id)
+            .Select(w => new { w.AssignedToId, w.CreatedById })
+            .FirstOrDefaultAsync();
+        if (wd is null) return [];
+        return new[] { wd.AssignedToId, wd.CreatedById }
+            .Where(u => !string.IsNullOrEmpty(u) && u != actorId)
+            .Select(u => u!)
+            .Distinct()
+            .ToList();
+    }
 
     // ── Queries ───────────────────────────────────────────────────────────
 

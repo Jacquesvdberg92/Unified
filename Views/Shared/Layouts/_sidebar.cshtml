@@ -3,6 +3,7 @@
             @using Unified.Services
             @inject UserManager<AppUser> UserManager
             @inject CsMessagingService CsMessagingService
+            @inject WithdrawalService WithdrawalService
 
                         <aside class="app-sidebar sticky" id="sidebar">
 
@@ -184,7 +185,8 @@
                             }
 
                             @* ── Finance ── *@
-                            @if (User.IsInRole("CSAgent") || User.IsInRole("TeamLeader") || User.IsInRole("BrandManager") || User.IsInRole("SwissArmyKnife") || User.IsInRole("Finance"))
+                            @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("AccountManager")
+                                 && await WithdrawalService.CanAccessAsync(User, UserManager.GetUserId(User)))
                             {
                                 <li class="slide__category-group">
                                     <div class="slide__category" data-category="finance">
