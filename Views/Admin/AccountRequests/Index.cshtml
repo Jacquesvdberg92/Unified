@@ -131,7 +131,7 @@
                             <div class="modal fade" id="approveModal-@req.Id" tabindex="-1">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
-                                        <form asp-action="ApproveRequest" method="post">
+                                        <form data-inplace asp-action="ApproveRequest" method="post">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@req.Id" />
                                             <div class="modal-header">
@@ -171,7 +171,7 @@
                             <div class="modal fade" id="rejectModal-@req.Id" tabindex="-1">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
-                                        <form asp-action="RejectRequest" method="post">
+                                        <form data-inplace asp-action="RejectRequest" method="post">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@req.Id" />
                                             <div class="modal-header">

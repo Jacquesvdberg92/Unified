@@ -440,3 +440,11 @@ pre.work-dist-body {
 [data-theme-mode=dark] .ukraine-link {
     color: #5aa9ff;
 }
+
+/* In-place updates (js/inplace.js): dim the region being refreshed, but only if the
+   server takes a moment, so quick updates do not flicker */
+.inplace-busy {
+    opacity: .55;
+    pointer-events: none;
+    transition: opacity .15s ease .2s;
+}

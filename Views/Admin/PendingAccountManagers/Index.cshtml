@@ -75,12 +75,12 @@
                             }
                         </td>
                         <td>
-                            <form asp-action="ApproveAccountManager" method="post" class="d-inline">
+                            <form data-inplace asp-action="ApproveAccountManager" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@req.AccountRequestId" />
                                 <button type="submit" class="btn btn-sm btn-success me-1">Approve</button>
                             </form>
-                            <form asp-action="RejectAccountManager" method="post" class="d-inline" onsubmit="return confirm('Reject this account manager request?');">
+                            <form data-inplace asp-action="RejectAccountManager" method="post" class="d-inline" onsubmit="return confirm('Reject this account manager request?');">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@req.AccountRequestId" />
                                 <button type="submit" class="btn btn-sm btn-danger">Reject</button>

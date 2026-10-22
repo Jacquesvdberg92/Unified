@@ -1,0 +1,22 @@
+@*
+    Layout for in-place updates (requests with X-Inplace: 1, see _ViewStart and wwwroot/js/inplace.js).
+    Only the page content is sent back; inplace.js swaps the regions it needs into the open page,
+    so the header, sidebar, styles and scripts are not downloaded and re-run again.
+*@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"] — Unified</title>
+</head>
+<body>
+    <div data-inplace-region="page">
+        <partial name="~/Views/Shared/_Breadcrumbs.cshtml" />
+        @RenderBody()
+    </div>
+    <partial name="~/Views/Shared/_Toast.cshtml" />
+    @{
+        if (IsSectionDefined("Styles"))  { IgnoreSection("Styles"); }
+        if (IsSectionDefined("Scripts")) { IgnoreSection("Scripts"); }
+    }
+</body>
+</html>

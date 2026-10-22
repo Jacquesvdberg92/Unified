@@ -60,8 +60,9 @@ builder.Services.AddResponseCompression(opts =>
 // Output cache for read-heavy pages (reports, leaderboard)
 builder.Services.AddOutputCache(opts =>
 {
-    opts.AddPolicy("Reports",  p => p.Expire(TimeSpan.FromMinutes(5)));
-    opts.AddPolicy("LeaderBoard", p => p.Expire(TimeSpan.FromMinutes(5)));
+    // Vary by X-Inplace so a layout-less in-place response is never served as a full page
+    opts.AddPolicy("Reports",  p => p.Expire(TimeSpan.FromMinutes(5)).SetVaryByHeader("X-Inplace"));
+    opts.AddPolicy("LeaderBoard", p => p.Expire(TimeSpan.FromMinutes(5)).SetVaryByHeader("X-Inplace"));
 });
 
 // Memory cache for frequently read reference data

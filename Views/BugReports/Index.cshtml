@@ -73,11 +73,11 @@
                                 <td class="text-end text-nowrap">
                                     @if (row.Status == BugReportStatus.Pending)
                                     {
-                                        <form asp-action="Retry" asp-route-id="@row.Id" method="post" class="d-inline">
+                                        <form data-inplace asp-action="Retry" asp-route-id="@row.Id" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-primary">Send now</button>
                                         </form>
-                                        <form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this unsent report?');">
+                                        <form data-inplace asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this unsent report?');">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                         </form>

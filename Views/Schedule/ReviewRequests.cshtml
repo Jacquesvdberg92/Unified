@@ -8,7 +8,7 @@
     var selTeamId = (int)ViewBag.SelectedTeamId;
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
+<div class="container-xxl flex-grow-1 container-p-y" data-inplace-region="review" data-inplace="review,review-team">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="fw-bold mb-0"><i class="bx bx-task me-2"></i>Review Requests</h4>
         <a asp-action="WeekView" asp-route-teamId="@selTeamId" class="btn btn-outline-secondary btn-sm">← Week View</a>
@@ -19,7 +19,7 @@
         <div class="card-body py-2">
             <form method="get" class="d-flex align-items-center gap-2">
                 <label class="form-label mb-0 small fw-semibold">Team</label>
-                <select name="teamId" class="form-select form-select-sm" style="width:200px" onchange="this.form.submit()">
+                <select name="teamId" class="form-select form-select-sm" style="width:200px" onchange="this.form.requestSubmit()">
                     @foreach (var t in teams)
                     {
                         <option value="@t.Id" selected="@(selTeamId == t.Id ? "selected" : null)">@t.Name</option>
@@ -100,10 +100,10 @@
 <div class="modal fade" id="actionModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
-            <form id="actionForm" method="post">
+            <form id="actionForm" method="post" data-inplace="review,review-team">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="requestId" id="actionRequestId" />
-                <input type="hidden" name="teamId"    value="@selTeamId" />
+                <input type="hidden" name="teamId"    value="@selTeamId" data-inplace-region="review-team" />
                 <div class="modal-header">
                     <h6 class="modal-title" id="actionTitle">Confirm</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -302,14 +302,17 @@ document.querySelectorAll('.copy-btn').forEach(function (btn) {
     }
 })();
 
-// Index: DataTable init
+// Index: DataTable init, again whenever the brand filter or a delete swaps the table in place
 (function () {
-    var tbl = document.getElementById('templatesTable');
-    if (tbl && typeof $ !== 'undefined' && $.fn.DataTable) {
-        $(function () {
+    function init() {
+        if (document.getElementById('templatesTable') && typeof $ !== 'undefined' && $.fn.DataTable) {
             $('#templatesTable').DataTable({ responsive: true, order: [[2, 'asc'], [0, 'asc']] });
-        });
+        }
     }
+    if (document.getElementById('templatesTable') && typeof $ !== 'undefined') $(init);
+    document.addEventListener('inplace:load', function (e) {
+        if (e.detail.name === 'templates') init();
+    });
 })();
 
 // BrandForm: dynamic brand links table

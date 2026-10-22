@@ -36,7 +36,7 @@ public class AttendanceController : Controller
 
     // POST /Attendance/ClockIn
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ClockIn()
+    public async Task<IActionResult> ClockIn(string? returnUrl = null)
     {
         var userId = _users.GetUserId(User)!;
         try
@@ -52,12 +52,12 @@ public class AttendanceController : Controller
         }
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             return Json(new { success = true, message = "Clocked in successfully." });
-        return RedirectToAction(nameof(Index));
+        return BackTo(returnUrl);
     }
 
     // POST /Attendance/ClockOut
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ClockOut()
+    public async Task<IActionResult> ClockOut(string? returnUrl = null)
     {
         var userId = _users.GetUserId(User)!;
         try
@@ -73,7 +73,7 @@ public class AttendanceController : Controller
         }
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             return Json(new { success = true, message = "Clocked out successfully." });
-        return RedirectToAction(nameof(Index));
+        return BackTo(returnUrl);
     }
 
     // GET /Attendance/EditLog/5
@@ -145,4 +145,10 @@ public class AttendanceController : Controller
             return View();
         }
     }
+
+    /// <summary>Back to the page the clock button was on (local URLs only), else My Attendance.</summary>
+    private IActionResult BackTo(string? returnUrl) =>
+        !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? LocalRedirect(returnUrl)
+            : RedirectToAction(nameof(Index));
 }

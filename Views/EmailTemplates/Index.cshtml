@@ -24,11 +24,12 @@
     </div>
 </div>
 
+<div data-inplace-region="templates" data-inplace>
 <div class="card mb-3">
     <div class="card-body py-2">
         <form method="get" class="d-flex align-items-center gap-3 flex-wrap">
             <label class="mb-0 fw-semibold">Filter by Brand:</label>
-            <select name="brandId" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+            <select name="brandId" class="form-select form-select-sm w-auto" onchange="this.form.requestSubmit()">
                 <option value="">All</option>
                 @foreach (var b in brands)
                 {
@@ -97,6 +98,7 @@
             </tbody>
         </table>
     </div>
+</div>
 </div>
 
 @section Styles {

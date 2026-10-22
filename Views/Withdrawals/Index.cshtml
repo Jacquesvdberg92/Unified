@@ -8,7 +8,8 @@
     they are handling it, track missing documents (POI, POR, POD, CC, BD, CRP),
     link related tickets as free text and discuss it in the comment thread.
     Selecting a card (?id=) opens its detail panel on the right; every action
-    posts back and returns here with the same filters.
+    posts back and returns here with the same filters. All of it is data-inplace,
+    so only the page content is swapped (wwwroot/js/inplace.js), never the whole screen.
 *@
 @{
     ViewData["Title"] = "WD List";
@@ -57,7 +58,7 @@
         u is null ? "Unknown" : (string.IsNullOrWhiteSpace(u.DisplayName) ? u.UserName ?? "Unknown" : u.DisplayName);
 }
 
-<div class="container-fluid">
+<div class="container-fluid" data-inplace>
 
     @if (TempData["Error"] is string err)
     {
@@ -90,12 +91,12 @@
                 @foreach (var (value, label) in new[] { (WithdrawalService.Scope.All, "All"), (WithdrawalService.Scope.Mine, "Picked up by me"), (WithdrawalService.Scope.Unassigned, "Unassigned") })
                 {
                     <input type="radio" class="btn-check" name="scope" id="scope-@value" value="@value"
-                           checked="@(Model.Scope == value)" onchange="this.form.submit()">
+                           checked="@(Model.Scope == value)" onchange="this.form.requestSubmit()">
                     <label class="btn btn-outline-primary" for="scope-@value">@label</label>
                 }
             </div>
             <label class="visually-hidden" for="wdBrand">Brand</label>
-            <select id="wdBrand" name="brandId" class="form-select form-select-sm" style="max-width:200px" onchange="this.form.submit()">
+            <select id="wdBrand" name="brandId" class="form-select form-select-sm" style="max-width:200px" onchange="this.form.requestSubmit()">
                 <option value="">All brands</option>
                 @foreach (var b in Model.Brands)
                 {
@@ -107,7 +108,7 @@
                    placeholder="CL ID or WD number" autocomplete="off">
             <div class="form-check form-check-inline mb-0 ms-1">
                 <input class="form-check-input" type="checkbox" id="wdMissingOnly" name="missingOnly" value="true"
-                       checked="@Model.MissingOnly" onchange="this.form.submit()">
+                       checked="@Model.MissingOnly" onchange="this.form.requestSubmit()">
                 <label class="form-check-label small" for="wdMissingOnly">Only with missing documents</label>
             </div>
             <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-filter-alt me-1"></i>Apply</button>
@@ -349,7 +350,7 @@
 @* ── New withdrawal modal ── *@
 <div class="modal fade" id="newWithdrawalModal" tabindex="-1" aria-labelledby="newWithdrawalTitle" aria-hidden="true">
     <div class="modal-dialog">
-        <form asp-action="Create" method="post" class="modal-content">
+        <form asp-action="Create" method="post" class="modal-content" data-inplace>
             @Html.AntiForgeryToken()
             <div class="modal-header">
                 <h6 class="modal-title" id="newWithdrawalTitle">New withdrawal</h6>
