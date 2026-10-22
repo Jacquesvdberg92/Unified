@@ -54,7 +54,10 @@
         </script>
 
 		<!-- FAVICON -->
-        <link rel="icon" type="image/png" href="@Url.Content("~/fav.png")">
+        <link rel="icon" type="image/png" href="~/fav.png" asp-append-version="true">
+
+        <!-- FONT PRELOAD: the body font, so text renders in Poppins without waiting for styles.css -->
+        <link rel="preload" href="~/assets/fonts/poppins/poppins-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 
         <!-- BOOTSTRAP CSS -->
 	    <link  id="style" href="@Url.Content("~/assets/libs/bootstrap/css/bootstrap.min.css")" rel="stylesheet">
